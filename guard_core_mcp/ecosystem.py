@@ -79,17 +79,18 @@ class EcosystemRegistry(BaseModel):
 GO_ENGINE = EngineInfo(
     package="guard-core-go",
     repo="https://github.com/rennf93/guard-core-go",
-    version="0.1.0",
-    install="go get github.com/rennf93/guard-core-go@v0.1.0",
+    version="4.1.0",
+    install="go get github.com/rennf93/guard-core-go/v4@v4.1.0",
     release_status="tagged",
     conformance=(
         "spec-4.0.3 corpus vendored at conformance/guard-core-spec-4.0.3 "
         "(184 cases across 12 suites), fail-closed baseline"
     ),
     notes=(
-        "module github.com/rennf93/guard-core-go, go 1.25.0; the only tag is the "
-        "v0.1.0 pre-release snapshot; the README is a stub, so usage lives in the "
-        "adapter READMEs and AGENTS.md"
+        "module github.com/rennf93/guard-core-go/v4, go 1.25.0; tagged v4.1.0 "
+        "and served by the Go module proxy under the /v4 major path; the "
+        "README is a short pointer, so usage lives in the adapter READMEs "
+        "and AGENTS.md"
     ),
 )
 
@@ -265,10 +266,10 @@ GO_ENTRY = LanguageEntry(
         AdapterInfo(
             package="nethttp-guard",
             repo="https://github.com/rennf93/nethttp-guard",
-            version="0.1.0",
+            version="1.1.0",
             install=(
-                "go get github.com/rennf93/nethttp-guard "
-                "github.com/rennf93/guard-core-go@v0.1.0"
+                "go get github.com/rennf93/nethttp-guard@v1.1.0 "
+                "github.com/rennf93/guard-core-go/v4@v4.1.0"
             ),
             release_status="tagged",
             framework="nethttp",
@@ -289,12 +290,12 @@ GO_ENTRY = LanguageEntry(
         AdapterInfo(
             package="gin-guard",
             repo="https://github.com/rennf93/gin-guard",
-            version="unreleased",
+            version="1.1.0",
             install=(
-                "go get github.com/rennf93/gin-guard@main "
-                "github.com/rennf93/guard-core-go@v0.1.0"
+                "go get github.com/rennf93/gin-guard@v1.1.0 "
+                "github.com/rennf93/guard-core-go/v4@v4.1.0"
             ),
-            release_status="untagged",
+            release_status="tagged",
             framework="gin",
             role="Gin middleware (gin.HandlerFunc via router.Use)",
             python_counterpart="flaskapi-guard",
@@ -302,19 +303,19 @@ GO_ENTRY = LanguageEntry(
             snippet_language="go",
             snippet=GO_GIN_SNIPPET,
             notes=(
-                "no release tag yet; pin a commit or track main; import with the "
-                "alias guardgin because the package name collides with gin-gonic"
+                "tagged v1.1.0; import with the alias guardgin because the "
+                "package name collides with gin-gonic"
             ),
         ),
         AdapterInfo(
             package="echo-guard",
             repo="https://github.com/rennf93/echo-guard",
-            version="unreleased",
+            version="1.1.0",
             install=(
-                "go get github.com/rennf93/echo-guard@main "
-                "github.com/rennf93/guard-core-go@v0.1.0"
+                "go get github.com/rennf93/echo-guard@v1.1.0 "
+                "github.com/rennf93/guard-core-go/v4@v4.1.0"
             ),
-            release_status="untagged",
+            release_status="tagged",
             framework="echo",
             role="Echo middleware (echo.MiddlewareFunc via router.Use)",
             python_counterpart="flaskapi-guard",
@@ -322,19 +323,19 @@ GO_ENTRY = LanguageEntry(
             snippet_language="go",
             snippet=GO_ECHO_SNIPPET,
             notes=(
-                "no release tag yet; pin a commit or track main; import with the "
-                "alias guardecho because the package name collides with labstack"
+                "tagged v1.1.0; import with the alias guardecho because the "
+                "package name collides with labstack"
             ),
         ),
         AdapterInfo(
             package="fiber-guard",
             repo="https://github.com/rennf93/fiber-guard",
-            version="unreleased",
+            version="1.1.0",
             install=(
-                "go get github.com/rennf93/fiber-guard@main "
-                "github.com/rennf93/guard-core-go@v0.1.0"
+                "go get github.com/rennf93/fiber-guard@v1.1.0 "
+                "github.com/rennf93/guard-core-go/v4@v4.1.0"
             ),
-            release_status="untagged",
+            release_status="tagged",
             framework="fiber",
             role="Fiber middleware (fiber.Handler, fasthttp-native)",
             python_counterpart="tornadoapi-guard",
@@ -345,18 +346,17 @@ GO_ENTRY = LanguageEntry(
             snippet_language="go",
             snippet=GO_FIBER_SNIPPET,
             notes=(
-                "no release tag yet; pin a commit or track main; shims fiber.Ctx "
-                "directly, buffers the full body, and takes the client identity "
-                "from the fasthttp TCP peer IP"
+                "tagged v1.1.0; shims fiber.Ctx directly, buffers the full body, "
+                "and takes the client identity from the fasthttp TCP peer IP"
             ),
         ),
     ],
     agent=AgentInfo(
         package="guard-agent-go",
         repo="https://github.com/rennf93/guard-agent-go",
-        version="0.1.0",
-        install="go get github.com/rennf93/guard-agent-go@main",
-        release_status="untagged",
+        version="3.0.2",
+        install="go get github.com/rennf93/guard-agent-go/v3@v3.0.2",
+        release_status="tagged",
         semantics=(
             "buffered background agent with at-least-once delivery: per-kind "
             "buffers of 100, 30s flush interval or the 0.8 high watermark, "
@@ -373,9 +373,10 @@ GO_ENTRY = LanguageEntry(
         snippet_language="go",
         snippet=GO_AGENT_SNIPPET,
         notes=(
-            "package name is guardagent; version 0.1.0 comes from the Version "
-            "constant, there is no tag yet; SigningSecret signs the uncompressed "
-            "body; install identity persists at ~/.guard-agent/install-id"
+            "package name is guardagent; module path "
+            "github.com/rennf93/guard-agent-go/v3, tagged v3.0.2 matching the "
+            "Version constant; SigningSecret signs the uncompressed body; "
+            "install identity persists at ~/.guard-agent/install-id"
         ),
     ),
 )
@@ -456,7 +457,7 @@ await agent.stop(); // final flush + confirm"""
 
 TS_ADAPTER_NOTES = (
     "pnpm monorepo (packages/*); adapters depend on @guardcore/core via "
-    "workspace:* locally; release tag 1.0.0"
+    "workspace:* locally; release tag 4.1.0"
 )
 
 
@@ -464,7 +465,7 @@ def _ts_adapter(package: str, framework: str, role: str, snippet: str) -> Adapte
     return AdapterInfo(
         package=package,
         repo=f"https://github.com/rennf93/guard-core-ts/tree/master/packages/{framework}",
-        version="1.0.0",
+        version="4.1.0",
         install=f"npm install @guardcore/core {package}",
         release_status="tagged",
         framework=framework,
@@ -485,7 +486,7 @@ TS_ENTRY = LanguageEntry(
     engine=EngineInfo(
         package="@guardcore/core",
         repo="https://github.com/rennf93/guard-core-ts",
-        version="1.0.0",
+        version="4.1.0",
         install="npm install @guardcore/core",
         release_status="tagged",
         conformance=(
@@ -528,9 +529,9 @@ TS_ENTRY = LanguageEntry(
     agent=AgentInfo(
         package="guardagent",
         repo="https://github.com/rennf93/guard-agent-ts",
-        version="0.1.0",
+        version="3.0.2",
         install="pnpm add guardagent",
-        release_status="untagged",
+        release_status="tagged",
         semantics=(
             "1:1 port of the Python agent semantics: buffer of 100 per kind, "
             "30s flush interval, 0.8 high watermark, drop/block/raise overflow, "
@@ -546,8 +547,8 @@ TS_ENTRY = LanguageEntry(
         snippet=TS_AGENT_SNIPPET,
         notes=(
             "Node >= 20; signs the uncompressed body so signatures survive the "
-            "server decompressing first; no git tag yet, so the npm publish must "
-            "have run for pnpm add to resolve"
+            "server decompressing first; tagged v3.0.2 with the npm publish "
+            "already run, so pnpm add resolves it"
         ),
     ),
 )
@@ -668,15 +669,13 @@ register_shutdown_function(static function () use ($agent): void {
 
 PHP_ENGINE_NOTES = (
     "composer rennf93/guard-core-php, php ^8.2 plus ext-pcre, ext-mbstring and "
-    "ext-json; tag v0.1.0 is not on Packagist yet, so composer.json needs a VCS "
-    "repository pointing at https://github.com/rennf93/guard-core-php with "
-    "minimum-stability dev and prefer-stable true; namespace root "
-    r"RenzoFranceschini\GuardCore"
+    "ext-json; tagged v4.1.0 and on Packagist, so a plain composer require "
+    "resolves it; namespace root " + r"RenzoFranceschini\GuardCore"
 )
 
 PHP_ADAPTER_NOTES = (
-    "php ^8.2; requires rennf93/guard-core-php ^0.1.0, which still needs the "
-    "VCS repositories block until the engine reaches Packagist"
+    "php ^8.2; requires rennf93/guard-core-php ^4.1.0, which is on Packagist "
+    "so no VCS repositories block is needed"
 )
 
 
@@ -712,7 +711,7 @@ PHP_ENTRY = LanguageEntry(
     engine=EngineInfo(
         package="guard-core-php",
         repo="https://github.com/rennf93/guard-core-php",
-        version="0.1.0",
+        version="4.1.0",
         install="composer require rennf93/guard-core-php",
         release_status="tagged",
         conformance=(
@@ -725,56 +724,55 @@ PHP_ENTRY = LanguageEntry(
         _php_adapter(
             "psr15-guard",
             "psr15",
-            "0.1.0",
+            "1.1.0",
             r"PSR-15 middleware (Psr\Http\Server\MiddlewareInterface)",
             "flaskapi-guard",
             "sync PSR-7 middleware, matching the sync-mirror extension style",
             PHP_PSR15_SNIPPET,
             PHP_ADAPTER_NOTES
-            + "; tagged v0.1.0; needs a PSR-7/PSR-17 implementation such as "
+            + "; tagged v1.1.0; needs a PSR-7/PSR-17 implementation such as "
             "nyholm/psr7; caps scanned bodies at MAX_BODY_BYTES (256 KiB)",
         ),
         _php_adapter(
             "laravel-guard",
             "laravel",
-            "unreleased",
+            "1.1.0",
             "global Laravel middleware (prepend or $middleware stack)",
             "djapi-guard",
             "global framework middleware in a batteries-included MVC framework",
             PHP_LARAVEL_SNIPPET,
-            PHP_ADAPTER_NOTES + "; no tags yet, installs from source (dev-main)",
+            PHP_ADAPTER_NOTES + "; tagged v1.1.0",
         ),
         _php_adapter(
             "symfony-guard",
             "symfony",
-            "unreleased",
+            "1.1.0",
             "HttpKernelInterface decorator (kernel middleware)",
             "djapi-guard",
             "kernel middleware stack wrapping the framework kernel",
             PHP_SYMFONY_SNIPPET,
             PHP_ADAPTER_NOTES
-            + "; no tags yet, installs from source (dev-main); wraps the kernel "
-            "rather than registering a bundle",
+            + "; tagged v1.1.0; wraps the kernel rather than registering a bundle",
         ),
         _php_adapter(
             "slim-guard",
             "slim",
-            "unreleased",
+            "1.1.0",
             "Slim App middleware (SlimGuard::forApp()->addTo())",
             "flaskapi-guard",
             "micro-framework integration over PSR-15 middleware",
             PHP_SLIM_SNIPPET,
             PHP_ADAPTER_NOTES
-            + "; no tags yet, installs from source (dev-main); composes "
-            "rennf93/psr15-guard ^0.1.0 rather than the engine directly",
+            + "; tagged v1.1.0; composes rennf93/psr15-guard ^1.0.0 rather "
+            "than the engine directly",
         ),
     ],
     agent=AgentInfo(
         package="guard-agent-php",
         repo="https://github.com/rennf93/guard-agent-php",
-        version="0.1.0",
+        version="3.0.2",
         install="composer require rennf93/guard-agent-php",
-        release_status="untagged",
+        release_status="tagged",
         semantics=(
             "zero-dependency agent (ext-json and ext-curl only): buffer of 100, "
             "30s flush interval, tick() loop for long-running workers, "
@@ -791,8 +789,9 @@ PHP_ENTRY = LanguageEntry(
         snippet_language="php",
         snippet=PHP_AGENT_SNIPPET,
         notes=(
-            "version 0.1.0 lives in the Version constant because composer.json "
-            "carries no version field; no tags yet; signs the uncompressed body"
+            "version 3.0.2 lives in the Version constant because composer.json "
+            "carries no version field; tagged v3.0.2 and on Packagist; signs "
+            "the uncompressed body"
         ),
     ),
 )
@@ -872,15 +871,15 @@ async fn main() {
 
 RUST_ENGINE_NOTES = (
     "cargo workspace (crates/*), edition 2024, MSRV 1.92; the engine crate "
-    "guard-core-engine is publish = false and nothing is on crates.io yet, so "
-    "adapters depend on it by path; the facade crate guard-core-rs re-exports "
-    "only preprocessor and semantic, so adapters use guard-core-engine directly"
+    "guard-core-engine and the facade crate guard-core-rs publish to "
+    "crates.io (4.1.0); the facade re-exports detect, compiler, preprocessor "
+    "and semantic, and the adapters depend on guard-core-engine directly"
 )
 
 RUST_ADAPTER_NOTES = (
     "edition 2024, MSRV 1.92; fail-secure (500 on check failure), 403 for "
     "suspicious requests, 413 for oversized payloads; body cap configurable "
-    "with with_body_cap; not on crates.io, path dependency until tagging"
+    "with with_body_cap; published on crates.io at 1.1.0"
 )
 
 
@@ -896,9 +895,9 @@ def _rust_adapter(
     return AdapterInfo(
         package=package,
         repo=f"https://github.com/rennf93/{package}",
-        version="0.1.0",
-        install=f'{package} = {{ path = "../{package}" }}',
-        release_status="untagged",
+        version="1.1.0",
+        install=f'{package} = "1.1.0"',
+        release_status="published",
         framework=framework,
         role=role,
         python_counterpart=counterpart,
@@ -915,11 +914,9 @@ RUST_ENTRY = LanguageEntry(
     engine=EngineInfo(
         package="guard-core-rs",
         repo="https://github.com/rennf93/guard-core-rs",
-        version="0.0.1",
-        install=(
-            'guard-core-engine = { path = "../guard-core-rs/crates/guard-core-engine" }'
-        ),
-        release_status="untagged",
+        version="4.1.0",
+        install='guard-core-engine = "4.1.0"',
+        release_status="published",
         conformance=(
             "spec-4.0.3 corpus vendored in the guard-core-conformance crate: "
             "184/184 cases green with a fail-closed drift gate and the "
@@ -965,9 +962,9 @@ RUST_ENTRY = LanguageEntry(
     agent=AgentInfo(
         package="guard-agent-rs",
         repo="https://github.com/rennf93/guard-agent-rs",
-        version="0.1.0",
+        version="3.0.2",
         install="cargo add guard-agent-rs",
-        release_status="untagged",
+        release_status="published",
         semantics=(
             "tokio-based async agent: per-kind buffers of 100, 30s flush "
             "interval, 0.8 high watermark, drop/block/raise overflow, "
@@ -982,9 +979,8 @@ RUST_ENTRY = LanguageEntry(
         snippet_language="rust",
         snippet=RUST_AGENT_SNIPPET,
         notes=(
-            "no git tag yet, so confirm the crates.io release exists before "
-            "relying on cargo add; use --features persistence for Redis; signs "
-            "the uncompressed body"
+            "tagged v3.0.2 and on crates.io, so cargo add resolves it; use "
+            "--features persistence for Redis; signs the uncompressed body"
         ),
     ),
 )
@@ -1088,7 +1084,7 @@ PY_ENTRY = LanguageEntry(
     engine=EngineInfo(
         package="guard-core",
         repo="https://github.com/rennf93/guard-core",
-        version="4.0.4",
+        version="4.1.0",
         install="uv add guard-core",
         release_status="published",
         conformance=(
@@ -1105,21 +1101,21 @@ PY_ENTRY = LanguageEntry(
         _python_adapter(
             "fastapi-guard",
             "fastapi",
-            "8.0.0",
+            "8.0.2",
             "ASGI middleware for FastAPI (async tree)",
             PY_FASTAPI_SNIPPET,
         ),
         _python_adapter(
             "flaskapi-guard",
             "flask",
-            "4.3.0",
+            "4.3.2",
             "Flask extension over the sync mirror",
             PY_FLASK_SNIPPET,
         ),
         _python_adapter(
-            "djangoapi-guard",
+            "djapi-guard",
             "django",
-            "4.3.0",
+            "4.3.2",
             "Django middleware adapter over the sync mirror",
             PY_DJANGO_SNIPPET,
         ),
@@ -1134,7 +1130,7 @@ PY_ENTRY = LanguageEntry(
     agent=AgentInfo(
         package="guard-agent",
         repo="https://github.com/rennf93/guard-agent",
-        version="3.0.1",
+        version="3.0.2",
         install="uv add guard-agent",
         release_status="published",
         semantics=(
@@ -1152,9 +1148,9 @@ PY_ENTRY = LanguageEntry(
         snippet_language="python",
         snippet=PY_AGENT_SNIPPET,
         notes=(
-            "3.0.1 signs the compressed wire bytes when the body exceeds the "
-            "compression threshold, while the server verifies the uncompressed "
-            "body, so see the saas.known_quirks entry before enabling "
+            "3.0.2 signs the uncompressed body, matching the server contract "
+            "and all four language ports; the compressed-signature defect is "
+            "fixed as of 3.0.2, so pin >=3.0.2 before enabling "
             "require_signed_payloads"
         ),
     ),
@@ -1173,7 +1169,7 @@ REGISTRY = EcosystemRegistry(
         spec_version="4.0.3",
         cases=184,
         suites=12,
-        engine_commit="436d6f72",
+        engine_commit="0122af02",
         corpus=(
             "every engine vendors the same frozen spec-4.0.3 fixture corpus: "
             "xss 22, sqli 22, cmd_injection 18, misc_injection 29, "
@@ -1254,11 +1250,12 @@ REGISTRY = EcosystemRegistry(
         },
         known_quirks=[
             (
-                "guard-agent 3.0.1 (Python) still signs the compressed wire bytes once "
-                "the body exceeds the compression threshold while the server "
-                "verifies the uncompressed body, so signed and gzipped batches "
-                "from that release fail verification when require_signed_payloads "
-                "is enabled"
+                "guard-agent releases before 3.0.2 (Python) signed the "
+                "compressed wire bytes once the body exceeded the compression "
+                "threshold while the server verifies the uncompressed body, so "
+                "signed and gzipped batches from those releases fail "
+                "verification when require_signed_payloads is enabled; 3.0.2 "
+                "signs the uncompressed body and matches the server contract"
             ),
             (
                 "the Go, TypeScript, PHP and Rust agents sign the uncompressed "

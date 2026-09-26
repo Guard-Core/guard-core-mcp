@@ -10,6 +10,33 @@ Release Notes
 
 ___
 
+v8.0.2 (2026-09-26)
+-------------------
+
+Community fixes and exempt_ips lockstep: trailing-slash route config, block response Content-Type, live-smoke exempt_ips scenario; guard-core 4.1.0 tracking (v8.0.2)
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+- **Fixed** - Route decorator config now resolves through Starlette's trailing-slash redirect (#142): when the request path matches no route but toggling the trailing slash does, the middleware reads the config of the route Starlette would 307-redirect to, so a route override registered on `/path` now governs a request to `/path/` (and vice versa) instead of silently falling through to the global defaults. Each router decides with its own `redirect_slashes` (mounted apps for their paths, the including app for an included router's routes), the root path and directly matched requests are untouched.
+- **Fixed** - Block responses now declare `Content-Type: text/plain` (#144): the Starlette response factory left Starlette's media type unset, so middleware-generated 403/429/400 pages went out without a content type and clients were left guessing. The factory now passes `media_type="text/plain"`, matching the engine's reference response factory.
+- **Tests** - New live-smoke scenario `tests/live_smoke/scenarios/exempt_ips.py` (#145) covering the guard-core `exempt_ips` skip-list end to end through the live stack: an exempt IP exceeding `rate_limit` keeps getting 200 across the crossing while no rate-limit bucket is written for it at all (`smoke:rate_limit:rate:<ip>` stays absent in Redis, pinning that the exempt skip sits ahead of the limiter), a penetration-detection payload from the exempt IP still gets 400 (exemption is not immunity), the identical sequence without `exempt_ips` throttles at the crossing with 429 and leaves exactly the bucket the exempt run never wrote, and an IP that is both exempt and blacklisted gets 403 (blacklist beats exemption). The scenario merged red against PyPI guard-core (< 4.1.0) by design, the documented lockstep hold; with this release it runs green against the published 4.1.0 engine in CI.
+- **Compatibility** - The `guard-core` floor rises from `>=4.0.0` to `>=4.1.0` and this release tracks the guard-core 4.1.0 engine (the exempt_ips skip-list, the recon leading-separator gate, the raw-view recon scan, the cross-engine interop harness). Both fixed behaviors are adapter-side; no guard-core API fastapi-guard uses changed shape.
+
+___
+
+v8.0.1 (2026-09-23)
+-------------------
+
+CI hardening, live smoke suite, agent docs; guard-core 4.0.4 tracking (v8.0.1)
+------------------------------------------------------------------------------
+
+- **CI** - Added a DockSec container scan with SARIF upload to the pipeline (#138) and removed the Slack notification steps from all workflows.
+- **CI** - New live smoke suite (`tests/live_smoke/`): a Docker Compose stack (nginx, gunicorn, Redis) running the full example app is exercised against PRs, and a nightly upstream drift gate builds the suite against guard-core master so engine-side regressions surface before a release instead of after (#134).
+- **Fixed (tests)** - `test_cloud_ip_blocking_with_logging` (`tests/test_middleware/test_security_middleware.py`) now awaits the scheduled background cloud-IP refresh before asserting instead of relying on a stale Redis handler left behind by another test to suspend the dispatch (#136).
+- **Documentation** - Added `AGENTS.md`/`CLAUDE.md` agent guidance and extended the fastapi-guard package skill.
+- **Compatibility** - No production code changed: the delta since 8.0.0 is CI, tests and docs only, hence the patch bump. The `guard-core>=4.0.0` floor is unchanged and this release tracks the guard-core 4.0.4 engine.
+
+___
+
 v8.0.0 (2026-09-04)
 -------------------
 

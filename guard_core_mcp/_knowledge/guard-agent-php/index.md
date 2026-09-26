@@ -8,7 +8,7 @@ The PHP telemetry agent for the Guard ecosystem. Composer name `rennf93/guard-ag
 composer require rennf93/guard-agent-php
 ```
 
-No git tags yet and composer.json carries no `version` field: the version lives in `RenzoFranceschini\GuardAgent\Version::VERSION` (0.1.0) with `USER_AGENT = 'guard-agent/0.1.0'`.
+Tagged `v3.0.2` and on Packagist, so plain composer resolves it; composer.json carries no `version` field, the version lives in `RenzoFranceschini\GuardAgent\Version::VERSION` (3.0.2) with `USER_AGENT = 'guard-agent/3.0.2'`.
 
 ## Setup
 
@@ -35,10 +35,9 @@ Default drop overflow, Retry-After handling, permanent-rejection classification,
 
 ## Wire contract
 
-`POST {endpoint}/api/v1/events`, `/api/v1/metrics`, `/api/v1/status` with `User-Agent: guard-agent/0.1.0`, `X-API-Key`, `X-Agent-Install-Id`, optional `X-Project-Id`, and optional `X-Payload-Signature: v1=<hex>`, where the HMAC-SHA256 covers the **uncompressed** JSON body (the server decompresses gzip before verifying). The 413 cap is 262144 bytes decompressed.
+`POST {endpoint}/api/v1/events`, `/api/v1/metrics`, `/api/v1/status` with `User-Agent: guard-agent/3.0.2`, `X-API-Key`, `X-Agent-Install-Id`, optional `X-Project-Id`, and optional `X-Payload-Signature: v1=<hex>`, where the HMAC-SHA256 covers the **uncompressed** JSON body (the server decompresses gzip before verifying). The 413 cap is 262144 bytes decompressed.
 
 ## Footguns
 
-- No tags: composer resolves it from source until a release lands and Packagist submission happens.
 - `sendEvent` never throws under the default drop policy; a silent drop is the failure mode, so monitor `AgentStatus`/stats if delivery matters.
 - `ext-curl` is required (not suggested): the transport is implemented over curl with gzip bodies.

@@ -1,6 +1,6 @@
 ---
 title: "SecurityConfig"
-description: "Complete reference for the SecurityConfig Zod schema with all 44 fields"
+description: "Complete reference for the SecurityConfig Zod schema"
 ---
 
 `SecurityConfig` is the central configuration object for all `@guardcore` adapters. It is validated at startup using a Zod schema. All fields have sensible defaults -- you only need to specify what you want to change.
@@ -32,8 +32,25 @@ const resolved = SecurityConfigSchema.parse(config);
 |-------|------|---------|-------------|
 | `whitelist` | `string[] \| null` | `null` | IP/CIDR allowlist. When set, only these IPs are allowed |
 | `blacklist` | `string[]` | `[]` | IP/CIDR blocklist. These IPs are always blocked |
+| `exemptIps` | `string[]` | `[]` | IP/CIDR skip-list for trusted automation. Entries skip rate limiting, the user-agent check and per-route cloud-provider blocks |
 | `whitelistCountries` | `string[]` | `[]` | Two-letter country codes to allow (requires `geoIpHandler` or `geoResolver`) |
 | `blockedCountries` | `string[]` | `[]` | Two-letter country codes to block (requires `geoIpHandler` or `geoResolver`) |
+
+### `exemptIps` vs `whitelist`
+
+`exemptIps` is noise reduction for known-friendly automation (monitoring probes,
+VPN egress, a partner's server), not immunity. A non-empty `whitelist` is also an
+allowlist: every IP not on it is denied by the global IP check, so it cannot be
+used to let a few clients skip throttling on a public API. `exemptIps` is not
+restrictive: every unlisted IP is checked exactly as usual, and a match only sets
+the same skip state a whitelist match sets (rate limiting, user-agent check,
+per-route cloud-provider blocks). Everything else still applies to listed IPs:
+penetration detection (attack payloads are still blocked and counted), the
+blacklist, dynamic IP bans, per-route `requireIp`/`blockIp` rules, the global
+`blockCloudProviders` list, HTTPS enforcement and security headers. Entries
+accept IPv4, IPv6 and CIDR forms, validated at config construction (an invalid
+entry fails closed). The two lists may coexist; an IP on both is simply a
+whitelist match.
 
 ## Rate Limiting
 
@@ -60,11 +77,15 @@ const resolved = SecurityConfigSchema.parse(config);
 
 ## Auto-Banning
 
+Every penetration-detection violation increments the source IP's counter for the matched detection category. When a threshold is crossed, the IP is banned and subsequent requests are blocked with 403 by the IP check. `threatBanConfig` entries fire at their own threshold and duration; everything else falls back to the flat `autoBanThreshold`/`autoBanDuration` pair measured against the IP's total across categories.
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `enableIpBanning` | `boolean` | `true` | Enable automatic IP banning |
-| `autoBanThreshold` | `number` | `10` | Suspicious requests before auto-ban |
-| `autoBanDuration` | `number` | `3600` | Ban duration in seconds |
+| `enableIpBanning` | `boolean` | `true` | Enable automatic IP banning. `false` disables ban creation entirely; enforcement of already-active bans is unaffected |
+| `autoBanThreshold` | `number` | `10` | Total violations across categories before auto-ban (fallback when no `threatBanConfig` entry matched) |
+| `autoBanDuration` | `number` | `3600` | Fallback ban duration in seconds |
+| `threatBanConfig` | `Record<string, { threshold: number; duration: number }>` | `{}` | Per-category ban thresholds and durations. Keys are the detection categories (`xss`, `sqli`, `dir_traversal`, `cmd_injection`, ...) plus the `rate_limit` pseudo-category; unknown keys fail validation |
+| `enableRateLimitAutoBan` | `boolean` | `false` | Feed rate-limit violations into the same autoban engine: each active-mode (non-passive) violation increments the `rate_limit` category, with a `threatBanConfig['rate_limit']` override or the flat threshold fallback. Requires `enableIpBanning` to actually ban |
 
 ## User Agent Filtering
 
@@ -95,7 +116,7 @@ const resolved = SecurityConfigSchema.parse(config);
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `blockCloudProviders` | `('AWS' \| 'GCP' \| 'Azure')[]` | `[]` | Cloud providers to block |
+| `blockCloudProviders` | `('AWS' \| 'GCP' \| 'Azure')[]` | `[]` | Cloud providers to block. Requests whose IP falls in a selected provider's refreshed ranges get 403; routes can override the list per-route via the `blockCloudProviders` route selector, and whitelist/exempt IPs skip the check |
 | `cloudIpRefreshInterval` | `number` | `3600` | Seconds between cloud IP range refreshes (60-86400) |
 
 ## GeoIP
@@ -193,6 +214,11 @@ const config: SecurityConfig = {
 
   autoBanThreshold: 5,
   autoBanDuration: 7200,
+  threatBanConfig: {
+    sqli: { threshold: 3, duration: 86400 },
+    rate_limit: { threshold: 3, duration: 1800 },
+  },
+  enableRateLimitAutoBan: true,
 
   blockedUserAgents: ['sqlmap', 'nikto', 'nmap', 'masscan'],
 

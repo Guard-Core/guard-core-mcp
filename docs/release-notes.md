@@ -10,6 +10,21 @@ Release Notes
 
 ___
 
+v1.2.0 (2026-09-26)
+-------------------
+
+Full-ecosystem refresh to the guard-core 4.1.0 train (v1.2.0)
+-------------------------------------------------------------
+
+- **Changed** - The `ecosystem` registry records the released 4.1.0 train for every engine: guard-core 4.1.0 (PyPI, engine commit `0122af02` in the conformance block), guard-core-go v4.1.0 (module path `github.com/rennf93/guard-core-go/v4`, Go module proxy verified), guard-core-php v4.1.0 (now on Packagist, so the VCS repository workaround is gone), @guardcore/core 4.1.0, and guard-core-rs/guard-core-engine 4.1.0 (crates.io).
+- **Changed** - Every adapter pin moves to its released version: fastapi-guard 8.0.2, flaskapi-guard 4.3.2, djapi-guard 4.3.2 (the PyPI name is `djapi-guard`; the registry had carried the non-existent `djangoapi-guard`), tornadoapi-guard unchanged at 1.0.0, the Go adapters (nethttp-guard, gin-guard, echo-guard, fiber-guard) v1.1.0, the PHP adapters (psr15-guard, laravel-guard, symfony-guard, slim-guard) v1.1.0, the Rust adapters (tower-guard-rs, axum-guard-rs, actix-guard-rs, rocket-guard-rs) 1.1.0 on crates.io, and the TypeScript packages (@guardcore/express, fastify, hono, nestjs) 4.1.0.
+- **Changed** - The telemetry agent pins move to 3.0.2 across all five languages: guard-agent (PyPI), guardagent (npm), guard-agent-go (tagged v3.0.2, module path `/v3`), guard-agent-php (Packagist) and guard-agent-rs (crates.io). The saas `known_quirks` entry now says the Python compressed-signature defect is fixed as of guard-agent 3.0.2 (releases before 3.0.2 signed the compressed wire bytes), and the agent notes point operators at pinning >=3.0.2 before enabling `require_signed_payloads`.
+- **Changed** - The hand-written `_knowledge` corpus re-syncs its install lines, tags and registry states to those releases (guard-core-go `/v4` module path and spec-4.0.3 corpus, guard-core-php on Packagist, guard-core-rs crates.io publication with the facade re-exporting `detect`/`compiler`, the four agents' 3.0.2 tags, guard-core-app 2026.09.24).
+- **Changed** - `scripts/sync_docs.py` resolves each vendored repo under both layouts: the CI sibling clones (`../<package>`) and the local ecosystem checkout nested under per-language directories, siblings winning; the vendored `_docs` re-syncs to guard-core 4.1.0, fastapi-guard 8.0.2, guard-agent 3.0.2 and guard-core-ts 4.1.0.
+- **Changed** - `uv.lock` moves guard-core to 4.1.0, fastapi-guard to 8.0.2 and guard-agent to 3.0.2; version 1.2.0 marks the full-ecosystem 4.1.0 refresh this server documents.
+
+___
+
 v1.1.1 (2026-09-23)
 -------------------
 

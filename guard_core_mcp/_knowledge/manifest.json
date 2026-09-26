@@ -1,34 +1,34 @@
 {
   "guard-agent-go": {
     "site_url": "https://github.com/rennf93/guard-agent-go",
-    "version": "0.1.0"
+    "version": "3.0.2"
   },
   "guard-agent-php": {
     "site_url": "https://github.com/rennf93/guard-agent-php",
-    "version": "0.1.0"
+    "version": "3.0.2"
   },
   "guard-agent-rs": {
     "site_url": "https://github.com/rennf93/guard-agent-rs",
-    "version": "0.1.0"
+    "version": "3.0.2"
   },
   "guard-agent-ts": {
     "site_url": "https://github.com/rennf93/guard-agent-ts",
-    "version": "0.1.0"
+    "version": "3.0.2"
   },
   "guard-core-app": {
     "site_url": "https://github.com/rennf93/guard-core-app",
-    "version": "2026.09.19"
+    "version": "2026.09.24"
   },
   "guard-core-go": {
     "site_url": "https://github.com/rennf93/guard-core-go",
-    "version": "0.1.0"
+    "version": "4.1.0"
   },
   "guard-core-php": {
     "site_url": "https://github.com/rennf93/guard-core-php",
-    "version": "0.1.0"
+    "version": "4.1.0"
   },
   "guard-core-rs": {
     "site_url": "https://github.com/rennf93/guard-core-rs",
-    "version": "0.0.1"
+    "version": "4.1.0"
   }
 }
