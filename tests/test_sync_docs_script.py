@@ -54,6 +54,57 @@ def test_sync_raises_when_sibling_docs_directory_is_missing(
         sync_docs.sync("example-package", "https://example.invalid/")
 
 
+def test_sync_resolves_the_nested_ecosystem_layout(tmp_path, monkeypatch) -> None:
+    workdir = tmp_path / "workdir"
+    workdir.mkdir()
+    repository = tmp_path / "Python" / "nested-package"
+    docs = repository / "docs"
+    docs.mkdir(parents=True)
+    (docs / "index.md").write_text("# Nested\n")
+    (repository / "pyproject.toml").write_text('version = "3.2.1"\n')
+    monkeypatch.chdir(workdir)
+    monkeypatch.setattr(sync_docs, "DOCS_ROOT", tmp_path / "_docs")
+    monkeypatch.setattr(
+        sync_docs,
+        "NESTED_LAYOUT",
+        {"nested-package": ("Python", "nested-package")},
+    )
+
+    entry = sync_docs.sync("nested-package", "https://example.invalid/")
+
+    assert entry == {"site_url": "https://example.invalid/", "version": "3.2.1"}
+    destination = tmp_path / "_docs" / "nested-package"
+    assert (destination / "index.md").read_text() == "# Nested\n"
+
+
+def test_sibling_layout_wins_over_the_nested_layout(tmp_path, monkeypatch) -> None:
+    workdir = tmp_path / "workdir"
+    workdir.mkdir()
+    sibling_docs = tmp_path / "nested-package" / "docs"
+    sibling_docs.mkdir(parents=True)
+    (sibling_docs / "index.md").write_text("# Sibling\n")
+    (tmp_path / "nested-package" / "pyproject.toml").write_text('version = "1.0.0"\n')
+    nested_docs = tmp_path / "Python" / "nested-package" / "docs"
+    nested_docs.mkdir(parents=True)
+    (nested_docs / "index.md").write_text("# Nested\n")
+    (tmp_path / "Python" / "nested-package" / "pyproject.toml").write_text(
+        'version = "2.0.0"\n'
+    )
+    monkeypatch.chdir(workdir)
+    monkeypatch.setattr(sync_docs, "DOCS_ROOT", tmp_path / "_docs")
+    monkeypatch.setattr(
+        sync_docs,
+        "NESTED_LAYOUT",
+        {"nested-package": ("Python", "nested-package")},
+    )
+
+    entry = sync_docs.sync("nested-package", "https://example.invalid/")
+
+    assert entry == {"site_url": "https://example.invalid/", "version": "1.0.0"}
+    destination = tmp_path / "_docs" / "nested-package"
+    assert (destination / "index.md").read_text() == "# Sibling\n"
+
+
 def test_sync_copies_markdown_and_mirrors_directory_structure(
     tmp_path, monkeypatch
 ) -> None:

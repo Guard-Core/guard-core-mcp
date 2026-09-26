@@ -1,6 +1,6 @@
 # guard-agent-ts
 
-The TypeScript telemetry agent for the Guard ecosystem. npm package `guardagent` (not scoped), version 0.1.0, Node >= 20, dual ESM/CJS via tsup, optional peer `ioredis ^5.0.0` for crash-recovery persistence.
+The TypeScript telemetry agent for the Guard ecosystem. npm package `guardagent` (not scoped), version 3.0.2, Node >= 20, dual ESM/CJS via tsup, optional peer `ioredis ^5.0.0` for crash-recovery persistence.
 
 ## Install
 
@@ -9,7 +9,7 @@ pnpm add guardagent
 pnpm add ioredis   # optional: crash-recovery persistence
 ```
 
-No git tag exists on the repo yet; `publishConfig.access` is public and npm publication runs through the release workflow on GitHub Release tags, so `pnpm add` only resolves once a publish has actually run.
+Tagged `v3.0.2` with the npm publish already run, so `pnpm add` resolves it.
 
 ## Setup
 
@@ -41,4 +41,4 @@ At-least-once delivery, 413 split-or-drop, Retry-After backoff (300s cap), perma
 ## Footguns
 
 - The adapters (@guardcore/express, fastify, hono, nestjs) do not wire the agent up for you; @guardcore/core exposes `sendAgentEvent` and an `agentHandler` hook on `initializeSecurityMiddleware` for forwarding.
-- Older revisions signed the compressed wire bytes; the fix (branch `fix/uncompressed-signature`) signs the uncompressed body. Verify which revision you actually resolve before debugging signature failures.
+- The compressed-signature defect (signing the gzipped wire bytes) is fixed as of 3.0.2: the transport signs the uncompressed body. Pin >=3.0.2 before enabling `require_signed_payloads` server-side.

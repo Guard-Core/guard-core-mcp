@@ -8,17 +8,7 @@ The PHP port of the guard-core security engine. Composer name `rennf93/guard-cor
 composer require rennf93/guard-core-php
 ```
 
-Tagged `v0.1.0`, but not on Packagist yet: until the Packagist submission lands, point composer at the repository and allow dev stability.
-
-```json
-{
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "repositories": [
-        { "type": "vcs", "url": "https://github.com/rennf93/guard-core-php" }
-    ]
-}
-```
+Tagged `v4.1.0` and on Packagist, so a plain `composer require` resolves it; no VCS repository block or dev stability is needed.
 
 composer.json carries no `version` field (the tag carries it).
 
@@ -30,7 +20,7 @@ composer.json carries no `version` field (the tag carries it).
 
 ## Conformance
 
-`composer conformance` runs `bin/conformance.php` over the vendored spec 4.0.2 corpus (163 cases).
+`composer conformance` runs `bin/conformance.php` over the vendored spec 4.0.3 corpus (184 cases across 12 suites).
 
 ## Footguns
 

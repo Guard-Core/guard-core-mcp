@@ -1,14 +1,14 @@
 # guard-agent-go
 
-The Go telemetry agent for the Guard ecosystem. Module `github.com/rennf93/guard-agent-go`, package `guardagent`, directive `go 1.25.0`. It is standalone: its only dependency is `redis/go-redis/v9`, and it does not depend on guard-core-go.
+The Go telemetry agent for the Guard ecosystem. Module `github.com/rennf93/guard-agent-go/v3`, package `guardagent`, directive `go 1.25.0`. It is standalone: its only dependency is `redis/go-redis/v9`, and it does not depend on guard-core-go.
 
 ## Install
 
 ```sh
-go get github.com/rennf93/guard-agent-go@main
+go get github.com/rennf93/guard-agent-go/v3@v3.0.2
 ```
 
-No release tag yet; the README says to pin a commit or track main until the first `v*` tag. Version 0.1.0 comes from the `Version` constant in `version.go`.
+Tagged `v3.0.2`; the `Version` constant in `version.go` matches the tag. The module path carries the `/v3` major suffix, so installs must use it.
 
 ## Setup
 

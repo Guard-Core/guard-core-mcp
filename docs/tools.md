@@ -33,27 +33,27 @@ versions()
 
 ```json
 {
-  "guard_core_mcp": "1.1.0",
+  "guard_core_mcp": "1.2.0",
   "installed": {
-    "guard-core": "4.0.2",
-    "fastapi-guard": "8.0.0",
-    "guard-agent": "3.0.0"
+    "guard-core": "4.1.0",
+    "fastapi-guard": "8.0.2",
+    "guard-agent": "3.0.2"
   },
   "docs_bundled_for": {
-    "fastapi-guard": "8.0.0",
-    "guard-agent": "3.0.0",
-    "guard-core": "4.0.3",
-    "guard-core-ts": "1.0.0"
+    "fastapi-guard": "8.0.2",
+    "guard-agent": "3.0.2",
+    "guard-core": "4.1.0",
+    "guard-core-ts": "4.1.0"
   },
   "knowledge_bundled_for": {
-    "guard-core-app": "2026.09.19",
-    "guard-core-go": "0.1.0",
-    "guard-core-php": "0.1.0",
-    "guard-core-rs": "0.0.1",
-    "guard-agent-go": "0.1.0",
-    "guard-agent-php": "0.1.0",
-    "guard-agent-rs": "0.1.0",
-    "guard-agent-ts": "0.1.0"
+    "guard-core-app": "2026.09.24",
+    "guard-core-go": "4.1.0",
+    "guard-core-php": "4.1.0",
+    "guard-core-rs": "4.1.0",
+    "guard-agent-go": "3.0.2",
+    "guard-agent-php": "3.0.2",
+    "guard-agent-rs": "3.0.2",
+    "guard-agent-ts": "3.0.2"
   }
 }
 ```

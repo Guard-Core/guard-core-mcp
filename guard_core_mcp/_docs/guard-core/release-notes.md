@@ -10,6 +10,36 @@ Release Notes
 
 ___
 
+v4.1.0 (2026-09-26)
+-------------------
+
+Exempt_ips skip-list, recon leading-separator gate, raw-view recon scan and the cross-engine interop harness (v4.1.0)
+---------------------------------------------------------------------------------------------------------------------
+
+### Added
+
+- **``exempt_ips``: a skip-list for trusted automated clients** (guard-core #117, #118). IPs and CIDRs listed in the new field skip rate limiting, the user-agent check and per-route ``@block_clouds`` exactly as a whitelist match does, without restricting anyone else. An exempt match sets the request's exempt flag only after the blacklist and dynamic-ban checks pass, so the blacklist, dynamic bans, per-route IP rules, penetration detection (including its violation counting and auto-ban contribution) and the global ``block_cloud_providers`` list still apply to exempt IPs; the ``whitelist`` deny path is byte-identical to before; and no new deny path is introduced anywhere. Entries validate fail-closed at construction exactly like ``whitelist`` (IPv4, IPv6 and IPv4-mapped forms), a ``/0`` entry warns that it exempts every address, the field participates in the sensitive-output redaction, and the live-smoke suite gained an access-control scenario for it.
+- **Cross-engine interop harness** (guard-core #120, #122, #123). ``interop/`` now carries the tooling that keeps the Go, PHP, Rust and TypeScript engines verdict-identical to this one: the Redis-state phases (rate-limit state written by one engine and read across the others), binary-body and body-surface detect vector suites with per-vector contexts, a five-family body-extraction differential over hundreds of generated bodies, middleware-level spot checks (an attack smuggled inside a binary upload's printable islands must block and ``?system=SAP`` must pass in every family), and the exempt_ips state phase (an exempt client stays unthrottled over one shared Redis state while a non-exempt client is blocked at the same crossing, and blacklist beats exemption). Raw reports land in ``interop/reports/``.
+
+### Fixed
+
+- **Bare query and body values such as ``?system=SAP``, ``?mode=default`` or ``README.md`` no longer count as recon probes** (guard-core #115, #116). Whole-value recon path rows whose leading path separator is optional (the extension-path row plus the product/config/doc rows such as ``default``, ``sap``, ``actuator``, ``cgi-bin``, ``README.md``, ``credentials.json``) required the matched value to start with ``/`` or ``\`` when scanned in ``query_param`` and ``request_body`` contexts (embedded JSON leaves included); ``url_path`` and ``unknown`` contexts are unchanged. Separator-prefixed probes (``/default.asp``, ``/actuator/health``, ``\README.md``) still detect and still feed violation counting and auto-ban; the set of affected rows is derived from the pattern table by the same optional-separator anchor rule the engine ports copy.
+- **Backslash-prefixed recon probes such as ``\default`` were invisible in every configured pipeline.** The preprocessing pipeline's LDAP hex escape decoder folds ``\de`` sequences into single characters before the pattern tables run, so a query or body value like ``\default`` arrived at the recon rows as ``Þfault`` and matched nothing; only the deprecated legacy unconfigured singleton (no preprocessor, raw values) saw them. The recon-category rows are now also scanned against the signal-preserving raw view (unicode normalization only, backslashes intact) in addition to the processed views, via a new ``DETECTION_RECON_RAW_VIEW_PATTERN_SOURCES`` set derived from the pattern table; the #116 leading-separator gate applies to raw-view matches exactly as everywhere else, so bare words stay innocent in query and body contexts, separator-prefixed probes detect again, url_path and unknown contexts are unchanged, and a row matching both the processed and the raw view on the same text is counted once instead of doubling the threat score. This is the reference fix for the cross-engine divergence documented in the 2026-09-25 detection audit; the Go, PHP, Rust and TypeScript ports copy the same view-membership change.
+
+___
+
+v4.0.5 (2026-09-24)
+-------------------
+
+Printable-run islands: binary-dense multipart file parts stop feeding compressed bytes to the pattern scan (v4.0.5)
+---------------------------------------------------------------------------------------------------------------------------
+
+### Fixed
+
+- **Large binary file uploads still produced pattern matches that grew with file size.** The 4.0.3 density gate discards noise-prone heuristic matches in binary-dense regions, but non-gated patterns could still fire: in hundreds of megabytes of deflate output the probability of a short attack-shaped printable fragment (for example the LDAP paren-breakout ``)`` followed by ``(`` and ``!``) reaches certainty, and a fragment landing in a locally clean 64-character window is not gated, so every new large archive was a fresh roll of the dice (observed with a 373 MB zip containing an Acrobat installer matching the LDAP paren-breakout source). A multipart file-part payload whose binary artifact characters make up at least a fifth of it is now reduced to its printable runs before scanning: runs of tab, newline, carriage return, ASCII 0x20-0x7E and decoded non-ASCII printable characters, keeping only runs whose length reaches the new ``detection_binary_min_run_length`` field (default 16) and scanning each retained run as its own scan value, so no pattern can match across the binary bytes that separate two runs. Compressed data produces almost no 16-character printable runs, so a large archive yields no scannable content and the false-positive rate stops growing with file size. Text uploads, short and mostly-text payloads stay below the ratio and keep their full scan; text parts without a filename are never reduced; whole-body fallback scans are never reduced, so raw-body signature coverage (pickle opcodes at scan-window boundaries, UTF-16/32 payloads routed through the wide-encoding preprocessor, null-byte LDAP shapes) stays intact; file names, multipart field names and part headers are scanned regardless; and text genuinely embedded in a binary-dense upload (padded webshell code runs, scripts inside PDFs, stored paths in archives) forms runs past the threshold and is still detected. The tradeoff, deliberate and documented in the detection tuning guide, is that attack patterns whose printable characters are shorter than the run length, or split by embedded binary bytes, inside a binary-dense upload payload are not detected.
+
+___
+
 v4.0.4 (2026-09-23)
 -------------------
 

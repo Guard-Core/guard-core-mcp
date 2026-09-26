@@ -22,6 +22,32 @@ DOCS_ROOT = PACKAGE_ROOT / "_docs"
 VERSION_PATTERN = re.compile(r'^version\s*=\s*"([^"]+)"', re.MULTILINE)
 MARKDOWN_PATTERNS = ("*.md", "*.mdx")
 
+# The CI docs-drift job clones each repo as a sibling of this checkout
+# (../<package>), while the local ecosystem checkout nests them under
+# per-language directories next to this repo's parent; both layouts
+# resolve, siblings first. Tuple elements are joined after "../", so
+# they are relative to the checkout's parent directory.
+NESTED_LAYOUT = {
+    "fastapi-guard": ("..", "Python", "fastapi-guard"),
+    "guard-core": ("..", "Python", "guard-core"),
+    "guard-agent": ("..", "Python", "guard-agent"),
+    "guard-core-ts": ("..", "Typescript", "guard-core-ts"),
+}
+
+
+def find_repository(package: str) -> Path:
+    candidates = [Path("..") / package]
+    nested = NESTED_LAYOUT.get(package)
+    if nested is not None:
+        candidates.append(Path("..").joinpath(*nested))
+    for candidate in candidates:
+        if (candidate / "docs").is_dir():
+            return candidate
+    raise SystemExit(
+        f"{candidates[0]} not found; clone {package} next to this repo "
+        "(or under its ecosystem language directory)"
+    )
+
 
 def read_version(repository: Path) -> str:
     pyproject = repository / "pyproject.toml"
@@ -40,7 +66,7 @@ def read_version(repository: Path) -> str:
 
 
 def sync(package: str, site_url: str) -> dict[str, str]:
-    repository = Path("..") / package
+    repository = find_repository(package)
     source = repository / "docs" / DOCS_SUBDIRS.get(package, "")
     if not source.is_dir():
         raise SystemExit(f"{source} not found; clone {package} next to this repo")
