@@ -8,7 +8,7 @@ The PHP port of the guard-core security engine. Composer name `rennf93/guard-cor
 composer require rennf93/guard-core-php
 ```
 
-Tagged `v4.1.0` and on Packagist, so a plain `composer require` resolves it; no VCS repository block or dev stability is needed.
+Tagged `v4.2.0` and on Packagist, so a plain `composer require` resolves it; no VCS repository block or dev stability is needed.
 
 composer.json carries no `version` field (the tag carries it).
 
@@ -20,7 +20,7 @@ composer.json carries no `version` field (the tag carries it).
 
 ## Conformance
 
-`composer conformance` runs `bin/conformance.php` over the vendored spec 4.0.3 corpus (184 cases across 12 suites).
+`composer conformance` runs `bin/conformance.php` (detect) and `bin/conformance_pipeline.php` (pipeline) over the vendored spec 4.1.0 corpus in `conformance/guard-core-spec-4.1.0/` (219 cases across 17 suites).
 
 ## Footguns
 
