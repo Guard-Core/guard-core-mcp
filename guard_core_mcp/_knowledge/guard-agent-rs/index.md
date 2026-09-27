@@ -1,6 +1,6 @@
 # guard-agent-rs
 
-The Rust telemetry agent for the Guard ecosystem. Crate `guard-agent-rs` 3.0.2, edition 2024, MSRV 1.92. Standalone: it does not depend on guard-core-engine (stack: reqwest with rustls, tokio, hmac, sha2, flate2, optional redis behind the `persistence` feature).
+The Rust telemetry agent for the Guard ecosystem. Crate `guard-agent-rs` 3.1.0, edition 2024, MSRV 1.92. Standalone: it does not depend on guard-core-engine (stack: reqwest with rustls, tokio, hmac, sha2, flate2, optional redis behind the `persistence` feature).
 
 ## Install
 
@@ -10,7 +10,7 @@ cargo add guard-agent-rs
 cargo add guard-agent-rs --features persistence
 ```
 
-Tagged `v3.0.2` and on crates.io, so `cargo add` resolves it.
+Tagged `v3.1.0` and on crates.io, so `cargo add` resolves it.
 
 ## Setup
 

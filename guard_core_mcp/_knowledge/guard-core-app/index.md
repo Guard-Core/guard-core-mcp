@@ -1,6 +1,6 @@
 # guard-core-app (SaaS ingestion contract)
 
-The SaaS platform (api.guard-core.com) that receives telemetry from every Guard agent. The contract below is verified against `backend/guard-core-api/guard_core_api/api/routers/telemetry_router.py` and its middleware/services. The repo tags by calendar date (latest at time of writing: 2026.09.24); AGENTS.md and CLAUDE.md exist, there is no SKILL.md.
+The SaaS platform (api.guard-core.com) that receives telemetry from every Guard agent. The contract below is verified against `backend/guard-core-api/guard_core_api/api/routers/telemetry_router.py` and its middleware/services. The repo tags by calendar date (latest at time of writing: 2026.09.24, unchanged in this train); AGENTS.md and CLAUDE.md exist, there is no SKILL.md.
 
 ## Endpoints
 

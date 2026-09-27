@@ -1,6 +1,6 @@
 # guard-agent-ts
 
-The TypeScript telemetry agent for the Guard ecosystem. npm package `guardagent` (not scoped), version 3.0.2, Node >= 20, dual ESM/CJS via tsup, optional peer `ioredis ^5.0.0` for crash-recovery persistence.
+The TypeScript telemetry agent for the Guard ecosystem. npm package `guardagent` (not scoped), version 3.1.0, Node >= 20, dual ESM/CJS via tsup, optional peer `ioredis ^5.0.0` for crash-recovery persistence.
 
 ## Install
 
@@ -9,7 +9,7 @@ pnpm add guardagent
 pnpm add ioredis   # optional: crash-recovery persistence
 ```
 
-Tagged `v3.0.2` with the npm publish already run, so `pnpm add` resolves it.
+Tagged `v3.1.0` with the npm publish already run, so `pnpm add` resolves it.
 
 ## Setup
 

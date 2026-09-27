@@ -5,10 +5,10 @@ The Go telemetry agent for the Guard ecosystem. Module `github.com/rennf93/guard
 ## Install
 
 ```sh
-go get github.com/rennf93/guard-agent-go/v3@v3.0.2
+go get github.com/rennf93/guard-agent-go/v3@v3.1.0
 ```
 
-Tagged `v3.0.2`; the `Version` constant in `version.go` matches the tag. The module path carries the `/v3` major suffix, so installs must use it.
+Tagged `v3.1.0`; the `Version` constant in `version.go` matches the tag. The module path carries the `/v3` major suffix, so installs must use it.
 
 ## Setup
 
@@ -17,6 +17,8 @@ Tagged `v3.0.2`; the `Version` constant in `version.go` matches the tag. The mod
 ## Delivery semantics
 
 At-least-once handshake (drain, send, confirm-or-requeue in original order). 429 honors `Retry-After` (60s default, 300s cap). 413 splits the batch recursively in half. 400/404/422 are permanent drops. 401/403/5xx/network errors back off exponentially behind a circuit breaker (5 failures in 60s, half-open probe). `Stop` performs one final flush that bypasses backoff gates. Redis persistence fails open: writes pause 30s after 3 consecutive failures.
+
+The 3.1.0 parity surface adds dynamic-rules polling (`dynamic_rules.go`) with local rate limiters and auto-ban, sensitive-header redaction and optional AES-256-GCM encrypted ingest, matching the other four ports.
 
 ## Wire contract
 

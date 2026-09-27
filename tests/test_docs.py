@@ -64,7 +64,7 @@ def test_search_covers_the_knowledge_corpus() -> None:
 
 
 def test_search_can_be_scoped_to_one_knowledge_package() -> None:
-    results = search_docs("engine_commit", package="guard-core-go")["results"]
+    results = search_docs("spec_version", package="guard-core-go")["results"]
 
     assert results
     assert {result["package"] for result in results} == {"guard-core-go"}

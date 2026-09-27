@@ -10,6 +10,20 @@ Release Notes
 
 ___
 
+v1.3.0 (2026-09-27)
+-------------------
+
+The parity train closeout: the registry reflects the shipped 4.2.0/3.1.0 ecosystem (v1.3.0)
+--------------------------------------------------------------------------------------------
+
+- **Changed** - The `ecosystem` registry records the released 4.2.0 parity train for every engine: guard-core 4.2.0 (PyPI, head `45b16088` recorded in the conformance block), guard-core-go v4.2.0 (tag `fdf15562`, Go module proxy), guard-core-php 4.2.0 (Packagist, head `388d4d1e`), @guardcore/core 4.2.0 (all five npm packages, head `72348cb4`), and guard-core-rs/guard-core-engine 4.2.0 (crates.io, head `84ba8907`).
+- **Changed** - The conformance block tracks the 4.2.0 corpus truthfully: spec 4.1.0, 219 cases across 17 suites (the 12 detect suites, 184 cases, plus the 5 new pipeline suites - ip_control 12, rate_limits 5, detection_response 8, headers_cors 7, behavior_rules 3), and the interop line moves from 82/82 to 106/106 (the exempt_ips phases included).
+- **Changed** - Every adapter pin moves to its released 1.2.0/4.2.0 version: the Go adapters (nethttp-guard, gin-guard, echo-guard, fiber-guard) v1.2.0 over guard-core-go v4.2.0, the PHP adapters v1.2.0 over guard-core-php ^4.2.0, the Rust adapters 1.2.0 over guard-core-engine 4.2.0 on crates.io, and the TypeScript packages (@guardcore/express, fastify, hono, nestjs) 4.2.0. The Python adapters are unchanged (fastapi-guard 8.0.2, flaskapi-guard 4.3.2, djapi-guard 4.3.2, tornadoapi-guard 1.0.0).
+- **Changed** - The telemetry agent pins move to 3.1.0 across all five languages (guard-agent on PyPI, guardagent on npm, guard-agent-go, guard-agent-php on Packagist, guard-agent-rs on crates.io); the semantics lines record the 3.1.0 agent feature-parity surface (dynamic-rules polling with local rate limiters and auto-ban, sensitive-header redaction, optional AES-256-GCM encrypted ingest) and the pre-3.0.2 compressed-signature quirk note is kept.
+- **Changed** - The guard-core-rs registry and knowledge entries carry the honest known gaps (behavior-rule storage is in-memory only with no Redis-backed distributed mode, and the route ip_blacklist-before-ip_whitelist evaluation order diverges from the reference), both documented in the port's docs/configuration.md.
+- **Changed** - The hand-written `_knowledge` corpus re-syncs to those releases (guard-core-go/php/rs 4.2.0 with the spec-4.1.0 corpus, the four agents at 3.1.0) and the vendored `_docs` re-syncs to guard-core 4.2.0, guard-agent 3.1.0, fastapi-guard 8.0.2 and guard-core-ts 4.2.0 via `scripts/sync_docs.py`.
+- **Changed** - `uv.lock` moves guard-core to 4.2.0 and guard-agent to 3.1.0; version 1.3.0 closes out the 4.2.0/3.1.0 parity release train this server documents.
+
 v1.2.0 (2026-09-26)
 -------------------
 

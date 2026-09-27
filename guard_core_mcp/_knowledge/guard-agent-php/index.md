@@ -8,7 +8,7 @@ The PHP telemetry agent for the Guard ecosystem. Composer name `rennf93/guard-ag
 composer require rennf93/guard-agent-php
 ```
 
-Tagged `v3.0.2` and on Packagist, so plain composer resolves it; composer.json carries no `version` field, the version lives in `RenzoFranceschini\GuardAgent\Version::VERSION` (3.0.2) with `USER_AGENT = 'guard-agent/3.0.2'`.
+Tagged `v3.1.0` and on Packagist, so plain composer resolves it; composer.json carries no `version` field, the version lives in `RenzoFranceschini\GuardAgent\Version::VERSION` (3.1.0) with `USER_AGENT = 'guard-agent/3.1.0'`.
 
 ## Setup
 
@@ -35,7 +35,7 @@ Default drop overflow, Retry-After handling, permanent-rejection classification,
 
 ## Wire contract
 
-`POST {endpoint}/api/v1/events`, `/api/v1/metrics`, `/api/v1/status` with `User-Agent: guard-agent/3.0.2`, `X-API-Key`, `X-Agent-Install-Id`, optional `X-Project-Id`, and optional `X-Payload-Signature: v1=<hex>`, where the HMAC-SHA256 covers the **uncompressed** JSON body (the server decompresses gzip before verifying). The 413 cap is 262144 bytes decompressed.
+`POST {endpoint}/api/v1/events`, `/api/v1/metrics`, `/api/v1/status` with `User-Agent: guard-agent/3.1.0`, `X-API-Key`, `X-Agent-Install-Id`, optional `X-Project-Id`, and optional `X-Payload-Signature: v1=<hex>`, where the HMAC-SHA256 covers the **uncompressed** JSON body (the server decompresses gzip before verifying). The 413 cap is 262144 bytes decompressed.
 
 ## Footguns
 
