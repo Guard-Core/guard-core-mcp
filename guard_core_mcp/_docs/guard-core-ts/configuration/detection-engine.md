@@ -135,36 +135,61 @@ monitor.registerAnomalyCallback((anomaly) => {
 });
 ```
 
-## 75 Pattern Categories
+## Pattern Table
 
-The engine ships with 75 built-in patterns across 15 attack categories:
+The engine ships with the 157-row spec 4.1.0 pattern table across 19 categories (the canonical sources are carried verbatim and verified by the spec 4.1.0 conformance corpus, 219 cases):
 
 | Category | Patterns | Contexts |
 |----------|----------|----------|
-| XSS | 8 | query_param, header, request_body |
-| SQL Injection | 9 | query_param, request_body |
-| Directory Traversal | 5 | url_path, query_param, request_body |
-| Command Injection | 5 | query_param, request_body |
-| File Inclusion | 2 | url_path, query_param, request_body |
-| LDAP Injection | 3 | query_param, request_body |
-| XML/XXE | 3 | header, request_body |
-| SSRF | 2 | query_param, request_body |
-| NoSQL Injection | 2 | query_param, request_body |
-| File Upload | 1 | header, request_body |
-| Path Traversal (encoded) | 1 | url_path, query_param, request_body |
-| Template Injection | 2 | query_param, request_body |
-| HTTP Splitting | 1 | header, query_param, request_body |
-| Sensitive Files | 5 | url_path, request_body |
-| CMS Probing | 4 | url_path, request_body |
-| Reconnaissance | 22 | url_path |
+| Command Injection | 23 | header, query_param, request_body, url_path |
+| SQL Injection | 22 | header, query_param, request_body, url_path |
+| Reconnaissance | 21 | query_param, request_body, url_path |
+| Deserialization | 13 | header, query_param, request_body, url_path |
+| XSS | 9 | header, query_param, request_body, url_path |
+| LDAP Injection | 9 | header, query_param, request_body, url_path |
+| Sensitive Files | 8 | query_param, request_body, url_path |
+| Directory Traversal | 7 | header, query_param, request_body, url_path |
+| CMS Probing | 7 | query_param, request_body, url_path |
+| NoSQL Injection | 6 | header, query_param, request_body, url_path |
+| Template Injection | 6 | header, query_param, request_body, url_path |
+| SSRF | 5 | header, query_param, request_body, url_path |
+| File Inclusion | 4 | header, query_param, request_body, url_path |
+| XML/XXE | 4 | header, query_param, request_body, url_path |
+| File Upload | 4 | header, query_param, request_body |
+| Prototype Pollution | 4 | header, query_param, request_body, url_path |
+| Code Injection | 3 | header, query_param, request_body, url_path |
+| Path Traversal (encoded) | 1 | header, query_param, request_body, url_path |
+| HTTP Splitting | 1 | header, query_param, request_body, url_path |
 
 Each pattern is only checked against relevant contexts -- a SQL injection pattern is not tested against URL paths, and reconnaissance patterns are not tested against request bodies.
+
+## Scan Deadlines and Pattern Quarantine
+
+Every per-pattern scan on the JS-native regex path runs under a verdict deadline (`detectionCompilerTimeout`, deployment default 2.0 s, mirroring the reference `detection_compiler_timeout`). A JS `RegExp` cannot be interrupted mid-execution, so the deadline is enforced as a deadline-bounded synchronous fallback with documented detection limits:
+
+- A scan that overshoots the deadline still runs to completion, but its verdict is discarded (no match is reported), the timeout is recorded, and the pattern source appears in the detection result's `timeouts` list. The detection limit: a pattern that massively exceeds the deadline still blocks its thread for the overshoot duration. Only a worker-based path (Node `worker_threads`, used by `PatternCompiler.safeMatch`) can hard-interrupt a regex.
+- The reference's second arm applies as well: a scan that completes with no verdict but whose measured time reached 0.9x the deadline is the same timeout verdict (the reference `_suspatterns_regex.py` flips `timeout_occurred` under `not matches and elapsed >= 0.9 * compiler.default_timeout`), so a scan that crawls home just under the wire fails closed too.
+- The timeout verdict itself is detection evidence: it contributes a `pattern_timeout` threat with the pattern's weight (so repeated timeouts feed the threat score) and fires a `pattern_anomaly_timeout` event through `PerformanceMonitor`.
+- **Consecutive-timeout quarantine** (the reference's 4-consecutive-timeout pool replacement, mapped to a worker-less runtime): a pattern whose scans time out 4 consecutive times (the reference scan-pool size) is pulled from the active scan pool for a 60 s cooldown window. While quarantined it is not scanned and records nothing; after the cooldown it is re-admitted automatically. Any successful scan resets a pattern's consecutive-timeout counter. Quarantine and release are reported as `pattern_pool_quarantined` / `pattern_pool_released` events.
+
+### Worker-thread scan execution (`detectionScanWorkerPool`)
+
+Set `detectionScanWorkerPool: true` to move the unbounded regex work off the main thread, the way the reference runs every timeout-guarded scan on its shared 4-worker thread pool (compiler.py `shared_regex_executor`). Default `false`: the deadline-bounded synchronous fallback above stays the default execution mode, and worker-less targets (edge runtimes) have no pool to run.
+
+With the knob on:
+
+- Each plain full-content pattern scan dispatches the candidate match loop to a bounded pool of exactly 4 worker threads (the reference `_SHARED_EXECUTOR_MAX_WORKERS`). The worker answers with candidate matches only; candidate validation (per-pattern rejection validators, binary-density gates) stays on the calling thread, so a scan's verdict is byte-identical to the inline path - only the preemption changes. Patterns whose scan logic is engine-side (windowed finders, structural scan matchers, scan windows) stay on the inline path; their verdicts are identical either way.
+- The verdict deadline terminates the worker mid-`RegExp` (hard interrupt): the result is abandoned, the calling thread was never blocked, and a fresh worker takes the terminated one's slot, so the pool stays at its bound.
+- Replacement mirrors the reference `report_scan_timeout`: any completed scan resets the consecutive-timeout counter, and 4 consecutive timeouts replace the WHOLE pool (every worker terminated and respawned, with the same warning the reference logs), because a slow pattern may have poisoned every worker.
+- On runtimes without `worker_threads`, the engine logs a single warning and keeps every scan on the inline deadline path.
+
+All other timeout semantics (the `pattern_timeout` threat, the 0.9x slow-completion arm, the `timeouts` result list, the anomaly events) are identical in both modes.
 
 ## Tuning Knobs
 
 | Config Field | Default | Effect |
 |-------------|---------|--------|
-| `detectionCompilerTimeout` | `2.0` | Seconds before regex compilation times out |
+| `detectionCompilerTimeout` | `2.0` | Per-scan verdict deadline in seconds (a scan that overshoots it is discarded as a timeout and heads toward quarantine) |
 | `detectionMaxContentLength` | `10000` | Max characters to scan per request |
 | `detectionPreserveAttackPatterns` | `true` | Keep attack regions when truncating |
 | `detectionSemanticThreshold` | `0.7` | Minimum semantic score to flag as threat |
@@ -172,6 +197,7 @@ Each pattern is only checked against relevant contexts -- a SQL injection patter
 | `detectionSlowPatternThreshold` | `0.1` | Seconds before a pattern is "slow" |
 | `detectionMonitorHistorySize` | `1000` | Metrics history buffer size |
 | `detectionMaxTrackedPatterns` | `1000` | Max patterns tracked by monitor |
+| `detectionScanWorkerPool` | `false` | Opt-in worker-thread scan execution: the deadline terminates the worker (hard interrupt) instead of letting the scan block the main thread; the pool is bounded at 4 workers and replaced after 4 consecutive timeouts |
 
 **Lowering `detectionSemanticThreshold`** catches more attacks but increases false positives.
 **Raising `detectionMaxContentLength`** scans more of large request bodies but increases CPU time.
