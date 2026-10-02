@@ -19,11 +19,11 @@ RUN pip install uv
 
 COPY pyproject.toml uv.lock* README.md /app/
 
+COPY guard_core_mcp/ /app/guard_core_mcp/
+
 RUN uv sync --extra hosted --frozen --compile-bytecode
 
 ENV PATH="/app/.venv/bin:$PATH"
-
-COPY guard_core_mcp/ /app/guard_core_mcp/
 
 RUN useradd --system --home /app --shell /usr/sbin/nologin guard \
     && chown -R guard:guard /app
