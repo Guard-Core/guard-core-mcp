@@ -33,6 +33,12 @@ stop:
 	@docker compose down --rmi all --remove-orphans -v
 	@docker system prune -f
 
+# Run the hosted HTTP server locally (supply the GUARD_CORE_MCP_* env vars)
+.PHONY: run-http
+run-http:
+	@uv run guard-core-mcp-http
+	@find . | grep -E "(__pycache__|\.pyc|\.pyo|\.pytest_cache|\.ruff_cache|\.mypy_cache)" | xargs rm -rf
+
 # Lint code
 .PHONY: lint
 lint:
@@ -219,13 +225,13 @@ serve-docs:
 # Lint documentation
 .PHONY: lint-docs
 lint-docs:
-	@uv run pymarkdownlnt scan -r -e .venv -e .git -e .github -e guard_core_mcp -e tests -e .claude -e CLAUDE.md -e .cursor -e .kiro .
+	@uv run pymarkdownlnt scan -r -e .venv -e .git -e .github -e guard_core_mcp -e tests -e .claude -e CLAUDE.md -e .cursor -e .kiro -e plugin .
 	@find . | grep -E "(__pycache__|\.pyc|\.pyo|\.pytest_cache|\.ruff_cache|\.mypy_cache)" | xargs rm -rf
 
 # Fix documentation
 .PHONY: fix-docs
 fix-docs:
-	@uv run pymarkdownlnt fix -r -e .venv -e .git -e .github -e guard_core_mcp -e tests -e .claude -e CLAUDE.md -e .cursor -e .kiro .
+	@uv run pymarkdownlnt fix -r -e .venv -e .git -e .github -e guard_core_mcp -e tests -e .claude -e CLAUDE.md -e .cursor -e .kiro -e plugin .
 	@find . | grep -E "(__pycache__|\.pyc|\.pyo|\.pytest_cache|\.ruff_cache|\.mypy_cache)" | xargs rm -rf
 
 # Prune

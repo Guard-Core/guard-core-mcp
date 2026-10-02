@@ -1184,11 +1184,14 @@ wheels = [
 
 [[package]]
 name = "guard-core-mcp"
-version = "1.3.0"
+version = "1.4.0"
 source = { editable = "." }
 dependencies = [
     { name = "mcp" },
     { name = "pydantic" },
+    { name = "pyjwt", extra = ["crypto"] },
+    { name = "starlette" },
+    { name = "uvicorn" },
 ]
 
 [package.optional-dependencies]
@@ -1215,14 +1218,22 @@ dev = [
     { name = "vulture" },
     { name = "xenon" },
 ]
+hosted = [
+    { name = "fastapi-guard" },
+    { name = "guard-agent" },
+    { name = "guard-core" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "bandit", extras = ["toml"], marker = "extra == 'dev'" },
     { name = "deptry", marker = "extra == 'dev'" },
     { name = "fastapi-guard", marker = "extra == 'dev'" },
+    { name = "fastapi-guard", marker = "extra == 'hosted'" },
     { name = "guard-agent", marker = "extra == 'dev'" },
+    { name = "guard-agent", marker = "extra == 'hosted'" },
     { name = "guard-core", marker = "extra == 'dev'" },
+    { name = "guard-core", marker = "extra == 'hosted'" },
     { name = "mcp", specifier = ">=2" },
     { name = "mkdocs", marker = "extra == 'dev'" },
     { name = "mkdocs-material", marker = "extra == 'dev'" },
@@ -1232,6 +1243,7 @@ requires-dist = [
     { name = "pip-audit", marker = "extra == 'dev'" },
     { name = "pre-commit", marker = "extra == 'dev'" },
     { name = "pydantic" },
+    { name = "pyjwt", extras = ["crypto"] },
     { name = "pymarkdownlnt", marker = "extra == 'dev'" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pytest-asyncio", marker = "extra == 'dev'" },
@@ -1239,10 +1251,12 @@ requires-dist = [
     { name = "radon", marker = "extra == 'dev'" },
     { name = "ruff", marker = "extra == 'dev'" },
     { name = "safety", marker = "extra == 'dev'" },
+    { name = "starlette" },
+    { name = "uvicorn" },
     { name = "vulture", marker = "extra == 'dev'" },
     { name = "xenon", marker = "extra == 'dev'" },
 ]
-provides-extras = ["dev"]
+provides-extras = ["hosted", "dev"]
 
 [[package]]
 name = "h11"
