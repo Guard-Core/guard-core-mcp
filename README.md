@@ -37,6 +37,10 @@ claude mcp add guard-core -- uv run guard-core-mcp
 
 The ecosystem tools are pure data, so they work everywhere, with or without the Python libraries installed. Every quick-start snippet is copied verbatim from the sibling repo READMEs, and `release_status` tells you honestly whether a package is `published`, `tagged`, or still `untagged` (source, `main`, or path dependency only).
 
+## ChatGPT plugin
+
+The same tools are also served remotely at `https://mcp.guard-core.com/mcp` and packaged as a ChatGPT plugin: sign in with a guard-core account, and ChatGPT can validate configs, search the docs and run payloads through the hosted detection engine (the latest published releases, not your local versions). The packaging lives in [`plugin/`](plugin/), the hosted server in `guard_core_mcp.hosting`, and the full story (env vars, Docker image, developer-mode test loop, submission checklist) in the [ChatGPT plugin guide](https://guard-core-mcp.guard-core.com/latest/chatgpt-plugin/).
+
 ## Licence
 
 MIT

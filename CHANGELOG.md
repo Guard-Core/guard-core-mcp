@@ -3,6 +3,19 @@ Release Notes
 
 ___
 
+v1.4.0 (2026-10-02)
+-------------------
+
+Guard Core for ChatGPT: the hosted plugin release (v1.4.0)
+----------------------------------------------------------
+
+- **Added** - Hosted streamable-http serving of the same nine tools: `guard_core_mcp/hosting.py` wraps the MCP app in a pure-ASGI RS256 bearer-auth middleware (PyJWKClient URL mode, or an inline JWKS for tests and air-gapped runs), serves the RFC 9728 protected-resource metadata with a discovery hint on every 401, and adds CORS; the new `guard-core-mcp-http` entry point runs it under uvicorn configured by the `GUARD_CORE_MCP_*` environment variables.
+- **Added** - The `hosted` extra installs guard-core, fastapi-guard and guard-agent, so the hosted `versions`, `validate_config` and `check_payload` answers run the lockfile-pinned latest releases; `Dockerfile.hosted` packages it as a non-root container and the `release-docker` workflow publishes `ghcr.io/rennf93/guard-core-mcp` images on release.
+- **Added** - `plugin/` packages the ChatGPT directory submission: `plugin.json` with the `com.openai` presentation metadata (privacy policy, terms, brand color, default prompts), `mcp.json` pointing at `https://mcp.guard-core.com/mcp`, a `skills/guard-core/SKILL.md` tool-selection skill, and generated icon assets.
+- **Added** - `docs/chatgpt-plugin.md` documents the architecture (ChatGPT signs in with a guard-core account through the api.guard-core.com OAuth 2.1 authorization server, then talks to the resource server at mcp.guard-core.com), the developer-mode test loop, local development against a local API, and the pre-submission checklist; the e2e suite drives the real HTTP server with throwaway RSA keys, including a full initialize/list/call session.
+
+___
+
 v1.3.0 (2026-09-27)
 -------------------
 

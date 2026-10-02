@@ -1,0 +1,45 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "guard-core",
+  "version": "0.1.0",
+  "description": "Guard Core security tools: validate fastapi-guard and guard-core configs, search the Guard documentation, resolve adapters across five languages, and run real attack payloads through the live detection engine.",
+  "author": {
+    "name": "Renzo Franceschini",
+    "url": "https://github.com/rennf93"
+  },
+  "homepage": "https://guard-core.com",
+  "repository": "https://github.com/rennf93/guard-core-mcp",
+  "license": "MIT",
+  "keywords": [
+    "security",
+    "fastapi",
+    "guard-core",
+    "waf",
+    "mcp"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Guard Core",
+        "shortDescription": "Validate Guard security configs and test attack payloads against the real detection engine.",
+        "longDescription": "Guard Core answers security questions about the Guard ecosystem from the libraries themselves instead of from memory. Validate a fastapi-guard, guard-core or guard-agent config and catch the unknown or misspelled keys pydantic silently ignores, look up what a setting does and what it defaults to, search and read the Guard documentation, run a request through the real penetration-detection engine to see whether it would be blocked and by which pattern, and resolve install and integration steps for any of the five-language, twenty-adapter Guard matrix. Config validation and payload checks run against the latest published releases hosted by the Guard Core platform.",
+        "developerName": "Guard Core",
+        "category": "Developer Tools",
+        "capabilities": [
+          "Read"
+        ],
+        "websiteURL": "https://guard-core.com",
+        "privacyPolicyURL": "https://guard-core.com/privacy",
+        "termsOfServiceURL": "https://guard-core.com/terms",
+        "defaultPrompt": [
+          "Would fastapi-guard block this request: POST /login with body user=admin' OR 1=1--?",
+          "Is this SecurityConfig valid, and are any keys misspelled so they are silently ignored?",
+          "Which Guard package protects a Gin web app, and how do I wire its telemetry agent?"
+        ],
+        "brandColor": "#2563eb",
+        "composerIcon": "./assets/composer-icon.png",
+        "logo": "./assets/logo.png"
+      }
+    }
+  }
+}
