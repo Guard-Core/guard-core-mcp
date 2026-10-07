@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://rennf93.github.io/guard-core-mcp/latest/1.4.1/</loc>
+         <loc>https://guard-core.github.io/guard-core-mcp/latest/1.4.1/</loc>
          <lastmod>2026-10-07</lastmod>
     </url>
     <url>
-         <loc>https://rennf93.github.io/guard-core-mcp/latest/1.4.1/chatgpt-plugin/</loc>
+         <loc>https://guard-core.github.io/guard-core-mcp/latest/1.4.1/chatgpt-plugin/</loc>
          <lastmod>2026-10-07</lastmod>
     </url>
     <url>
-         <loc>https://rennf93.github.io/guard-core-mcp/latest/1.4.1/installation/</loc>
+         <loc>https://guard-core.github.io/guard-core-mcp/latest/1.4.1/installation/</loc>
          <lastmod>2026-10-07</lastmod>
     </url>
     <url>
-         <loc>https://rennf93.github.io/guard-core-mcp/latest/1.4.1/release-notes/</loc>
+         <loc>https://guard-core.github.io/guard-core-mcp/latest/1.4.1/release-notes/</loc>
          <lastmod>2026-10-07</lastmod>
     </url>
     <url>
-         <loc>https://rennf93.github.io/guard-core-mcp/latest/1.4.1/tools/</loc>
+         <loc>https://guard-core.github.io/guard-core-mcp/latest/1.4.1/tools/</loc>
          <lastmod>2026-10-07</lastmod>
     </url>
 </urlset>
