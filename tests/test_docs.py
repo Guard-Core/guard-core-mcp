@@ -11,7 +11,9 @@ def test_search_finds_a_page_and_cites_its_url() -> None:
     results = search_docs("rate limiting")["results"]
 
     assert results
-    assert results[0]["url"].startswith(("https://guard-core.github.io/", "https://rennf93.github.io/"))
+    assert results[0]["url"].startswith(
+        ("https://guard-core.github.io/", "https://rennf93.github.io/")
+    )
     assert results[0]["path"].endswith(".md")
     assert results[0]["snippet"]
 
