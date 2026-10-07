@@ -3,6 +3,21 @@ Release Notes
 
 ___
 
+v1.4.1 (2026-10-07)
+-------------------
+
+v1.4.1 (2026-10-07)
+-------------------
+
+The plugin polish release: the hosted Docker image build fix, the official plugin icon set, and the CI action bumps (v1.4.1)
+---------------------------------------------------------------------------------------------------------------------------
+
+- **Fixed** - The hosted Docker image installs the package only after its source is present, unbreaking the image build that reached for the package before the sources landed (cbd97c4).
+- **Changed** - The plugin package ships the official Guard Core logo instead of the placeholder, plus a 256px palette-optimized composer icon for the ChatGPT directory (d0d9d9f, 335e755).
+- **Changed** - CI action bumps: docker/build-push-action 6 -> 7, docker/setup-buildx-action 3 -> 4, docker/login-action 3 -> 4, github/codeql-action 4.38.1 -> 4.38.2 (#38, #39, #40, #41).
+
+___
+
 v1.4.0 (2026-10-02)
 -------------------
 
