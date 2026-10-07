@@ -43,7 +43,7 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.tag }}
-            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/guard-core/guard-core-mcp:${{ steps.version.outputs.tag }}
+            ghcr.io/guard-core/guard-core-mcp:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
