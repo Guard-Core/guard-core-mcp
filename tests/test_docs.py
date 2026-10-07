@@ -31,10 +31,10 @@ def test_index_pages_collapse_to_their_directory_url() -> None:
 
     assert (
         document_url("guard-core", "index.md")
-        == "https://rennf93.github.io/guard-core/latest/"
+        == "https://guard-core.github.io/guard-core/latest/"
     )
     assert document_url("guard-core", "api/models.md") == (
-        "https://rennf93.github.io/guard-core/latest/api/models/"
+        "https://guard-core.github.io/guard-core/latest/api/models/"
     )
 
 
@@ -42,7 +42,7 @@ def test_get_doc_returns_the_page_text() -> None:
     result = get_doc("guard-core", "index.md")
 
     assert result["content"].strip()
-    assert result["url"] == "https://rennf93.github.io/guard-core/latest/"
+    assert result["url"] == "https://guard-core.github.io/guard-core/latest/"
 
 
 def test_get_doc_rejects_path_traversal() -> None:
