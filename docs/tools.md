@@ -227,7 +227,7 @@ search_docs("rate limiting", "fastapi-guard", limit=3)
       "path": "tutorial/decorators/rate-limiting.md",
       "heading": "",
       "snippet": "description: Learn how to use rate limiting decorators for custom request rate controls and geographic rate limiting",
-      "url": "https://rennf93.github.io/fastapi-guard/latest/tutorial/decorators/rate-limiting/",
+      "url": "https://guard-core.github.io/fastapi-guard/latest/tutorial/decorators/rate-limiting/",
       "score": 115
     },
     {
@@ -235,7 +235,7 @@ search_docs("rate limiting", "fastapi-guard", limit=3)
       "path": "release-notes.md",
       "heading": "",
       "snippet": "- **Geographic rate limit check**: Fixed geo-based rate limiting by implementing the missing `_check_geo_rate_limit` method in `RateLimitCheck`. Previously, geo rate limits configured via the `@security.geo_rate_limit` decorator were stored but never enforced. The rate limit pipeline now correctly e",
-      "url": "https://rennf93.github.io/fastapi-guard/latest/release-notes/",
+      "url": "https://guard-core.github.io/fastapi-guard/latest/release-notes/",
       "score": 92
     },
     {
@@ -243,7 +243,7 @@ search_docs("rate limiting", "fastapi-guard", limit=3)
       "path": "tutorial/ip-management/rate-limiter.md",
       "heading": "",
       "snippet": "Rate limiting is a crucial security feature that protects your API from abuse, DoS attacks, and excessive usage. FastAPI Guard provides a robust rate limiting system through the dedicated `RateLimitManager` class.",
-      "url": "https://rennf93.github.io/fastapi-guard/latest/tutorial/ip-management/rate-limiter/",
+      "url": "https://guard-core.github.io/fastapi-guard/latest/tutorial/ip-management/rate-limiter/",
       "score": 69
     }
   ]
@@ -280,7 +280,7 @@ get_doc("fastapi-guard", "installation.md")
 {
   "package": "fastapi-guard",
   "path": "installation.md",
-  "url": "https://rennf93.github.io/fastapi-guard/latest/installation/",
+  "url": "https://guard-core.github.io/fastapi-guard/latest/installation/",
   "content": "---\n\ntitle: Installation - FastAPI Guard\ndescription: Learn how to install and set up FastAPI Guard, a comprehensive security middleware for FastAPI applications\nkeywords: fastapi guard installation, python security middleware, fastapi security setup\n---\n\nInstallation\n============\n\nInstall `fastapi-..."
 }
 ```

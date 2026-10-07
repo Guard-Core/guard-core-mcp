@@ -1,6 +1,6 @@
 site_name: Guard Core MCP
 site_description: MCP server for the Guard ecosystem - config validation, docs search and live threat detection for fastapi-guard, guard-core and guard-agent.
-site_url: https://rennf93.github.io/guard-core-mcp/latest/
+site_url: https://guard-core.github.io/guard-core-mcp/latest/
 repo_name: rennf93/guard-core-mcp
 repo_url: https://github.com/rennf93/guard-core-mcp
 edit_uri: edit/master/docs/
@@ -99,7 +99,7 @@ extra:
     - property: og:description
       content: MCP server for the Guard ecosystem - config validation, docs search and live threat detection for fastapi-guard, guard-core and guard-agent.
     - property: og:image
-      content: https://rennf93.github.io/guard-core-mcp/latest/assets/guard_core_logo.svg
+      content: https://guard-core.github.io/guard-core-mcp/latest/assets/guard_core_logo.svg
     - name: keywords
       content: mcp, model context protocol, fastapi-guard, guard-core, guard-agent, security, python, ai agents
 

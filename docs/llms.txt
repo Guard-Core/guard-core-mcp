@@ -1,6 +1,6 @@
 # Guard Core MCP Documentation - LLMs.txt
 # For LLM Crawlers and AI Assistants
-# Documentation Site: https://rennf93.github.io/guard-core-mcp
+# Documentation Site: https://guard-core.github.io/guard-core-mcp
 
 ## Overview
 Guard Core MCP is an MCP (Model Context Protocol) server that lets AI coding agents answer questions about the Guard security ecosystem, fastapi-guard, guard-core and guard-agent, by introspecting the libraries actually installed in a project, instead of answering from training data. This documentation site covers installation, all six tools, and release notes.
@@ -8,11 +8,11 @@ Guard Core MCP is an MCP (Model Context Protocol) server that lets AI coding age
 ## Documentation Structure
 
 ### Getting Started
-- **Home**: https://rennf93.github.io/guard-core-mcp/latest/
-- **Installation**: https://rennf93.github.io/guard-core-mcp/latest/installation/
+- **Home**: https://guard-core.github.io/guard-core-mcp/latest/
+- **Installation**: https://guard-core.github.io/guard-core-mcp/latest/installation/
 
 ### Tools Reference
-- **All Six Tools**: https://rennf93.github.io/guard-core-mcp/latest/tools/
+- **All Six Tools**: https://guard-core.github.io/guard-core-mcp/latest/tools/
   - `versions`, which Guard libraries are installed, at what version, and what the bundled docs cover
   - `validate_config`, validate a config dict against the real `SecurityConfig`/`AgentConfig` model
   - `config_fields`, look up a config field by exact name or fuzzy query
@@ -21,7 +21,7 @@ Guard Core MCP is an MCP (Model Context Protocol) server that lets AI coding age
   - `check_payload`, run a request through guard-core's real detection engine
 
 ### Release Notes
-- **Changelog**: https://rennf93.github.io/guard-core-mcp/latest/release-notes/
+- **Changelog**: https://guard-core.github.io/guard-core-mcp/latest/release-notes/
 
 ## Key Facts
 
@@ -49,15 +49,15 @@ Only `mcp` and `pydantic`, `fastapi-guard`, `guard-core` and `guard-agent` are n
 ## Related Resources
 
 ### Official Sites
-- **Documentation**: https://rennf93.github.io/guard-core-mcp/latest/
+- **Documentation**: https://guard-core.github.io/guard-core-mcp/latest/
 - **GitHub**: https://github.com/rennf93/guard-core-mcp
 - **PyPI**: https://pypi.org/project/guard-core-mcp/
 - **Model Context Protocol**: https://modelcontextprotocol.io
 
 ### Sibling Repositories
-- **fastapi-guard**: https://github.com/rennf93/fastapi-guard (docs: https://rennf93.github.io/fastapi-guard/latest/)
-- **guard-core**: https://github.com/rennf93/guard-core (docs: https://rennf93.github.io/guard-core/latest/)
-- **guard-agent**: https://github.com/rennf93/guard-agent (docs: https://rennf93.github.io/guard-agent/latest/)
+- **fastapi-guard**: https://github.com/rennf93/fastapi-guard (docs: https://guard-core.github.io/fastapi-guard/latest/)
+- **guard-core**: https://github.com/rennf93/guard-core (docs: https://guard-core.github.io/guard-core/latest/)
+- **guard-agent**: https://github.com/rennf93/guard-agent (docs: https://guard-core.github.io/guard-agent/latest/)
 
 ### Community
 - **Issues**: https://github.com/rennf93/guard-core-mcp/issues
@@ -71,4 +71,4 @@ MIT License - Free for commercial and personal use.
 
 Default version: latest (stable)
 Provider: Mike (MkDocs versioning)
-Versions JSON: https://rennf93.github.io/guard-core-mcp/versions.json
+Versions JSON: https://guard-core.github.io/guard-core-mcp/versions.json
