@@ -8,7 +8,7 @@ REPOSITORIES = {
     "fastapi-guard": "https://guard-core.github.io/fastapi-guard/latest/",
     "guard-core": "https://guard-core.github.io/guard-core/latest/",
     "guard-agent": "https://guard-core.github.io/guard-agent/latest/",
-    "guard-core-ts": "https://guard-core.github.io/guard-core-ts/",
+    "guard-core-ts": "https://rennf93.github.io/guard-core-ts/",
 }
 
 # Repos whose markdown lives deeper than docs/ (an Astro Starlight site keeps
