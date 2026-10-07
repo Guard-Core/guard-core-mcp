@@ -5,9 +5,9 @@ import sys
 from pathlib import Path
 
 REPOSITORIES = {
-    "fastapi-guard": "https://rennf93.github.io/fastapi-guard/latest/",
-    "guard-core": "https://rennf93.github.io/guard-core/latest/",
-    "guard-agent": "https://rennf93.github.io/guard-agent/latest/",
+    "fastapi-guard": "https://guard-core.github.io/fastapi-guard/latest/",
+    "guard-core": "https://guard-core.github.io/guard-core/latest/",
+    "guard-agent": "https://guard-core.github.io/guard-agent/latest/",
     "guard-core-ts": "https://rennf93.github.io/guard-core-ts/",
 }
 
