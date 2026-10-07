@@ -3,6 +3,16 @@ Release Notes
 
 ___
 
+v1.4.2 (2026-10-07)
+-------------------
+
+The org-move docs refresh: the vendored documentation and its sources follow the Python family to the Guard-Core org (v1.4.2)
+----------------------------------------------------------------------------------------------------------------------------
+
+- **Changed** - The vendored `_docs` and its sync sources point at the Guard-Core org: `scripts/sync_docs.py` and the manifest now read the moved repos' Pages sites at `guard-core.github.io` (guard-core 4.3.1, guard-agent 3.2.1, fastapi-guard 8.0.2), with `guard-core-ts` staying on the legacy namespace until it transfers (#44, #45).
+- **Changed** - CI publishes to PyPI via OIDC trusted publishing (`pypa/gh-action-pypi-publish`, `environment: pypi`) instead of twine tokens, matching the PyPI trusted-publisher configuration; the release job now runs in the `pypi` environment.
+- **Fixed** - The `guard-core-ts` clone URL in CI keeps pointing at `rennf93/guard-core-ts` until the TypeScript wave moves, unbreaking the docs-drift gate.
+
 v1.4.1 (2026-10-07)
 -------------------
 
