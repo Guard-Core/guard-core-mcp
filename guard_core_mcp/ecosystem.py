@@ -1085,7 +1085,7 @@ def _python_adapter(
 ) -> AdapterInfo:
     return AdapterInfo(
         package=package,
-        repo=f"https://github.com/rennf93/{package}",
+        repo=f"https://github.com/Guard-Core/{package}",
         version=version,
         install=f"uv add {package}",
         release_status="published",
@@ -1104,7 +1104,7 @@ PY_ENTRY = LanguageEntry(
     label="Python",
     engine=EngineInfo(
         package="guard-core",
-        repo="https://github.com/rennf93/guard-core",
+        repo="https://github.com/Guard-Core/guard-core",
         version="4.2.0",
         install="uv add guard-core",
         release_status="published",
@@ -1151,7 +1151,7 @@ PY_ENTRY = LanguageEntry(
     ],
     agent=AgentInfo(
         package="guard-agent",
-        repo="https://github.com/rennf93/guard-agent",
+        repo="https://github.com/Guard-Core/guard-agent",
         version="3.1.0",
         install="uv add guard-agent",
         release_status="published",

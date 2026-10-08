@@ -1,8 +1,25 @@
 # Guard Core MCP
 
+<p align="center">
+  <a href="https://badge.fury.io/py/guard-core-mcp"><img src="https://badge.fury.io/py/guard-core-mcp.svg?cache=none&icon=si%3Apython&icon_color=%23008cb4" alt="PyPI version"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/ci.yml"><img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/release.yml"><img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/release.yml/badge.svg" alt="Release"></a>
+  <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/code-ql.yml"><img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/code-ql.yml/badge.svg" alt="CodeQL"></a>
+  <a href="https://guard-core.github.io/guard-core-mcp/"><img src="https://img.shields.io/badge/docs-mkdocs-blue" alt="Docs"></a>
+  <a href="https://pepy.tech/project/guard-core-mcp"><img src="https://pepy.tech/badge/guard-core-mcp" alt="Downloads"></a>
+</p>
+
+<p align="center">
+  <a href="https://guard-core.com">Website</a> &middot;
+  <a href="https://guard-core.github.io/guard-core-mcp/latest/">Docs</a> &middot;
+  <a href="https://playground.guard-core.com">Playground</a> &middot;
+  <a href="https://app.guard-core.com">Dashboard</a>
+</p>
+
 An [MCP](https://modelcontextprotocol.io) server that lets AI coding agents answer questions about the Guard security ecosystem from the libraries themselves, instead of from memory.
 
-Covers the whole family: the Python trio ([`fastapi-guard`](https://github.com/rennf93/fastapi-guard), [`guard-core`](https://github.com/rennf93/guard-core), [`guard-agent`](https://github.com/rennf93/guard-agent)) by live introspection, and the Go, TypeScript, PHP and Rust engines, their twenty framework adapters, their telemetry agents, and the [`guard-core-app`](https://github.com/rennf93/guard-core-app) SaaS ingestion contract from a verified registry and knowledge corpus.
+Covers the whole family: the Python trio ([`fastapi-guard`](https://github.com/Guard-Core/fastapi-guard), [`guard-core`](https://github.com/Guard-Core/guard-core), [`guard-agent`](https://github.com/Guard-Core/guard-agent)) by live introspection, and the Go, TypeScript, PHP and Rust engines, their twenty framework adapters, their telemetry agents, and the [`guard-core-app`](https://github.com/Guard-Core/guard-core-app) SaaS ingestion contract from a verified registry and knowledge corpus.
 
 ## Why
 

@@ -16,12 +16,12 @@ We take the security of Guard Core MCP seriously. If you believe you've found a 
 
 1. **Do not disclose the vulnerability publicly** until it has been addressed by the maintainers.
 2. **Report the vulnerability through GitHub's security advisory feature**:
-   - Go to the [Security tab](https://github.com/rennf93/guard-core-mcp/security/advisories) of the Guard Core MCP repository
+   - Go to the [Security tab](https://github.com/Guard-Core/guard-core-mcp/security/advisories) of the Guard Core MCP repository
    - Click on "New draft security advisory"
    - Fill in the details of the vulnerability
    - Submit the advisory
 
-   Alternatively, you can report vulnerabilities through [GitHub's private vulnerability reporting feature](https://github.com/rennf93/guard-core-mcp/security/advisories/new).
+   Alternatively, you can report vulnerabilities through [GitHub's private vulnerability reporting feature](https://github.com/Guard-Core/guard-core-mcp/security/advisories/new).
 
 3. Include the following information in your report:
    - A description of the vulnerability and its potential impact
@@ -38,11 +38,11 @@ Guard Core MCP is a local [MCP](https://modelcontextprotocol.io) server: it runs
 ### Install target
 
 1. **Install it into your project's environment, not an isolated one.** `uvx guard-core-mcp` will start, but an isolated environment has no `guard-core`, `fastapi-guard`, or `guard-agent` for it to introspect, so every answer falls back to bundled documentation rather than your actual installed versions. Prefer `uv add --dev guard-core-mcp` inside the project whose Guard configuration you want checked.
-2. **Do not point it at an environment holding production credentials it does not need.** The server only reads package metadata and executes the detection engine against synthetic, in-memory requests — it makes no network calls and opens no ports — but it inherits whatever the hosting environment can see, so keep it scoped to development and CI environments.
+2. **Do not point it at an environment holding production credentials it does not need.** The server only reads package metadata and executes the detection engine against synthetic, in-memory requests (it makes no network calls and opens no ports), but it inherits whatever the hosting environment can see, so keep it scoped to development and CI environments.
 
 ### Tool call inputs
 
-1. **`check_payload` runs its input through guard-core's real detection engine, not a sandboxed copy of it.** The regex protections (bounded quantifiers, per-pattern timeouts) are the same ones guard-core ships in production, so pathological input is handled the same way it would be at your application's edge — but treat payloads passed through your MCP client the same way you'd treat any other tool argument: avoid pasting real user data or secrets into a debugging session, since your MCP client may log tool calls.
+1. **`check_payload` runs its input through guard-core's real detection engine, not a sandboxed copy of it.** The regex protections (bounded quantifiers, per-pattern timeouts) are the same ones guard-core ships in production, so pathological input is handled the same way it would be at your application's edge, but treat payloads passed through your MCP client the same way you'd treat any other tool argument: avoid pasting real user data or secrets into a debugging session, since your MCP client may log tool calls.
 2. **`check_payload` always forces `enable_redis=False`** on the `SecurityConfig` it builds, regardless of what a caller passes in `config`. This is deliberate: it prevents a tool call from causing the server to open a connection to a Redis instance the caller specifies. There is no equivalent override for other outbound-network-capable `SecurityConfig` fields (e.g. a custom `geo_ip_handler`), so avoid passing configuration that points at infrastructure you don't control.
 3. **`validate_config` and `config_fields` instantiate the real Pydantic model** (`SecurityConfig` / `AgentConfig`) from whichever Guard package you ask about. Pydantic validation does not execute arbitrary code from its input, but as with any tool, only pass configuration you intend to test.
 
@@ -57,13 +57,13 @@ Guard Core MCP provides several properties that make it safer to run than an AI 
 
 - Answers about a Guard library's configuration come from the **real, installed Pydantic model**, not from training data that may be stale or version-mismatched.
 - `check_payload` exercises the **real detection engine**, so "would this be blocked" answers reflect actual behavior rather than a plausible-sounding guess.
-- No outbound network calls, no listening ports, and no persistence — the server only reads local package metadata, local bundled documentation, and processes synthetic in-memory requests.
+- No outbound network calls, no listening ports, and no persistence: the server only reads local package metadata, local bundled documentation, and processes synthetic in-memory requests.
 - Redis is unconditionally disabled for the detection sandbox, regardless of caller-supplied configuration.
 - Failure paths degrade to a structured error (`missing_library_error`) rather than raising, so a Guard library missing from the host environment cannot crash the server or leak a stack trace to the calling agent.
 
 ## Threat Model
 
-Guard Core MCP is not a network-facing service and does not itself protect an application from anything — that is the job of `fastapi-guard` / `guard-core` / `guard-agent`, which it introspects. Its own threat model is narrower:
+Guard Core MCP is not a network-facing service and does not itself protect an application from anything, that is the job of `fastapi-guard` / `guard-core` / `guard-agent`, which it introspects. Its own threat model is narrower:
 
 - **Supply-chain integrity**: install Guard Core MCP from PyPI with your usual dependency-pinning and provenance practices, the same way you would any other developer tool with access to your project's environment.
 - **Tool-output trust**: like any MCP tool, its output is text an AI agent may act on. Treat a `check_payload` verdict as evidence for a decision, not as the decision itself, particularly for security-relevant changes.

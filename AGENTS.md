@@ -130,7 +130,7 @@ make bump-version VERSION=x.y.z
 
 Engines (one per language, all passing the same frozen spec-4.0.3 corpus):
 
-- **guard-core** - Python reference engine: <https://github.com/rennf93/guard-core>
+- **guard-core** - Python reference engine: <https://github.com/Guard-Core/guard-core>
 - **guard-core-go** - Go engine (tagged `v0.1.0`): <https://github.com/rennf93/guard-core-go>
 - **guard-core-ts** - TypeScript monorepo (`@guardcore/*`, tagged `1.0.0`): <https://github.com/rennf93/guard-core-ts>
 - **guard-core-php** - PHP engine (tagged `v0.1.0`): <https://github.com/rennf93/guard-core-php>
@@ -140,7 +140,7 @@ Adapters live in their own repos (`nethttp-guard`, `gin-guard`, `echo-guard`, `f
 
 Agents (one per language, all shipping against the same ingestion contract):
 
-- **guard-agent** - Python agent covered by `PACKAGE_MODELS`: <https://github.com/rennf93/guard-agent>
+- **guard-agent** - Python agent covered by `PACKAGE_MODELS`: <https://github.com/Guard-Core/guard-agent>
 - **guard-agent-go**: <https://github.com/rennf93/guard-agent-go>
 - **guard-agent-ts** (npm `guardagent`): <https://github.com/rennf93/guard-agent-ts>
 - **guard-agent-php**: <https://github.com/rennf93/guard-agent-php>
@@ -148,8 +148,8 @@ Agents (one per language, all shipping against the same ingestion contract):
 
 Platform and Python adapters:
 
-- **guard-core-app** - SaaS platform (API, dashboard, playground) and telemetry ingestion endpoint: <https://github.com/rennf93/guard-core-app>
-- **fastapi-guard** - FastAPI/Starlette adapter covered by `PACKAGE_MODELS`: <https://github.com/rennf93/fastapi-guard>
-- **flaskapi-guard** - Flask extension adapter: <https://github.com/rennf93/flaskapi-guard>
-- **djapi-guard** - Django middleware adapter: <https://github.com/rennf93/djapi-guard>
-- **tornadoapi-guard** - Tornado handler/middleware adapter: <https://github.com/rennf93/tornadoapi-guard>
+- **guard-core-app** - SaaS platform (API, dashboard, playground) and telemetry ingestion endpoint: <https://github.com/Guard-Core/guard-core-app>
+- **fastapi-guard** - FastAPI/Starlette adapter covered by `PACKAGE_MODELS`: <https://github.com/Guard-Core/fastapi-guard>
+- **flaskapi-guard** - Flask extension adapter: <https://github.com/Guard-Core/flaskapi-guard>
+- **djapi-guard** - Django middleware adapter: <https://github.com/Guard-Core/djapi-guard>
+- **tornadoapi-guard** - Tornado handler/middleware adapter: <https://github.com/Guard-Core/tornadoapi-guard>

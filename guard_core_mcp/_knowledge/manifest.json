@@ -16,7 +16,7 @@
     "version": "3.1.0"
   },
   "guard-core-app": {
-    "site_url": "https://github.com/rennf93/guard-core-app",
+    "site_url": "https://github.com/Guard-Core/guard-core-app",
     "version": "2026.09.24"
   },
   "guard-core-go": {

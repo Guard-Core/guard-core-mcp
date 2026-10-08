@@ -11,7 +11,7 @@ Guard Core MCP
 [![PyPI version](https://badge.fury.io/py/guard-core-mcp.svg?cache=none&icon=si%3Apython&icon_color=%23008cb4)](https://badge.fury.io/py/guard-core-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-`guard-core-mcp` is an [MCP](https://modelcontextprotocol.io) server that lets AI coding agents answer questions about the Guard security ecosystem ([`fastapi-guard`](https://github.com/rennf93/fastapi-guard), [`guard-core`](https://github.com/rennf93/guard-core) and [`guard-agent`](https://github.com/rennf93/guard-agent)) by introspecting the libraries actually installed in your project, instead of answering from training data.
+`guard-core-mcp` is an [MCP](https://modelcontextprotocol.io) server that lets AI coding agents answer questions about the Guard security ecosystem ([`fastapi-guard`](https://github.com/Guard-Core/fastapi-guard), [`guard-core`](https://github.com/Guard-Core/guard-core) and [`guard-agent`](https://github.com/Guard-Core/guard-agent)) by introspecting the libraries actually installed in your project, instead of answering from training data.
 
 ___
 
