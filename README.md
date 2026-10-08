@@ -8,6 +8,7 @@
   <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/code-ql.yml"><img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/code-ql.yml/badge.svg" alt="CodeQL"></a>
   <a href="https://guard-core.github.io/guard-core-mcp/"><img src="https://img.shields.io/badge/docs-mkdocs-blue" alt="Docs"></a>
   <a href="https://pepy.tech/project/guard-core-mcp"><img src="https://pepy.tech/badge/guard-core-mcp" alt="Downloads"></a>
+  <a href="https://smithery.ai/servers/rennf93/guard-core-mcp"><img src="https://smithery.ai/badge/rennf93/guard-core-mcp" alt="smithery badge"></a>
 </p>
 
 <p align="center">
