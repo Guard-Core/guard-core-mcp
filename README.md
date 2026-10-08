@@ -61,3 +61,5 @@ The same tools are also served remotely at `https://mcp.guard-core.com/mcp` and 
 ## Licence
 
 MIT
+
+mcp-name: io.github.Guard-Core/guard-core-mcp
