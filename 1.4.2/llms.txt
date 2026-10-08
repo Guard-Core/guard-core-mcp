@@ -50,19 +50,19 @@ Only `mcp` and `pydantic`, `fastapi-guard`, `guard-core` and `guard-agent` are n
 
 ### Official Sites
 - **Documentation**: https://guard-core.github.io/guard-core-mcp/latest/
-- **GitHub**: https://github.com/rennf93/guard-core-mcp
+- **GitHub**: https://github.com/Guard-Core/guard-core-mcp
 - **PyPI**: https://pypi.org/project/guard-core-mcp/
 - **Model Context Protocol**: https://modelcontextprotocol.io
 
 ### Sibling Repositories
-- **fastapi-guard**: https://github.com/rennf93/fastapi-guard (docs: https://guard-core.github.io/fastapi-guard/latest/)
-- **guard-core**: https://github.com/rennf93/guard-core (docs: https://guard-core.github.io/guard-core/latest/)
-- **guard-agent**: https://github.com/rennf93/guard-agent (docs: https://guard-core.github.io/guard-agent/latest/)
+- **fastapi-guard**: https://github.com/Guard-Core/fastapi-guard (docs: https://guard-core.github.io/fastapi-guard/latest/)
+- **guard-core**: https://github.com/Guard-Core/guard-core (docs: https://guard-core.github.io/guard-core/latest/)
+- **guard-agent**: https://github.com/Guard-Core/guard-agent (docs: https://guard-core.github.io/guard-agent/latest/)
 
 ### Community
-- **Issues**: https://github.com/rennf93/guard-core-mcp/issues
-- **Contributing**: https://github.com/rennf93/guard-core-mcp/blob/master/CONTRIBUTING.md
-- **Security Policy**: https://github.com/rennf93/guard-core-mcp/security/policy
+- **Issues**: https://github.com/Guard-Core/guard-core-mcp/issues
+- **Contributing**: https://github.com/Guard-Core/guard-core-mcp/blob/master/CONTRIBUTING.md
+- **Security Policy**: https://github.com/Guard-Core/guard-core-mcp/security/policy
 
 ## License
 MIT License - Free for commercial and personal use.
