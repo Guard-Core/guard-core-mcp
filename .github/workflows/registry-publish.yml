@@ -19,15 +19,22 @@ jobs:
       - name: Skip when this version is already registered
         id: skip_check
         run: |
-          NAME=$(python3 -c 'import json;print(json.load(open("server.json"))["name"])')
-          VERSION=$(python3 -c 'import json;print(json.load(open("server.json"))["version"])')
-          if curl -fsSL "https://registry.modelcontextprotocol.io/v0/servers?search=$(python3 -c "import urllib.parse,os;print(urllib.parse.quote(os.environ["NAME"], safe=''))")" | grep -q "\"version\": \"$VERSION\""; then
-            echo "Version $VERSION of $NAME is already registered - skipping (the registry rejects duplicate versions)"
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Version $VERSION of $NAME is not registered yet - publishing"
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          fi
+          python3 - <<'PY'
+          import json, os, urllib.parse, urllib.request
+
+          with open("server.json") as f:
+              meta = json.load(f)
+          query = urllib.parse.quote(meta["name"], safe="")
+          url = f"https://registry.modelcontextprotocol.io/v0/servers?search={query}"
+          with urllib.request.urlopen(url) as response:
+              payload = json.load(response)
+          registered = [entry["server"]["version"] for entry in payload.get("servers", [])]
+          skip = meta["version"] in registered
+          print(f"registered versions: {registered}")
+          print(f"version {meta['version']} already registered: {skip}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"skip={'true' if skip else 'false'}\n")
+          PY
       - name: Login and publish
         if: steps.skip_check.outputs.skip != 'true'
         run: |
