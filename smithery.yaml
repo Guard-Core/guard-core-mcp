@@ -1,0 +1,13 @@
+# Smithery configuration for guard-core-mcp
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties: {}
+  commandFunction:
+    |-
+    (config) => ({
+      "command": "uv",
+      "args": ["run", "guard-core-mcp"],
+      "env": {}
+    })

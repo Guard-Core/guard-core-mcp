@@ -1,0 +1,17 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/npm/@modelcontextprotocol/schema@latest/server.schema.json",
+  "name": "io.github.Guard-Core/guard-core-mcp",
+  "description": "MCP server that answers Guard-ecosystem security questions from the libraries actually installed in your interpreter: SecurityConfig validation against the installed pydantic models (catches unknown keys pydantic silently drops), config-field lookup, docs search over the vendored and hand-written corpora, live threat detection through guard-core's real engine, and verified setup guidance for FastAPI, Flask, Django, Express, Fastify, NestJS, Hono, Gin, Fiber, Echo, Laravel, Symfony and more.",
+  "version": "1.4.2",
+  "packages": [
+    {
+      "registry_type": "pypi",
+      "identifier": "guard-core-mcp",
+      "version": "1.4.2"
+    }
+  ],
+  "repository": {
+    "url": "https://github.com/Guard-Core/guard-core-mcp",
+    "source": "github"
+  }
+}
