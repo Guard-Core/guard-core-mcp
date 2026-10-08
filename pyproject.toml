@@ -3,7 +3,7 @@ name = "guard-core-mcp"
 version = "1.4.2"
 description = "MCP server for the Guard ecosystem - config validation, docs search and live threat detection for fastapi-guard, guard-core and guard-agent."
 authors = [
-    {name = "Renzo Franceschini", email = "rennf93@users.noreply.github.com"}
+    {name = "Renzo Franceschini", email = "rennf93@guard-core.com"}
 ]
 readme = "README.md"
 license = "MIT"
@@ -34,7 +34,11 @@ guard-core-mcp = "guard_core_mcp.server:main"
 guard-core-mcp-http = "guard_core_mcp.http_server:main"
 
 [project.urls]
-Homepage = "https://github.com/rennf93/guard-core-mcp"
+Homepage = "https://github.com/Guard-Core/guard-core-mcp"
+Repository = "https://github.com/Guard-Core/guard-core-mcp"
+Documentation = "https://guard-core.github.io/guard-core-mcp/"
+Issues = "https://github.com/Guard-Core/guard-core-mcp/issues"
+Changelog = "https://github.com/Guard-Core/guard-core-mcp/blob/master/CHANGELOG.md"
 
 [project.optional-dependencies]
 hosted = [

@@ -6,7 +6,7 @@ Updates the version string across all files that reference it:
 - guard_core_mcp/__init__.py
 - .mike.yml
 - docs/versions/versions.json
-- docs/index.md
+- docs/chatgpt-plugin.md
 - CHANGELOG.md
 - docs/release-notes.md
 
@@ -14,7 +14,7 @@ Usage:
     python .github/scripts/bump_version.py <version>
     make bump-version VERSION=x.y.z
 
-No external dependencies required — stdlib only.
+No external dependencies required, stdlib only.
 """
 
 from __future__ import annotations
@@ -200,25 +200,25 @@ def update_versions_json(version: str) -> bool:
     return True
 
 
-def update_index_md(version: str) -> bool:
-    """Update the container pull version tag in docs/index.md, if present."""
-    path = PROJECT_ROOT / "docs" / "index.md"
+def update_docker_image_tag(version: str) -> bool:
+    """Update the hosted image tag in docs/chatgpt-plugin.md, if present."""
+    path = PROJECT_ROOT / "docs" / "chatgpt-plugin.md"
     if not path.is_file():
-        print("  docs/index.md: not found, skipping")
+        print("  docs/chatgpt-plugin.md: not found, skipping")
         return True
     content = path.read_text()
 
     pattern = re.compile(
-        r"(docker pull ghcr\.io/rennf93/guard-core-mcp:v)" r"[\d]+\.[\d]+\.[\d]+"
+        r"(ghcr\.io/guard-core/guard-core-mcp:)(?:<version>|v[\d]+\.[\d]+\.[\d]+)"
     )
     match = pattern.search(content)
     if not match:
-        print("  docs/index.md: no docker pull version tag found, skipping")
+        print("  docs/chatgpt-plugin.md: no container image tag found, skipping")
         return True
 
-    current_version = match.group(0).split(":v")[-1]
+    current_version = match.group(0).rsplit(":", 1)[-1].lstrip("v")
     if current_version == version:
-        print(f"  docs/index.md: already set to v{version}")
+        print(f"  docs/chatgpt-plugin.md: already set to v{version}")
         return True
 
     pyproject = PROJECT_ROOT / "pyproject.toml"
@@ -230,12 +230,13 @@ def update_index_md(version: str) -> bool:
     existing_versions.append(current_version)
 
     if not is_latest(version, existing_versions):
-        print(f"  docs/index.md: {version} is not latest, skipping docker tag update")
+        skipped = f"  docs/chatgpt-plugin.md: {version} is not latest, skipping"
+        print(skipped + " image tag update")
         return True
 
-    new_content = pattern.sub(f"\\g<1>{version}", content)
+    new_content = pattern.sub(f"\\g<1>v{version}", content)
     path.write_text(new_content)
-    print(f"  docs/index.md: updated docker tag to v{version}")
+    print(f"  docs/chatgpt-plugin.md: updated image tag to v{version}")
     return True
 
 
@@ -312,7 +313,7 @@ def main() -> int:
         ("guard_core_mcp/__init__.py", update_package_init),
         (".mike.yml", update_mike_yml),
         ("docs/versions/versions.json", update_versions_json),
-        ("docs/index.md", update_index_md),
+        ("docs/chatgpt-plugin.md", update_docker_image_tag),
         ("changelogs", update_changelogs),
     ]
 

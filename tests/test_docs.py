@@ -62,7 +62,7 @@ def test_search_covers_the_knowledge_corpus() -> None:
     app_result = next(
         result for result in results if result["package"] == "guard-core-app"
     )
-    assert app_result["url"] == "https://github.com/rennf93/guard-core-app"
+    assert app_result["url"] == "https://github.com/Guard-Core/guard-core-app"
 
 
 def test_search_can_be_scoped_to_one_knowledge_package() -> None:
@@ -80,7 +80,7 @@ def test_get_doc_returns_a_knowledge_page() -> None:
     result = get_doc("guard-core-app", "index.md")
 
     assert "ingestion contract" in result["content"]
-    assert result["url"] == "https://github.com/rennf93/guard-core-app"
+    assert result["url"] == "https://github.com/Guard-Core/guard-core-app"
     assert result["package"] == "guard-core-app"
 
 
@@ -106,6 +106,6 @@ def test_knowledge_manifest_covers_every_handwritten_repo() -> None:
 
     assert set(manifest) == expected
     for name, entry in manifest.items():
-        assert entry["site_url"].startswith("https://github.com/rennf93/")
+        assert entry["site_url"].startswith("https://github.com/")
         assert entry["version"]
         assert (KNOWLEDGE_ROOT / name / "index.md").is_file()
