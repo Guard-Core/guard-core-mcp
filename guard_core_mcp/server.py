@@ -1,7 +1,9 @@
 import importlib.metadata
-from typing import Any
+from typing import Annotated, Any
 
 from mcp.server.mcpserver import MCPServer
+from mcp.types import ToolAnnotations
+from pydantic import Field
 
 from guard_core_mcp import __version__
 from guard_core_mcp import config as config_module
@@ -11,7 +13,29 @@ from guard_core_mcp import ecosystem as ecosystem_module
 
 GUARD_DISTRIBUTIONS = ("guard-core", "fastapi-guard", "guard-agent")
 
-mcp = MCPServer("guard-core")
+READ_ONLY = ToolAnnotations(
+    read_only_hint=True,
+    destructive_hint=False,
+    idempotent_hint=True,
+    open_world_hint=False,
+)
+
+mcp = MCPServer(
+    "guard-core",
+    instructions=(
+        "Security answers for the Guard ecosystem from the libraries actually "
+        "installed in your interpreter, not from generic training data. "
+        "validate_config catches unknown and deprecated SecurityConfig keys before "
+        "pydantic silently drops them; config_fields finds the setting that controls "
+        "a behaviour; search_docs and get_doc return citable pages from the bundled "
+        "documentation; check_payload runs a request through guard-core's real "
+        "detection engine to explain or confirm a verdict; ecosystem, adapter_setup "
+        "and wire_agent cover the five-language adapter matrix and telemetry agent; "
+        "versions reports what is installed versus what the bundled docs describe. "
+        "All tools are read-only: nothing is fetched from the network and nothing is "
+        "modified."
+    ),
+)
 
 
 def installed_guard_versions() -> dict[str, str | None]:
@@ -24,7 +48,10 @@ def installed_guard_versions() -> dict[str, str | None]:
     return versions
 
 
-@mcp.tool()
+@mcp.tool(
+    title="Guard versions",
+    annotations=READ_ONLY,
+)
 def versions() -> dict[str, Any]:
     """Report which Guard libraries this server can introspect, and at what version.
 
@@ -60,9 +87,23 @@ def missing_library_error(exception: ModuleNotFoundError) -> dict[str, str]:
     }
 
 
-@mcp.tool()
+@mcp.tool(
+    title="Validate config",
+    annotations=READ_ONLY,
+)
 def validate_config(
-    config: dict[str, Any], package: str = "fastapi-guard"
+    config: Annotated[
+        dict[str, Any], Field(description="SecurityConfig fields to validate")
+    ],
+    package: Annotated[
+        str,
+        Field(
+            description=(
+                "Which Guard library to validate against: fastapi-guard, guard-core "
+                "or guard-agent"
+            )
+        ),
+    ] = "fastapi-guard",
 ) -> dict[str, Any]:
     """Validate a Guard config against the installed library's model.
 
@@ -75,8 +116,6 @@ def validate_config(
     keyword, a trusted_proxies /0 network, a whitelist /0 network, and
     enabled_detection_categories empty while penetration detection is enabled all
     land here as plain messages.
-
-    package is one of fastapi-guard, guard-core, guard-agent.
     """
     try:
         return config_module.validate_config(config, package)
@@ -86,8 +125,29 @@ def validate_config(
         return {"error": str(exception)}
 
 
-@mcp.tool()
-def config_fields(query: str, package: str = "fastapi-guard") -> dict[str, Any]:
+@mcp.tool(
+    title="Config fields lookup",
+    annotations=READ_ONLY,
+)
+def config_fields(
+    query: Annotated[
+        str,
+        Field(
+            description=(
+                "A config field name, or words describing what the setting should do"
+            )
+        ),
+    ],
+    package: Annotated[
+        str,
+        Field(
+            description=(
+                "Which Guard library to search: fastapi-guard, guard-core or "
+                "guard-agent"
+            )
+        ),
+    ] = "fastapi-guard",
+) -> dict[str, Any]:
     """Look up Guard config settings by name or by what they do.
 
     An exact field name populates the exact result with that field's type, default,
@@ -95,8 +155,6 @@ def config_fields(query: str, package: str = "fastapi-guard") -> dict[str, Any]:
     with every other field whose name or description contains every word of the query
     (case-insensitively, word order does not matter), which is the fastest way to
     answer whether a setting for some behaviour exists at all.
-
-    package is one of fastapi-guard, guard-core, guard-agent.
     """
     try:
         return config_module.config_fields(query, package)
@@ -106,9 +164,24 @@ def config_fields(query: str, package: str = "fastapi-guard") -> dict[str, Any]:
         return {"error": str(exception)}
 
 
-@mcp.tool()
+@mcp.tool(
+    title="Search docs",
+    annotations=READ_ONLY,
+)
 def search_docs(
-    query: str, package: str | None = None, limit: int = 5
+    query: Annotated[
+        str, Field(description="Words to search the bundled documentation for")
+    ],
+    package: Annotated[
+        str | None,
+        Field(
+            description=(
+                "Restrict the search to one library: fastapi-guard, guard-core or "
+                "guard-agent. Omit to search all three"
+            )
+        ),
+    ] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return")] = 5,
 ) -> dict[str, Any]:
     """Search the bundled Guard documentation and return citable pages.
 
@@ -121,8 +194,24 @@ def search_docs(
     return docs_module.search_docs(query, package, limit)
 
 
-@mcp.tool()
-def get_doc(package: str, path: str) -> dict[str, Any]:
+@mcp.tool(
+    title="Get doc page",
+    annotations=READ_ONLY,
+)
+def get_doc(
+    package: Annotated[
+        str,
+        Field(
+            description=(
+                "The library the page belongs to, taken from a search_docs result"
+            )
+        ),
+    ],
+    path: Annotated[
+        str,
+        Field(description="The page path, taken from a search_docs result"),
+    ],
+) -> dict[str, Any]:
     """Return the full text of one bundled documentation page.
 
     Use the package and path from a search_docs result.
@@ -130,14 +219,39 @@ def get_doc(package: str, path: str) -> dict[str, Any]:
     return docs_module.get_doc(package, path)
 
 
-@mcp.tool()
+@mcp.tool(
+    title="Check payload",
+    annotations=READ_ONLY,
+)
 async def check_payload(
-    path: str = "/",
-    method: str = "GET",
-    query: dict[str, str] | None = None,
-    headers: dict[str, str] | None = None,
-    body: str | dict[str, Any] | list[Any] | None = None,
-    config: dict[str, Any] | None = None,
+    path: Annotated[
+        str, Field(description="Request path, e.g. /login or /api/v1/items")
+    ] = "/",
+    method: Annotated[str, Field(description="HTTP method of the request")] = "GET",
+    query: Annotated[
+        dict[str, str] | None, Field(description="Query parameters of the request")
+    ] = None,
+    headers: Annotated[
+        dict[str, str] | None, Field(description="Request headers")
+    ] = None,
+    body: Annotated[
+        str | dict[str, Any] | list[Any] | None,
+        Field(
+            description=(
+                "Request body as a raw string or a JSON object or array, which is "
+                "serialized for you"
+            )
+        ),
+    ] = None,
+    config: Annotated[
+        dict[str, Any] | None,
+        Field(
+            description=(
+                "SecurityConfig fields to override the detection defaults with; "
+                "enable_redis is always forced off in this sandbox"
+            )
+        ),
+    ] = None,
 ) -> dict[str, Any]:
     """Run a request through guard-core's real detection engine.
 
@@ -152,9 +266,6 @@ async def check_payload(
     which can block it before detection runs, and a whitelisted IP skips detection
     entirely. So a clean verdict here does not promise the request reaches the route,
     and a threat verdict does not promise the running app would have blocked it.
-
-    body takes either a raw string or a JSON object or array, which is serialized for
-    you, so pass the request body in whatever shape you already have it.
 
     guard-core 3.15.0 bounds this scan three ways: detection_max_scan_values caps the
     request values inspected (default 512, names and values counted), and
@@ -183,7 +294,10 @@ async def check_payload(
         return missing_library_error(exception)
 
 
-@mcp.tool()
+@mcp.tool(
+    title="Ecosystem registry",
+    annotations=READ_ONLY,
+)
 def ecosystem() -> dict[str, Any]:
     """Return the full Guard ecosystem registry.
 
@@ -210,8 +324,25 @@ def ecosystem() -> dict[str, Any]:
     return ecosystem_module.ecosystem()
 
 
-@mcp.tool()
-def adapter_setup(language: str, framework: str) -> dict[str, Any]:
+@mcp.tool(
+    title="Adapter setup",
+    annotations=READ_ONLY,
+)
+def adapter_setup(
+    language: Annotated[
+        str,
+        Field(description="One of python, go, typescript, php, rust"),
+    ],
+    framework: Annotated[
+        str,
+        Field(
+            description=(
+                "The adapter slug (gin, fastify, laravel, axum, fastapi) or the "
+                "adapter package name"
+            )
+        ),
+    ],
+) -> dict[str, Any]:
     """Return the install and a verified minimal integration for one Guard adapter.
 
     language is one of python, go, typescript, php, rust; framework is that
@@ -229,8 +360,24 @@ def adapter_setup(language: str, framework: str) -> dict[str, Any]:
     return ecosystem_module.adapter_setup(language, framework)
 
 
-@mcp.tool()
-def wire_agent(language: str, framework: str | None = None) -> dict[str, Any]:
+@mcp.tool(
+    title="Wire agent",
+    annotations=READ_ONLY,
+)
+def wire_agent(
+    language: Annotated[
+        str,
+        Field(description="One of python, go, typescript, php, rust"),
+    ],
+    framework: Annotated[
+        str | None,
+        Field(
+            description=(
+                "Optional adapter slug of that language to add integration notes for"
+            )
+        ),
+    ] = None,
+) -> dict[str, Any]:
     """Return how to set up the Guard telemetry agent for one language.
 
     language is one of python, go, typescript, php, rust. The answer carries the
