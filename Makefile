@@ -249,6 +249,7 @@ clean:
 bump-version:
 	@if [ -z "$(VERSION)" ]; then echo "Usage: make bump-version VERSION=x.y.z"; exit 1; fi
 	@uv run python .github/scripts/bump_version.py $(VERSION)
+	@uv lock
 
 # Help
 .PHONY: help
