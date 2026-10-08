@@ -16,7 +16,20 @@ jobs:
         run: |
           curl -fsSL -o /tmp/mcp-publisher.tar.gz https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz
           tar -xzf /tmp/mcp-publisher.tar.gz -C /tmp
+      - name: Skip when this version is already registered
+        id: skip_check
+        run: |
+          NAME=$(python3 -c 'import json;print(json.load(open("server.json"))["name"])')
+          VERSION=$(python3 -c 'import json;print(json.load(open("server.json"))["version"])')
+          if curl -fsSL "https://registry.modelcontextprotocol.io/v0/servers?search=$(python3 -c "import urllib.parse,os;print(urllib.parse.quote(os.environ["NAME"], safe=''))")" | grep -q "\"version\": \"$VERSION\""; then
+            echo "Version $VERSION of $NAME is already registered - skipping (the registry rejects duplicate versions)"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version $VERSION of $NAME is not registered yet - publishing"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Login and publish
+        if: steps.skip_check.outputs.skip != 'true'
         run: |
           /tmp/mcp-publisher login github-oidc
           /tmp/mcp-publisher publish
