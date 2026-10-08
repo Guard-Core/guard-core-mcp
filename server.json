@@ -2,11 +2,11 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.Guard-Core/guard-core-mcp",
   "description": "Guard Core security MCP: SecurityConfig validation, docs search, live threat detection.",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "packages": [
     {
       "identifier": "guard-core-mcp",
-      "version": "1.4.3",
+      "version": "1.4.4",
       "transport": {
         "type": "stdio"
       },
