@@ -1,26 +1,62 @@
-# Guard Core MCP
+<p align="center">
+    <a href="https://guard-core.github.io/guard-core/latest/">
+        <img src="https://guard-core.github.io/guard-core/latest/assets/guard_core_legend.svg" alt="Guard Core">
+    </a>
+</p>
+
+___
 
 <p align="center">
-  <a href="https://badge.fury.io/py/guard-core-mcp"><img src="https://badge.fury.io/py/guard-core-mcp.svg?cache=none&icon=si%3Apython&icon_color=%23008cb4" alt="PyPI version"></a>
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
-  <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/ci.yml"><img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/release.yml"><img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/release.yml/badge.svg" alt="Release"></a>
-  <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/code-ql.yml"><img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/code-ql.yml/badge.svg" alt="CodeQL"></a>
-  <a href="https://guard-core.github.io/guard-core-mcp/"><img src="https://img.shields.io/badge/docs-mkdocs-blue" alt="Docs"></a>
-  <a href="https://pepy.tech/project/guard-core-mcp"><img src="https://pepy.tech/badge/guard-core-mcp" alt="Downloads"></a>
-  <a href="https://smithery.ai/servers/rennf93/guard-core-mcp"><img src="https://smithery.ai/badge/rennf93/guard-core-mcp" alt="smithery badge"></a>
+    <strong>Model Context Protocol server for the Guard ecosystem: config validation, docs search, and corpus tooling for agents and developers.</strong>
 </p>
 
 <p align="center">
-  <a href="https://guard-core.com">Website</a> &middot;
-  <a href="https://guard-core.github.io/guard-core-mcp/latest/">Docs</a> &middot;
-  <a href="https://playground.guard-core.com">Playground</a> &middot;
-  <a href="https://app.guard-core.com">Dashboard</a>
+    <a href="https://badge.fury.io/py/guard-core-mcp">
+        <img src="https://badge.fury.io/py/guard-core-mcp.svg?cache=none&icon=si%3Apython&icon_color=%23008cb4" alt="PyPiVersion">
+    </a>
+    <a href="https://guard-core.github.io/guard-core-mcp/latest/">
+        <img src="https://img.shields.io/badge/docs-latest-0080ff.svg" alt="Docs">
+    </a>
+    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/release.yml">
+        <img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/release.yml/badge.svg" alt="Release">
+    </a>
+    <a href="https://opensource.org/licenses/MIT">
+        <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+    </a>
+    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/ci.yml">
+        <img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/ci.yml/badge.svg" alt="CI">
+    </a>
+    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/code-ql.yml">
+        <img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/code-ql.yml/badge.svg" alt="CodeQL">
+    </a>
 </p>
 
-An [MCP](https://modelcontextprotocol.io) server that lets AI coding agents answer questions about the Guard security ecosystem from the libraries themselves, instead of from memory.
+<p align="center">
+    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/pages/pages-build-deployment">
+        <img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/pages/pages-build-deployment/badge.svg?branch=gh-pages" alt="PagesBuildDeployment">
+    </a>
+    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/docs.yml">
+        <img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/docs.yml/badge.svg" alt="DocsUpdate">
+    </a>
+    <img src="https://img.shields.io/github/last-commit/Guard-Core/guard-core-mcp?style=flat&amp;logo=git&amp;logoColor=white&amp;color=0080ff" alt="last-commit">
+</p>
 
-Covers the whole family: the Python trio ([`fastapi-guard`](https://github.com/Guard-Core/fastapi-guard), [`guard-core`](https://github.com/Guard-Core/guard-core), [`guard-agent`](https://github.com/Guard-Core/guard-agent)) by live introspection, and the Go, TypeScript, PHP and Rust engines, their twenty framework adapters, their telemetry agents, and the [`guard-core-app`](https://github.com/Guard-Core/guard-core-app) SaaS ingestion contract from a verified registry and knowledge corpus.
+<p align="center">
+    <img src="https://img.shields.io/badge/Python-3776AB.svg?style=flat&logo=python&logoColor=white" alt="Python"> <img src="https://img.shields.io/badge/MCP-1B1B1B.svg?style=flat" alt="MCP">
+    <a href="https://pepy.tech/project/guard-core-mcp">
+        <img src="https://pepy.tech/badge/guard-core-mcp" alt="Downloads">
+    </a>
+</p>
+
+<p align="center">
+    <a href="https://guard-core.com">Website</a> &middot;
+    <a href="https://guard-core.github.io/guard-core-mcp/latest/">Docs</a> &middot;
+    <a href="https://playground.guard-core.com">Playground</a> &middot;
+    <a href="https://app.guard-core.com">Dashboard</a> &middot;
+    <a href="https://discord.gg/ZW7ZJbjMkK">Discord</a>
+</p>
+
+---
 
 ## Why
 
