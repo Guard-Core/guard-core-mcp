@@ -6,7 +6,7 @@
   "packages": [
     {
       "identifier": "guard-core-mcp",
-      "version": "1.4.5",
+      "version": "1.5.0",
       "transport": {
         "type": "stdio"
       },
