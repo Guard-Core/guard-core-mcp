@@ -849,6 +849,11 @@ It keeps no user data; configs and payloads sent to <code>validate_config</code>
 <td>no</td>
 <td>Bind port; defaults to <code>8020</code></td>
 </tr>
+<tr>
+<td><code>MCPRUSH_TOKEN</code></td>
+<td>no</td>
+<td>Shared secret for the mcprush marketplace proxy: a request carrying a matching <code>x-mcprush-token</code> header authenticates without an OAuth bearer; unset keeps pure OAuth behavior</td>
+</tr>
 </tbody>
 </table>
 <h2 id="running-it">Running it<a class="headerlink" href="#running-it" title="Permanent link">&para;</a></h2>
