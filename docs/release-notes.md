@@ -10,6 +10,16 @@ Release Notes
 
 ___
 
+v1.5.0 (2026-10-11)
+-------------------
+
+McPrush proxy credential for hosted mode
+----------------------------------------
+
+- **Added** - `MCPRUSH_TOKEN`: hosted mode accepts a matching `x-mcprush-token` header as an alternative to the OAuth bearer, so the mcprush marketplace proxy passes its endpoint check (401 anonymous, 200 with the header); unset keeps pure OAuth behavior.
+
+___
+
 v1.4.5 (2026-10-08)
 -------------------
 

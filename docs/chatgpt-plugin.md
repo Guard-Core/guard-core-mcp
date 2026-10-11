@@ -55,7 +55,7 @@ docker run -p 8020:8020 \
   -e GUARD_CORE_MCP_PUBLIC_URL=https://mcp.guard-core.com \
   -e GUARD_CORE_MCP_OAUTH_ISSUER=https://api.guard-core.com \
   -e GUARD_CORE_MCP_OAUTH_JWKS_URL=https://api.guard-core.com/.well-known/jwks.json \
-  ghcr.io/guard-core/guard-core-mcp:v1.4.5
+  ghcr.io/guard-core/guard-core-mcp:v1.5.0
 ```
 
 The image installs the `hosted` extra, so `versions` reports the exact
