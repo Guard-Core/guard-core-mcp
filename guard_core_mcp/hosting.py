@@ -1,3 +1,4 @@
+import hmac
 import json
 import os
 from dataclasses import dataclass
@@ -33,6 +34,7 @@ class HostingConfig:
     oauth_scope: str
     jwks_url: str | None
     jwks_inline: str | None
+    mcprush_token: str | None = None
 
     @classmethod
     def from_env(cls) -> "HostingConfig":
@@ -54,6 +56,7 @@ class HostingConfig:
             oauth_scope=os.environ.get("GUARD_CORE_MCP_OAUTH_SCOPE", "mcp"),
             jwks_url=jwks_url,
             jwks_inline=jwks_inline,
+            mcprush_token=os.environ.get("MCPRUSH_TOKEN") or None,
         )
 
     def metadata_url(self) -> str:
@@ -115,14 +118,31 @@ class TokenVerifier:
 
 class BearerAuthMiddleware:
     def __init__(
-        self, app: ASGIApp, verifier: TokenVerifier, metadata_url: str
+        self,
+        app: ASGIApp,
+        verifier: TokenVerifier,
+        metadata_url: str,
+        mcprush_token: str | None = None,
     ) -> None:
         self.app = app
         self._verifier = verifier
         self._metadata_url = metadata_url
+        self._mcprush_token = mcprush_token.encode() if mcprush_token else None
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http" or scope["path"] == METADATA_PATH:
+            await self.app(scope, receive, send)
+            return
+        mcprush = Headers(scope=scope).get("x-mcprush-token")
+        if mcprush is not None:
+            # The mcprush proxy authenticates with this header instead of an
+            # OAuth bearer; a present-but-unmatched header must fail closed
+            # rather than fall through to the bearer flow.
+            if self._mcprush_token is None or not hmac.compare_digest(
+                mcprush.encode(), self._mcprush_token
+            ):
+                await self._reject(scope, receive, send, "invalid mcprush token")
+                return
             await self.app(scope, receive, send)
             return
         token = self._bearer_token(Headers(scope=scope).get("Authorization"))
@@ -180,6 +200,7 @@ def compose_hosted_stack(mcp_app: ASGIApp, config: HostingConfig) -> ASGIApp:
         ProtectedResourceMetadata(mcp_app, config),
         TokenVerifier(config),
         config.metadata_url(),
+        mcprush_token=config.mcprush_token,
     )
     return CORSMiddleware(
         auth,
@@ -191,6 +212,7 @@ def compose_hosted_stack(mcp_app: ASGIApp, config: HostingConfig) -> ASGIApp:
             "Mcp-Session-Id",
             "Mcp-Protocol-Version",
             "Last-Event-Id",
+            "X-Mcprush-Token",
         ],
         expose_headers=["Mcp-Session-Id"],
         max_age=86400,

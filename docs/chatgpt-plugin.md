@@ -36,6 +36,7 @@ It keeps no user data; configs and payloads sent to `validate_config` and
 | `GUARD_CORE_MCP_OAUTH_SCOPE` | no | Required scope; defaults to `mcp` |
 | `GUARD_CORE_MCP_HTTP_HOST` | no | Bind host; defaults to `127.0.0.1` |
 | `GUARD_CORE_MCP_HTTP_PORT` | no | Bind port; defaults to `8020` |
+| `MCPRUSH_TOKEN` | no | Shared secret for the mcprush marketplace proxy: a request carrying a matching `x-mcprush-token` header authenticates without an OAuth bearer; unset keeps pure OAuth behavior |
 
 ## Running it
 
