@@ -7,6 +7,7 @@ Updates the version string across all files that reference it:
 - .mike.yml
 - docs/versions/versions.json
 - docs/chatgpt-plugin.md
+- server.json (server version and PyPI package pointers)
 - CHANGELOG.md
 - docs/release-notes.md
 
@@ -280,6 +281,31 @@ def _insert_changelog_scaffold(path: Path, version: str, label: str) -> bool:
     return True
 
 
+def update_server_json(version: str) -> bool:
+    """Update the MCP registry manifest: server version and PyPI pointers."""
+    path = PROJECT_ROOT / "server.json"
+    if not path.is_file():
+        print("  server.json: not found, skipping")
+        return True
+    data = json.loads(path.read_text())
+
+    changed = False
+    if data.get("version") != version:
+        data["version"] = version
+        changed = True
+    for package in data.get("packages", []):
+        if package.get("registryType") == "pypi" and package.get("version") != version:
+            package["version"] = version
+            changed = True
+
+    if not changed:
+        print(f"  server.json: already set to {version}")
+        return True
+    path.write_text(json.dumps(data, indent=2) + "\n")
+    print(f"  server.json: updated to {version}")
+    return True
+
+
 def update_changelogs(version: str) -> bool:
     """Update CHANGELOG.md and docs/release-notes.md."""
     changelog = PROJECT_ROOT / "CHANGELOG.md"
@@ -314,6 +340,7 @@ def main() -> int:
         (".mike.yml", update_mike_yml),
         ("docs/versions/versions.json", update_versions_json),
         ("docs/chatgpt-plugin.md", update_docker_image_tag),
+        ("server.json", update_server_json),
         ("changelogs", update_changelogs),
     ]
 
