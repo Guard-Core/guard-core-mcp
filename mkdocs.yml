@@ -1,6 +1,6 @@
 site_name: Guard Core MCP
 site_description: MCP server for the Guard ecosystem - config validation, docs search and live threat detection for fastapi-guard, guard-core and guard-agent.
-site_url: https://guard-core.github.io/guard-core-mcp/latest/
+site_url: https://guard-core.github.io/guard-core-mcp/
 repo_name: Guard-Core/guard-core-mcp
 repo_url: https://github.com/Guard-Core/guard-core-mcp
 edit_uri: edit/master/docs/
