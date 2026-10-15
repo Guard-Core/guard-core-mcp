@@ -8,9 +8,23 @@ authors = [
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
+keywords = [
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "security",
+    "api-security",
+    "fastapi-guard",
+    "guard-core",
+    "guard-agent",
+    "config-validation",
+    "waf",
+]
 requires-python = ">=3.10,<3.15"
 classifiers = [
     "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Framework :: Pydantic :: 2",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
