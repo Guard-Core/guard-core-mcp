@@ -21,8 +21,8 @@ const resolved = SecurityConfigSchema.parse(config);
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `trustedProxies` | `string[]` | `[]` | IP addresses or CIDR ranges of trusted reverse proxies |
-| `trustedProxyDepth` | `number` | `1` | How many `X-Forwarded-For` hops to trust |
+| `trustedProxies` | `string[]` | `[]` | IP addresses or CIDR ranges of trusted reverse proxies, plus the literal `unix` token that lets `X-Forwarded-For` resolve the client for a request with no peer address (Unix socket). The connecting address is compared as the server reports it |
+| `trustedProxyDepth` | `number` | `1` | The `X-Forwarded-For` position counted from the right that names the client. The header is honored only when the connecting peer is a trusted proxy; from any other peer it is ignored and reported as a `suspicious_request` event |
 | `trustXForwardedProto` | `boolean` | `false` | Trust `X-Forwarded-Proto` header for HTTPS detection |
 | `passiveMode` | `boolean` | `false` | Log violations without blocking requests |
 
@@ -67,6 +67,8 @@ whitelist match.
 |-------|------|---------|-------------|
 | `enablePenetrationDetection` | `boolean` | `true` | Enable the 75-pattern detection engine |
 | `detectionCompilerTimeout` | `number` | `2.0` | Regex compilation timeout in seconds (0.1-10) |
+| `detectionMaxScanSeconds` | `number` | `10.0` | Cap on the CPU time spent regex scanning one request (not wall time, so a busy host does not exhaust it), summed across every field and pattern (0.1-60). Once reached, remaining patterns and values are not scanned and the request receives a weighted `pattern_timeout` threat (`scan_time_budget_exhausted`) that counts toward the anomaly score |
+| `excludedSemanticDetectionHeaders` | `string[]` | `[]` | Opt-in: header names whose values skip the semantic analyzer only (case-insensitive). Regex scanning of these headers is unchanged, e.g. `cookie` or `authorization` for apps whose JWTs score near `detectionSemanticThreshold` |
 | `detectionMaxContentLength` | `number` | `10000` | Max content length for scanning (1000-100000) |
 | `detectionPreserveAttackPatterns` | `boolean` | `true` | Preserve attack regions when truncating long content |
 | `detectionSemanticThreshold` | `number` | `0.7` | Semantic analysis threat score threshold (0-1) |
@@ -145,7 +147,7 @@ Every penetration-detection violation increments the source IP's counter for the
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `enableDynamicRules` | `boolean` | `false` | Enable agent-driven rule updates (requires `enableAgent`) |
+| `enableDynamicRules` | `boolean` | `false` | Enable agent-driven rule updates (requires `enableAgent`). Enabling it lets the dashboard change protection at runtime without a code change: a rule bans the IPs in its `ipBlacklist` (for `ipBanDuration` seconds), unbans the IPs in its `ipWhitelist`, adds its `suspiciousPatterns` to detection, and replaces `blockedCountries`, `whitelistCountries`, `rateLimit`, `rateLimitWindow`, `endpointRateLimits`, `blockCloudProviders`, `blockedUserAgents`, `enablePenetrationDetection`, `enableIpBanning`, `enableRateLimiting`, `enableRateLimitAutoBan`, `autoBanThreshold`, `autoBanDuration`, `emergencyMode` and `emergencyWhitelist`. A rule cannot change any other setting |
 | `dynamicRuleInterval` | `number` | `300` | Polling interval in seconds |
 
 ## Redis
@@ -177,7 +179,7 @@ Every penetration-detection violation increments the source IP's counter for the
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `excludePaths` | `string[]` | `[]` | URL paths to skip all security checks |
+| `excludePaths` | `string[]` | `[]` | URL paths excluded from security checks. The request still reaches your handler. The IP ban check, the global IP blacklist/whitelist and country rules, and rate limiting still apply; the penetration scan, route rules, user-agent, header and other checks are skipped. The response still gets security headers, CORS headers and request metrics, and behavior rules are not tracked |
 | `customErrorResponses` | `Record<number, string>` | `{}` | Custom error messages by status code |
 | `customRequestCheck` | `(req: GuardRequest) => Promise<GuardResponse \| null>` | `undefined` | Custom check function run at the end of the pipeline |
 | `customResponseModifier` | `(res: GuardResponse) => Promise<GuardResponse>` | `undefined` | Modify responses before sending |
