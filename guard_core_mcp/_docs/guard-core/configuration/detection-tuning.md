@@ -25,6 +25,14 @@ Maximum time in seconds for a single regex pattern match. Patterns that exceed t
 | `2.0`    | Balanced. Catches most attacks while limiting resource usage.|
 | `5.0`    | Permissive. Better detection but higher latency risk.        |
 
+### `detection_max_scan_seconds`
+
+**Type**: `float` | **Default**: `10.0` | **Range**: 0.1 - 60.0
+
+CPU time allowed for regex scanning one request (thread CPU time, not wall time, so a busy or CPU-starved host does not exhaust it), summed across every field (query parameters, headers, body values) and every pattern, not per `detect()` call. Once the budget is spent, the remaining patterns and request values are not scanned and the request gets a weighted `pattern_timeout` threat (pattern `scan_time_budget_exhausted`) that counts toward the anomaly score and the reported `timeouts`, the same way a per-pattern `detection_compiler_timeout` does, so padding a request with filler cannot silently skip detection. The default is far above normal traffic (a few milliseconds per request, roughly 16 ms for 8,863 characters on one measured CPU) and about 6 times the worst legitimate case the value cap allows (256 benign query parameters, 512 scan units, measured at about 1.5 s on that CPU), which leaves headroom for slower hosts. Only regex pattern CPU time counts, not decoding or semantic analysis. A pattern that hits `detection_compiler_timeout` is charged that timeout.
+
+In the async tree the scan awaits the regex worker instead of blocking the event loop, so other requests run between patterns. A single regex that is already executing still holds the GIL until it returns. The sync tree has no event loop and keeps blocking.
+
 ### `detection_pattern_validation_cache_path`
 
 **Type**: `str | None` | **Default**: `None`
@@ -81,6 +89,12 @@ Minimum score from the `SemanticAnalyzer` to classify content as a threat. The s
 
 !!! info "Semantic vs Regex"
     Regex patterns provide definitive threat detection. Semantic analysis is a secondary layer that catches obfuscated or novel attacks. Lowering the semantic threshold increases the chance of catching evasion attempts but also increases false positives on legitimate content containing technical terms.
+
+### `excluded_semantic_detection_headers`
+
+**Type**: `set[str]` | **Default**: `set()`
+
+Opt-in list of header names whose values skip the semantic analyzer only, matched case-insensitively. Regex category scanning of those headers is unchanged, and `excluded_detection_headers` keeps its meaning (it never silences a header). The semantic analyzer counts base64 as obfuscation and encoding layers, so JWT session cookies and bearer tokens can score close to `detection_semantic_threshold` (0.30 to 0.59 measured on sample cookies, 0.71 reported). For apps with JWT sessions, set `excluded_semantic_detection_headers={"cookie", "authorization"}` instead of raising the global threshold. A route can add names with `@security.detection_exclusion(semantic_headers={...})`.
 
 ### `detection_anomaly_threshold`
 
@@ -271,4 +285,4 @@ Every pattern category runs only on the request contexts it is scoped to. A payl
 | `xml` | `header`, `query_param`, `request_body`, `url_path` |
 | `xss` | `header`, `query_param`, `request_body`, `url_path` |
 
-Every category also runs on the `unknown` context, which is what a direct `SusPatternsManager.detect()` call without a context uses. Multipart parts, form fields and JSON values scan as `request_body`; a cookie value scans as `header`; a matrix parameter or path segment scans as `url_path`. 4.0.0 reviewed the whole matrix pair by pair with the per-context benchmark: nineteen (category, context) pairs that were never scanned gained coverage where the malicious corpus fired and the benign corpus stayed clean (three of them extend an already-disclosed false-positive class into one more context, with the corpus ids named in the benchmark), `sqli` gained `header` and `url_path` with three noise-prone rows kept narrow at pattern level, and every pair still excluded (`cmd_injection` on paths beyond the substitution patterns, `file_upload` on paths, `cms_probing`, `recon` and `sensitive_file` on headers) is one where the malicious corpus gains nothing on that context. That benchmark (`tests/test_sus_patterns/test_detection_benchmark.py`, run by the Detection Gate workflow) now measures recall and false positives per context for every category, so a change to any set shows up as a number, not a surprise.
+Every category also runs on the `unknown` context, which is what a direct `SusPatternsManager.detect()` call without a context uses. Multipart parts, form fields and JSON values scan as `request_body`; the `Cookie` header scans one `name=value` pair at a time, as `header`; a matrix parameter or path segment scans as `url_path`. 4.0.0 reviewed the whole matrix pair by pair with the per-context benchmark: nineteen (category, context) pairs that were never scanned gained coverage where the malicious corpus fired and the benign corpus stayed clean (three of them extend an already-disclosed false-positive class into one more context, with the corpus ids named in the benchmark), `sqli` gained `header` and `url_path` with three noise-prone rows kept narrow at pattern level, and every pair still excluded (`cmd_injection` on paths beyond the substitution patterns, `file_upload` on paths, `cms_probing`, `recon` and `sensitive_file` on headers) is one where the malicious corpus gains nothing on that context. That benchmark (`tests/test_sus_patterns/test_detection_benchmark.py`, run by the Detection Gate workflow) now measures recall and false positives per context for every category, so a change to any set shows up as a number, not a surprise.

@@ -12,6 +12,8 @@ All nine tools are registered in `guard_core_mcp/server.py`. `validate_config`, 
 
 `validate_config`, `config_fields` and `check_payload` depend on the corresponding library being installed in the interpreter running the server. If it is not, they return a structured `{"error": ..., "hint": ...}` instead of raising, see [Installation](installation.md#why-not-uvx-guard-core-mcp) for exactly what that looks like and why. The three ecosystem tools (`ecosystem`, `adapter_setup`, `wire_agent`) are pure data served from the registry in `guard_core_mcp/ecosystem.py` and work in any environment, with or without the Guard libraries installed.
 
+Every tool is read-only and idempotent, and declares that through MCP tool annotations (`readOnlyHint` true, `destructiveHint` false, `idempotentHint` true, `openWorldHint` false) alongside a human-readable title. Each tool's description says what it does, when to use it instead of a sibling tool, and which keys it returns, and every parameter carries a description and example values in its input schema, so a client or directory that scores tool definitions (such as Glama's Tool Definition Quality Score) reads the same contract documented below. The server also reports its own name, title and version at initialization, plus instructions that map each kind of question to the tool that answers it.
+
 ___
 
 `versions`

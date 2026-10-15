@@ -187,3 +187,25 @@ def test_wire_agent_tool_returns_the_setup() -> None:
 
     assert result["agent"]["package"] == "guard-agent-php"
     assert "laravel" in result["framework_note"]
+
+
+async def test_every_tool_is_documented_for_agents() -> None:
+    tools = await mcp.list_tools()
+
+    assert len(tools) == 9
+    for tool in tools:
+        assert tool.title and tool.title != tool.name
+        assert tool.annotations is not None
+        assert tool.annotations.read_only_hint is True
+        assert tool.annotations.destructive_hint is False
+        assert tool.annotations.idempotent_hint is True
+        assert tool.annotations.open_world_hint is False
+        assert "Returns" in (tool.description or ""), tool.name
+        for name, schema in tool.input_schema.get("properties", {}).items():
+            assert schema.get("description"), f"{tool.name}.{name}"
+            assert schema.get("examples"), f"{tool.name}.{name}"
+
+
+def test_server_identifies_itself_with_its_version() -> None:
+    assert mcp.version == __version__
+    assert mcp.title == "Guard Core"

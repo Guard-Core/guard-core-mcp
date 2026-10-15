@@ -49,6 +49,18 @@ ___
 </p>
 
 <p align="center">
+    <a href="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp">
+        <img src="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp/badges/score.svg" alt="guard-core-mcp MCP server - score on Glama">
+    </a>
+</p>
+
+<p align="center">
+    <a href="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp">
+        <img width="380" src="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp/badges/card.svg" alt="guard-core-mcp MCP server - quality and maintenance score on Glama">
+    </a>
+</p>
+
+<p align="center">
     <a href="https://guard-core.com">Website</a> &middot;
     <a href="https://guard-core.github.io/guard-core-mcp/latest/">Docs</a> &middot;
     <a href="https://playground.guard-core.com">Playground</a> &middot;
