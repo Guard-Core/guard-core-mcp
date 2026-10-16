@@ -10,6 +10,20 @@ Release Notes
 
 ___
 
+v1.6.0 (2026-10-16)
+-------------------
+
+Clearer tool definitions, patched dependencies and the Guard 4.4.0 family (v1.6.0)
+----------------------------------------------------------------------------------
+
+- **Changed** - Tool definitions are clearer for MCP clients and registries (descriptions and parameter documentation), with registry metadata in server.json, PyPI keywords, Glama badges and the glama.json server claim (#75, #77).
+- **Changed** - The lockfile moves the Guard libraries to guard-core 4.4.0, fastapi-guard 8.1.1 and guard-agent 3.2.4, the 2026-10-15 lockstep release, so the tools answer from the current API surface when the server runs in its own environment.
+- **Fixed** - Dependencies with published advisories move to patched versions: urllib3, pyjwt, virtualenv and multidict (#74).
+- **Changed** - `make bump-version` keeps server.json in step with the package version (#69), and the registry record points at the PyPI package (#67, #68).
+- **Docs** - The docs site_url drops /latest/ so canonical URLs resolve (#72).
+
+___
+
 v1.5.0 (2026-10-11)
 -------------------
 
