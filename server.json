@@ -3,12 +3,12 @@
   "name": "io.github.Guard-Core/guard-core-mcp",
   "title": "Guard Core",
   "description": "Guard Core security MCP: SecurityConfig validation, docs search, live threat detection.",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "websiteUrl": "https://guard-core.github.io/guard-core-mcp/",
   "packages": [
     {
       "identifier": "guard-core-mcp",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "transport": {
         "type": "stdio"
       },
