@@ -31,7 +31,7 @@ ___
 <p align="center">
     <a href="https://smithery.ai/servers/rennf93/guard-core-mcp"><img src="https://img.shields.io/badge/Smithery-listed-FF5601" alt="Smithery"></a>
     <a href="https://registry.modelcontextprotocol.io/v0/servers?search=io.github.Guard-Core/guard-core-mcp"><img src="https://img.shields.io/badge/MCP_Registry-listed-0080ff" alt="MCP Registry"></a>
-    <a href="https://context7.com/rennf93/guard-core-mcp"><img src="https://img.shields.io/badge/Context7-indexed-0080ff" alt="Context7"></a>
+    <a href="https://context7.com/guard-core/guard-core-mcp"><img src="https://img.shields.io/badge/Context7-indexed-0080ff" alt="Context7"></a>
     <a href="https://mcprush.com/guard-core/guard-core-mcp"><img src="https://img.shields.io/badge/MCPRush-listed-7c3aed" alt="MCPRush"></a>
     <a href="https://chatgpt.com/plugins/plugin_asdk_app_6abfa9f3e59c8191b26f2beb6bf716ec"><img src="https://img.shields.io/badge/ChatGPT-app-10a37f" alt="ChatGPT app"></a>
     <a href="https://aiagentslisting.com/mcp/guard-core-mcp"><img src="https://aiagentslisting.com/guard-core-mcp/badge.svg?claim=2b98e44a58647bfc3c074b6a147aa169" alt="Guard Core Mcp on AI Agents Listing"></a>
