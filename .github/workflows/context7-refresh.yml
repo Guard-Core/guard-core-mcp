@@ -20,7 +20,7 @@ jobs:
             echo "::notice::CONTEXT7_API_KEY is not set; skipping the Context7 refresh"
             exit 0
           fi
-          curl -fsS -X POST https://context7.com/api/v1/refresh \
+          curl -sS --fail-with-body -X POST https://context7.com/api/v1/refresh \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $CONTEXT7_API_KEY" \
-            -d '{"libraryName": "/rennf93/guard-core-mcp"}'
+            -d '{"libraryName": "/guard-core/guard-core-mcp"}'
