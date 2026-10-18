@@ -53,7 +53,13 @@ ___
         <img src="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp/badges/score.svg" alt="guard-core-mcp MCP server - score on Glama">
     </a>
     <a href="https://smithery.ai/servers/rennf93/guard-core-mcp">
-        <img src="https://smithery.ai/badge/rennf93/guard-core-mcp" alt="smithery badge">
+        <img src="https://img.shields.io/badge/Smithery-listed-FF5601" alt="Smithery">
+    </a>
+    <a href="https://registry.modelcontextprotocol.io/v0/servers?search=io.github.Guard-Core/guard-core-mcp">
+        <img src="https://img.shields.io/badge/MCP_Registry-listed-0080ff" alt="MCP Registry">
+    </a>
+    <a href="https://context7.com/rennf93/guard-core-mcp">
+        <img src="https://img.shields.io/badge/Context7-indexed-0080ff" alt="Context7">
     </a>
 </p>
 
