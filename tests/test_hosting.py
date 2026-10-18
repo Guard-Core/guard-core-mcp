@@ -8,8 +8,10 @@ import pytest
 from starlette.responses import JSONResponse
 from starlette.types import Receive, Scope, Send
 
+from guard_core_mcp import __version__
 from guard_core_mcp.hosting import (
     METADATA_PATH,
+    SERVER_CARD_PATH,
     HostingConfig,
     TokenVerifier,
     compose_hosted_stack,
@@ -84,6 +86,36 @@ async def test_metadata_answers_head_requests() -> None:
         response = await client.head(METADATA_PATH)
 
     assert response.status_code == 200
+
+
+async def test_server_card_reports_the_running_version_without_authentication() -> None:
+    pem = oauth_tokens.generate_key_pem()
+    stack, app = make_stack(oauth_tokens.build_jwks(pem))
+    async with make_client(stack) as client:
+        response = await client.get(SERVER_CARD_PATH)
+        head = await client.head(SERVER_CARD_PATH)
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "serverInfo": {"name": "guard-core-mcp", "version": __version__},
+        "authentication": {"required": True, "schemes": ["oauth2"]},
+    }
+    assert "max-age=300" in response.headers["Cache-Control"]
+    assert head.status_code == 200
+    assert app.reached is False
+
+
+async def test_public_paths_require_a_token_for_writes() -> None:
+    pem = oauth_tokens.generate_key_pem()
+    stack, app = make_stack(oauth_tokens.build_jwks(pem))
+    async with make_client(stack) as client:
+        responses = [
+            await client.post(path, json={})
+            for path in (METADATA_PATH, SERVER_CARD_PATH)
+        ]
+
+    assert [response.status_code for response in responses] == [401, 401]
+    assert app.reached is False
 
 
 async def test_missing_token_is_rejected_with_a_discovery_hint() -> None:

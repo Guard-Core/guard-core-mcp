@@ -1,0 +1,26 @@
+name: Refresh Context7
+# Asks Context7 to re-index this server's docs on every published release.
+# Needs the CONTEXT7_API_KEY repository secret (Context7 dashboard); without it
+# the job reports the missing secret and exits cleanly.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the Context7 refresh
+        env:
+          CONTEXT7_API_KEY: ${{ secrets.CONTEXT7_API_KEY }}
+        run: |
+          if [ -z "$CONTEXT7_API_KEY" ]; then
+            echo "::notice::CONTEXT7_API_KEY is not set; skipping the Context7 refresh"
+            exit 0
+          fi
+          curl -fsS -X POST https://context7.com/api/v1/refresh \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $CONTEXT7_API_KEY" \
+            -d '{"libraryName": "/rennf93/guard-core-mcp"}'

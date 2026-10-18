@@ -12,9 +12,12 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from guard_core_mcp import __version__
 from guard_core_mcp.server import mcp
 
 METADATA_PATH = "/.well-known/oauth-protected-resource"
+SERVER_CARD_PATH = "/.well-known/mcp/server-card.json"
+PUBLIC_PATHS = (METADATA_PATH, SERVER_CARD_PATH)
 
 
 def _env(name: str) -> str:
@@ -69,6 +72,13 @@ class HostingConfig:
             "scopes_supported": [self.oauth_scope],
             "bearer_methods_supported": ["header"],
         }
+
+
+def server_card_document() -> dict[str, Any]:
+    return {
+        "serverInfo": {"name": "guard-core-mcp", "version": __version__},
+        "authentication": {"required": True, "schemes": ["oauth2"]},
+    }
 
 
 class TokenVerifier:
@@ -130,7 +140,7 @@ class BearerAuthMiddleware:
         self._mcprush_token = mcprush_token.encode() if mcprush_token else None
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] != "http" or scope["path"] == METADATA_PATH:
+        if scope["type"] != "http" or self._is_public_read(scope):
             await self.app(scope, receive, send)
             return
         mcprush = Headers(scope=scope).get("x-mcprush-token")
@@ -155,6 +165,10 @@ class BearerAuthMiddleware:
             await self._reject(scope, receive, send, str(exception) or "invalid token")
             return
         await self.app(scope, receive, send)
+
+    @staticmethod
+    def _is_public_read(scope: Scope) -> bool:
+        return scope["path"] in PUBLIC_PATHS and scope["method"] in ("GET", "HEAD")
 
     @staticmethod
     def _bearer_token(authorization: str | None) -> str | None:
@@ -195,9 +209,29 @@ class ProtectedResourceMetadata:
         await self.app(scope, receive, send)
 
 
+class ServerCard:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+        self._document = server_card_document()
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        serves_card = (
+            scope["type"] == "http"
+            and scope["method"] in ("GET", "HEAD")
+            and scope["path"] == SERVER_CARD_PATH
+        )
+        if serves_card:
+            response = JSONResponse(
+                self._document, headers={"Cache-Control": "public, max-age=300"}
+            )
+            await response(scope, receive, send)
+            return
+        await self.app(scope, receive, send)
+
+
 def compose_hosted_stack(mcp_app: ASGIApp, config: HostingConfig) -> ASGIApp:
     auth = BearerAuthMiddleware(
-        ProtectedResourceMetadata(mcp_app, config),
+        ServerCard(ProtectedResourceMetadata(mcp_app, config)),
         TokenVerifier(config),
         config.metadata_url(),
         mcprush_token=config.mcprush_token,

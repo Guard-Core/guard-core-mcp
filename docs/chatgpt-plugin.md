@@ -24,6 +24,10 @@ access tokens against the platform API's JWKS and checks the `mcp` scope.
 It keeps no user data; configs and payloads sent to `validate_config` and
 `check_payload` are processed transiently and never persisted or logged.
 
+It also serves `/.well-known/mcp/server-card.json` without a token. The card's
+`serverInfo.version` is the running package version, so it changes with every
+release without a separate edit.
+
 ## Environment variables
 
 | Variable | Required | Purpose |
