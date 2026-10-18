@@ -799,6 +799,9 @@ documentation and run payloads through the real detection engine.</p>
 access tokens against the platform API's JWKS and checks the <code>mcp</code> scope.
 It keeps no user data; configs and payloads sent to <code>validate_config</code> and
 <code>check_payload</code> are processed transiently and never persisted or logged.</p>
+<p>It also serves <code>/.well-known/mcp/server-card.json</code> without a token. The card's
+<code>serverInfo.version</code> is the running package version, so it changes with every
+release without a separate edit.</p>
 <h2 id="environment-variables">Environment variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
