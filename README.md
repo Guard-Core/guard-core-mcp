@@ -52,6 +52,9 @@ ___
     <a href="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp">
         <img src="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp/badges/score.svg" alt="guard-core-mcp MCP server - score on Glama">
     </a>
+    <a href="https://smithery.ai/servers/rennf93/guard-core-mcp">
+        <img src="https://smithery.ai/badge/rennf93/guard-core-mcp" alt="smithery badge">
+    </a>
 </p>
 
 <p align="center">
