@@ -1,7 +1,7 @@
 {
   "fastapi-guard": {
     "site_url": "https://guard-core.github.io/fastapi-guard/latest/",
-    "version": "8.1.1"
+    "version": "8.1.2"
   },
   "guard-agent": {
     "site_url": "https://guard-core.github.io/guard-agent/latest/",
