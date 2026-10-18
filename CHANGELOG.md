@@ -3,6 +3,21 @@ Release Notes
 
 ___
 
+v1.7.0 (2026-10-18)
+-------------------
+
+Server card from the running version, Context7 refresh and directory badges (v1.7.0)
+------------------------------------------------------------------------------------
+
+- **Added** - Hosted mode serves `/.well-known/mcp/server-card.json` itself, with `serverInfo.version` taken from the running package, so the card no longer goes stale between releases (#87).
+- **Added** - Every published release asks Context7 to re-index the server's docs; the job needs the `CONTEXT7_API_KEY` repository secret and skips with a notice without it (#87).
+- **Changed** - Unauthenticated POSTs to `/.well-known/oauth-protected-resource` and the server card now get a 401 instead of passing the auth middleware (#87).
+- **Changed** - The vendored docs and the lockfile move to fastapi-guard 8.1.2, so the hosted tools and the docs answer from the same release (#87).
+- **Fixed** - The MCP Registry publish runs only after the version is on PyPI, since the registry validates the PyPI package (#81).
+- **Docs** - The README carries a badge for every directory the server is listed on (Smithery, the MCP Registry, Context7, MCPRush, the ChatGPT app, AI Agents Listing) and a single Glama card, with no underlined gaps between badges (#83, #84, #85, #86).
+
+___
+
 v1.6.0 (2026-10-16)
 -------------------
 
