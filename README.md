@@ -1,7 +1,5 @@
 <p align="center">
-    <a href="https://guard-core.github.io/guard-core/latest/">
-        <img src="https://guard-core.github.io/guard-core/latest/assets/guard_core_legend.svg" alt="Guard Core">
-    </a>
+    <a href="https://guard-core.github.io/guard-core/latest/"><img src="https://guard-core.github.io/guard-core/latest/assets/guard_core_legend.svg" alt="Guard Core"></a>
 </p>
 
 ___
@@ -11,71 +9,36 @@ ___
 </p>
 
 <p align="center">
-    <a href="https://badge.fury.io/py/guard-core-mcp">
-        <img src="https://badge.fury.io/py/guard-core-mcp.svg?cache=none&icon=si%3Apython&icon_color=%23008cb4" alt="PyPiVersion">
-    </a>
-    <a href="https://guard-core.github.io/guard-core-mcp/latest/">
-        <img src="https://img.shields.io/badge/docs-latest-0080ff.svg" alt="Docs">
-    </a>
-    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/release.yml">
-        <img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/release.yml/badge.svg" alt="Release">
-    </a>
-    <a href="https://opensource.org/licenses/MIT">
-        <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
-    </a>
-    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/ci.yml">
-        <img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/ci.yml/badge.svg" alt="CI">
-    </a>
-    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/code-ql.yml">
-        <img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/code-ql.yml/badge.svg" alt="CodeQL">
-    </a>
+    <a href="https://badge.fury.io/py/guard-core-mcp"><img src="https://badge.fury.io/py/guard-core-mcp.svg?cache=none&icon=si%3Apython&icon_color=%23008cb4" alt="PyPiVersion"></a>
+    <a href="https://guard-core.github.io/guard-core-mcp/latest/"><img src="https://img.shields.io/badge/docs-latest-0080ff.svg" alt="Docs"></a>
+    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/release.yml"><img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/release.yml/badge.svg" alt="Release"></a>
+    <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License"></a>
+    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/ci.yml"><img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/code-ql.yml"><img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/code-ql.yml/badge.svg" alt="CodeQL"></a>
 </p>
 
 <p align="center">
-    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/pages/pages-build-deployment">
-        <img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/pages/pages-build-deployment/badge.svg?branch=gh-pages" alt="PagesBuildDeployment">
-    </a>
-    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/docs.yml">
-        <img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/docs.yml/badge.svg" alt="DocsUpdate">
-    </a>
+    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/pages/pages-build-deployment"><img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/pages/pages-build-deployment/badge.svg?branch=gh-pages" alt="PagesBuildDeployment"></a>
+    <a href="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/docs.yml"><img src="https://github.com/Guard-Core/guard-core-mcp/actions/workflows/docs.yml/badge.svg" alt="DocsUpdate"></a>
     <img src="https://img.shields.io/github/last-commit/Guard-Core/guard-core-mcp?style=flat&amp;logo=git&amp;logoColor=white&amp;color=0080ff" alt="last-commit">
 </p>
 
 <p align="center">
     <img src="https://img.shields.io/badge/Python-3776AB.svg?style=flat&logo=python&logoColor=white" alt="Python"> <img src="https://img.shields.io/badge/MCP-1B1B1B.svg?style=flat" alt="MCP">
-    <a href="https://pepy.tech/project/guard-core-mcp">
-        <img src="https://pepy.tech/badge/guard-core-mcp" alt="Downloads">
-    </a>
+    <a href="https://pepy.tech/project/guard-core-mcp"><img src="https://pepy.tech/badge/guard-core-mcp" alt="Downloads"></a>
 </p>
 
 <p align="center">
-    <a href="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp">
-        <img src="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp/badges/score.svg" alt="guard-core-mcp MCP server - score on Glama">
-    </a>
-    <a href="https://smithery.ai/servers/rennf93/guard-core-mcp">
-        <img src="https://img.shields.io/badge/Smithery-listed-FF5601" alt="Smithery">
-    </a>
-    <a href="https://registry.modelcontextprotocol.io/v0/servers?search=io.github.Guard-Core/guard-core-mcp">
-        <img src="https://img.shields.io/badge/MCP_Registry-listed-0080ff" alt="MCP Registry">
-    </a>
-    <a href="https://context7.com/rennf93/guard-core-mcp">
-        <img src="https://img.shields.io/badge/Context7-indexed-0080ff" alt="Context7">
-    </a>
-    <a href="https://mcprush.com/guard-core/guard-core-mcp">
-        <img src="https://img.shields.io/badge/MCPRush-listed-7c3aed" alt="MCPRush">
-    </a>
-    <a href="https://chatgpt.com/plugins/plugin_asdk_app_6abfa9f3e59c8191b26f2beb6bf716ec">
-        <img src="https://img.shields.io/badge/ChatGPT-app-10a37f" alt="ChatGPT app">
-    </a>
-    <a href="https://aiagentslisting.com/mcp/guard-core-mcp">
-        <img src="https://aiagentslisting.com/guard-core-mcp/badge.svg?claim=2b98e44a58647bfc3c074b6a147aa169" alt="Guard Core Mcp on AI Agents Listing">
-    </a>
+    <a href="https://smithery.ai/servers/rennf93/guard-core-mcp"><img src="https://img.shields.io/badge/Smithery-listed-FF5601" alt="Smithery"></a>
+    <a href="https://registry.modelcontextprotocol.io/v0/servers?search=io.github.Guard-Core/guard-core-mcp"><img src="https://img.shields.io/badge/MCP_Registry-listed-0080ff" alt="MCP Registry"></a>
+    <a href="https://context7.com/rennf93/guard-core-mcp"><img src="https://img.shields.io/badge/Context7-indexed-0080ff" alt="Context7"></a>
+    <a href="https://mcprush.com/guard-core/guard-core-mcp"><img src="https://img.shields.io/badge/MCPRush-listed-7c3aed" alt="MCPRush"></a>
+    <a href="https://chatgpt.com/plugins/plugin_asdk_app_6abfa9f3e59c8191b26f2beb6bf716ec"><img src="https://img.shields.io/badge/ChatGPT-app-10a37f" alt="ChatGPT app"></a>
+    <a href="https://aiagentslisting.com/mcp/guard-core-mcp"><img src="https://aiagentslisting.com/guard-core-mcp/badge.svg?claim=2b98e44a58647bfc3c074b6a147aa169" alt="Guard Core Mcp on AI Agents Listing"></a>
 </p>
 
 <p align="center">
-    <a href="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp">
-        <img width="380" src="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp/badges/card.svg" alt="guard-core-mcp MCP server - quality and maintenance score on Glama">
-    </a>
+    <a href="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp"><img width="380" src="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp/badges/card.svg" alt="guard-core-mcp MCP server - quality and maintenance score on Glama"></a>
 </p>
 
 <p align="center">
