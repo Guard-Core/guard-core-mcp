@@ -39,6 +39,7 @@ ___
 
 <p align="center">
     <a href="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp"><img width="380" src="https://glama.ai/mcp/servers/Guard-Core/guard-core-mcp/badges/card.svg" alt="guard-core-mcp MCP server - quality and maintenance score on Glama"></a>
+    <a href="https://mcprush.com/to/guard-core-mcp?ref=badge"><img width="380" src="https://mcprush.com/badge/guard-core-mcp/card.svg" alt="Guard Core MCP server"></a>
 </p>
 
 <p align="center">
