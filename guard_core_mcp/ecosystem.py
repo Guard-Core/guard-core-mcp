@@ -371,9 +371,12 @@ GO_ENTRY = LanguageEntry(
             "encrypted ingest"
         ),
         integration=(
-            "standalone: it does not depend on guard-core-go and no adapter "
-            "forwards telemetry automatically, so call SendEvent/SendMetric from "
-            "your handlers or middleware"
+            "standalone library: its packages do not import guard-core-go "
+            "(go.mod requires it for examples/basic_usage and the build-info "
+            "engine version lookup), and no adapter forwards telemetry "
+            "automatically, so call SendEvent/SendMetric from your handlers or "
+            "middleware, or wire it into the engine's OnBlock hook as "
+            "examples/basic_usage does"
         ),
         snippet_language="go",
         snippet=GO_AGENT_SNIPPET,
@@ -722,11 +725,11 @@ PHP_ENTRY = LanguageEntry(
         install="composer require rennf93/guard-core-php",
         release_status="tagged",
         conformance=(
-            "the composer conformance scripts (bin/conformance.php, "
+            "make test runs bin/conformance.php (also composer conformance), "
             "bin/conformance_pipeline.php, bin/conformance_events.php, "
-            "bin/conformance_redis.php, bin/conformance_safety.php and "
-            "bin/conformance_cost.php) run the vendored spec-4.1.0 corpus "
-            "(375 cases across 21 suites)"
+            "bin/conformance_safety.php and bin/conformance_redis.php over the "
+            "vendored spec-4.1.0 corpus (375 cases across 21 suites); "
+            "bin/conformance_cost.php ships but nothing runs it"
         ),
         notes=PHP_ENGINE_NOTES,
     ),
@@ -795,8 +798,10 @@ PHP_ENTRY = LanguageEntry(
             "and optional AES-256-GCM encrypted ingest"
         ),
         integration=(
-            "standalone: no PHP adapter forwards telemetry automatically, so "
-            "flush on request shutdown (register_shutdown_function, "
+            "every PHP adapter takes an optional agentHandler and forwards it to "
+            "the engine (GuardEngine::setAgentHandler()), so with enableAgent: "
+            "true events, metrics and dashboard dynamic rules flow through it; "
+            "still flush on request shutdown (register_shutdown_function, "
             "kernel.terminate or Laravel terminate) or run tick() in workers"
         ),
         snippet_language="php",
@@ -996,8 +1001,11 @@ RUST_ENTRY = LanguageEntry(
             "ingest"
         ),
         integration=(
-            "standalone crate (no dependency on the engine); call send_event "
-            "from your handlers and stop() at shutdown for the final flush"
+            "no default dependency on the engine; the optional guard-core "
+            "feature adds bridge::GuardAgentTelemetry, the guard-core-rs "
+            "TelemetryHandler that receives every middleware event and metric; "
+            "otherwise call send_event from your handlers, and stop() at "
+            "shutdown for the final flush"
         ),
         snippet_language="rust",
         snippet=RUST_AGENT_SNIPPET,

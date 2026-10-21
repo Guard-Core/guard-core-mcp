@@ -1,14 +1,14 @@
 # guard-agent-go
 
-The Go telemetry agent for the Guard ecosystem. Module `github.com/rennf93/guard-agent-go/v3`, package `guardagent`, directive `go 1.25.0`. It is standalone: its only dependency is `redis/go-redis/v9`, and it does not depend on guard-core-go.
+The Go telemetry agent for the Guard ecosystem. Module `github.com/rennf93/guard-agent-go/v3`, package `guardagent`, directive `go 1.26.0`. The library is standalone: its packages import only `redis/go-redis/v9`. `go.mod` also requires `guard-core-go/v4` v4.4.0, which `examples/basic_usage` uses and `version.go` looks up in the build info to report the linked engine version.
 
 ## Install
 
 ```sh
-go get github.com/rennf93/guard-agent-go/v3@v3.1.0
+go get github.com/rennf93/guard-agent-go/v3@v3.2.4
 ```
 
-Tagged `v3.1.0`; the `Version` constant in `version.go` matches the tag. The module path carries the `/v3` major suffix, so installs must use it.
+Tagged `v3.2.4`; the `Version` constant in `version.go` matches the tag. The module path carries the `/v3` major suffix, so installs must use it.
 
 ## Setup
 
@@ -26,6 +26,6 @@ The 3.1.0 parity surface adds dynamic-rules polling (`dynamic_rules.go`) with lo
 
 ## Footguns
 
-- No adapter forwards telemetry automatically: call `SendEvent`/`SendMetric` from your handlers or middleware yourself.
+- No adapter forwards telemetry automatically: call `SendEvent`/`SendMetric` from your handlers or middleware yourself, or wire it into the engine as `examples/basic_usage` does (the engine's `OnBlock` hook builds one `SecurityEvent` per blocked request).
 - `New` takes a `Config` value plus variadic `Option`, not a pointer.
 - Set `SigningSecret` from `INGEST_PAYLOAD_SIGNING_SECRET`; an empty secret means the signature header is simply omitted.

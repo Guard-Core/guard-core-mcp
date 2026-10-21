@@ -1,6 +1,6 @@
 # guard-core-app (SaaS ingestion contract)
 
-The SaaS platform (api.guard-core.com) that receives telemetry from every Guard agent. The contract below is verified against `backend/guard-core-api/guard_core_api/api/routers/telemetry_router.py` and its middleware/services. The repo tags by calendar date (latest at time of writing: 2026.09.24, unchanged in this train); AGENTS.md and CLAUDE.md exist, there is no SKILL.md.
+The SaaS platform (api.guard-core.com) that receives telemetry from every Guard agent. The contract below is verified against `backend/guard-core-api/guard_core_api/api/routers/telemetry_router.py` and its middleware/services. The repo tags by calendar date (latest at this sync: 2026.10.21); AGENTS.md and CLAUDE.md sit at the root, and a SKILL.md ships at `backend/guard-core-api/guard_core_api/.agents/skills/guard-core-app/SKILL.md`.
 
 ## Endpoints
 
@@ -32,7 +32,7 @@ All mounted under the `/api/v1` prefix:
 
 ## Response semantics
 
-- `200`: accepted. The `TelemetryResponse` body carries `success`, `events_dropped_invalid_timestamp` and `errors`; `success: false` or a non-empty `errors` means a partial failure, and agents requeue the batch in memory, retain their Redis keys and back off.
+- `200`: accepted. The `TelemetryResponse` body carries `success`, `events_received`, `events_dropped_invalid_timestamp`, `metrics_received`, `events_processed`, `metrics_processed`, `errors` and `quota_warning`; `success: false` or a non-empty `errors` means a partial failure, and agents requeue the batch in memory, retain their Redis keys and back off.
 - `429`: rate limited by three token buckets (per-IP, per-API-key, per-project), always with a `Retry-After` header (seconds, minimum 1). Agents must buffer and retry, never drop; the client-side Retry-After cap is 300s.
 - `413`: payload too large; agents split the batch in half recursively or drop the singleton.
 - `400/404/422`: classified as permanent rejections agent-side (`_NON_RETRYABLE_STATUS_CODES` also includes 413, reached only after the split attempt); the batch is dropped, never retried.
