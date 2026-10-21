@@ -26,3 +26,6 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 COPY guard_core_mcp/ /app/guard_core_mcp/
 COPY tests/ /app/tests/
+COPY scripts/ /app/scripts/
+
+RUN uv pip install --python .venv/bin/python --no-deps -e /app
