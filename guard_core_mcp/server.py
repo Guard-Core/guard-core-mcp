@@ -404,7 +404,7 @@ def ecosystem() -> dict[str, Any]:
     Each language entry holds its engine (name, install command, version,
     release_status, conformance status), every framework adapter with a verified
     quick-start snippet and the Python adapter it maps to, and its telemetry agent
-    with delivery semantics. A conformance block describes the frozen spec-4.0.2
+    with delivery semantics. A conformance block describes the frozen spec-4.1.0
     corpus every engine is tested against, and a saas block documents the
     guard-core-app ingestion contract all agents share.
 
