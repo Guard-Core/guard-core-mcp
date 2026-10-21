@@ -1,6 +1,6 @@
 # guard-agent-php
 
-The PHP telemetry agent for the Guard ecosystem. Composer name `rennf93/guard-agent-php`, requires PHP `^8.2`, `ext-json` and `ext-curl`, and has zero composer dependencies (optional: `ext-redis` and `predis/predis`). Namespace root `RenzoFranceschini\GuardAgent\`.
+The PHP telemetry agent for the Guard ecosystem. Composer name `rennf93/guard-agent-php`, requires PHP `^8.2`, `ext-json`, `ext-curl` and `ext-openssl`, and has zero composer dependencies (optional: `ext-redis` and `predis/predis`). Namespace root `RenzoFranceschini\GuardAgent\`.
 
 ## Install
 
@@ -8,7 +8,7 @@ The PHP telemetry agent for the Guard ecosystem. Composer name `rennf93/guard-ag
 composer require rennf93/guard-agent-php
 ```
 
-Tagged `v3.1.0` and on Packagist, so plain composer resolves it; composer.json carries no `version` field, the version lives in `RenzoFranceschini\GuardAgent\Version::VERSION` (3.1.0) with `USER_AGENT = 'guard-agent/3.1.0'`.
+Tagged `v3.2.4` and on Packagist, so plain composer resolves it; composer.json carries no `version` field, the version lives in `RenzoFranceschini\GuardAgent\Version::VERSION` (3.2.4) with `USER_AGENT = 'guard-agent-php/' . VERSION`, so `guard-agent-php/3.2.4`.
 
 ## Setup
 
@@ -25,6 +25,8 @@ $agent->start();
 
 Public API: `start()`, `stop()`, `tick()`, `flushBuffer()`, `sendEvent(array)`, `sendMetric(array)`. Defaults from `AgentConfig`: `bufferSize` 100, `flushInterval` 30s, `statusInterval` 300s (floor 60s), `highWatermarkRatio` 0.8, `maxConcurrentFlushes` 1, `bufferOverflowPolicy` Drop (send never throws or blocks), `maxPayloadSize` 1024, `timeout` 30s, `retryAttempts` 3, `backoffFactor` 1.0, `compressionEnabled` true with `compressionThreshold` 1024 bytes.
 
+The PHP adapters (psr15-guard, laravel-guard, symfony-guard, slim-guard) take an optional `agentHandler` and forward it to the engine (`GuardEngine::setAgentHandler()`), so with `enableAgent: true` security events, metrics and dashboard dynamic rules flow through this agent.
+
 Request-shutdown shipping: call `flushBuffer()` and `stop()` from `register_shutdown_function` in plain PHP, `kernel.terminate` in Symfony, or the `terminate` hook in Laravel. Long-running workers instead loop `tick()` (cheap: no network I/O unless a trigger fires).
 
 Redis persistence is optional and dependency-free paths exist: `ExtRedisClient`, `PredisRedisClient`, or the built-in `StreamRedisClient` (speaks RESP over streams, no extension needed). Keys look like `{prefix}:agent_events:event_<nanos>_<8hex>` with a 3600s TTL.
@@ -35,9 +37,9 @@ Default drop overflow, Retry-After handling, permanent-rejection classification,
 
 ## Wire contract
 
-`POST {endpoint}/api/v1/events`, `/api/v1/metrics`, `/api/v1/status` with `User-Agent: guard-agent/3.1.0`, `X-API-Key`, `X-Agent-Install-Id`, optional `X-Project-Id`, and optional `X-Payload-Signature: v1=<hex>`, where the HMAC-SHA256 covers the **uncompressed** JSON body (the server decompresses gzip before verifying). The 413 cap is 262144 bytes decompressed.
+`POST {endpoint}/api/v1/events`, `/api/v1/metrics`, `/api/v1/status` with `User-Agent: guard-agent-php/3.2.4`, `X-API-Key`, `X-Agent-Install-Id`, optional `X-Project-Id`, and optional `X-Payload-Signature: v1=<hex>`, where the HMAC-SHA256 covers the **uncompressed** JSON body (the server decompresses gzip before verifying). The 413 cap is 262144 bytes decompressed.
 
 ## Footguns
 
 - `sendEvent` never throws under the default drop policy; a silent drop is the failure mode, so monitor `AgentStatus`/stats if delivery matters.
-- `ext-curl` is required (not suggested): the transport is implemented over curl with gzip bodies.
+- `ext-curl` and `ext-openssl` are required (not suggested): the transport is implemented over curl with gzip bodies.

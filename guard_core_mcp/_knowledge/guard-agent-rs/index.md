@@ -1,6 +1,6 @@
 # guard-agent-rs
 
-The Rust telemetry agent for the Guard ecosystem. Crate `guard-agent-rs` 3.1.0, edition 2024, MSRV 1.92. Standalone: it does not depend on guard-core-engine (stack: reqwest with rustls, tokio, hmac, sha2, flate2, optional redis behind the `persistence` feature).
+The Rust telemetry agent for the Guard ecosystem. Crate `guard-agent-rs` 3.2.4, edition 2024, MSRV 1.92. No default dependency on the engine (stack: reqwest with rustls, tokio, hmac, sha2, flate2, aes-gcm, optional redis behind the `persistence` feature). The optional `guard-core` feature pulls guard-core-rs and adds `bridge::GuardAgentTelemetry`, which implements the facade's `TelemetryHandler` so the engine's composite agent handler hands the agent every middleware event and metric.
 
 ## Install
 
@@ -8,9 +8,11 @@ The Rust telemetry agent for the Guard ecosystem. Crate `guard-agent-rs` 3.1.0, 
 cargo add guard-agent-rs
 # with the built-in Redis backend:
 cargo add guard-agent-rs --features persistence
+# with the guard-core-rs engine bridge:
+cargo add guard-agent-rs --features guard-core
 ```
 
-Tagged `v3.1.0` and on crates.io, so `cargo add` resolves it.
+Tagged `v3.2.4` and on crates.io, so `cargo add` resolves it.
 
 ## Setup
 
