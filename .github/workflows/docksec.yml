@@ -6,11 +6,13 @@ on:
     paths:
       - 'Dockerfile'
       - '**/Dockerfile'
+      - 'Dockerfile.hosted'
       - '.github/workflows/docksec.yml'
   pull_request:
     paths:
       - 'Dockerfile'
       - '**/Dockerfile'
+      - 'Dockerfile.hosted'
       - '.github/workflows/docksec.yml'
   schedule:
     - cron: '0 6 * * 1'
@@ -49,3 +51,41 @@ jobs:
         with:
           sarif_file: docksec-results
           category: docksec
+
+  scan-hosted:
+    # DockSec keeps only files named exactly Dockerfile, so it never reports on Dockerfile.hosted,
+    # the image release-docker.yml publishes. Lint and scan it, then build it and wait for its HEALTHCHECK.
+    name: Scan Dockerfile.hosted
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Lint with hadolint
+        run: docker run --rm -i hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d < Dockerfile.hosted
+
+      - name: Scan with trivy config
+        # --skip-check-update keeps the checks bundled with this pinned trivy, so the result only changes with the pin.
+        run: docker run --rm -v "$PWD:/src:ro" aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 config --skip-check-update --exit-code 1 /src/Dockerfile.hosted
+
+      - name: Build the image
+        run: docker build -f Dockerfile.hosted -t guard-core-mcp-hosted:ci .
+
+      - name: Wait for the HEALTHCHECK to pass
+        run: |
+          docker run -d --name hosted \
+            -e GUARD_CORE_MCP_PUBLIC_URL=https://mcp.example.test \
+            -e GUARD_CORE_MCP_OAUTH_ISSUER=https://auth.example.test \
+            -e GUARD_CORE_MCP_OAUTH_JWKS_URL=https://auth.example.test/jwks.json \
+            guard-core-mcp-hosted:ci
+          for _ in $(seq 1 30); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' hosted)
+            [ "$status" = healthy ] && exit 0
+            [ "$status" = unhealthy ] && break
+            sleep 5
+          done
+          docker logs hosted
+          exit 1
