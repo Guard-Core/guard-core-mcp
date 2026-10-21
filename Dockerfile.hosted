@@ -1,35 +1,35 @@
 ARG PYTHON_VERSION=3.10
 FROM python:${PYTHON_VERSION}-slim
 
-RUN apt-get update && apt-get install -y \
-    libsodium23 \
-    curl
+COPY --from=ghcr.io/astral-sh/uv:0.13.4 /uv /uvx /bin/
+
+RUN useradd --system --uid 10001 --home /app --shell /usr/sbin/nologin guard \
+    && mkdir /app \
+    && chown guard:guard /app
 
 WORKDIR /app
 
-ENV PIP_NO_CACHE_DIR=false \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
+ENV PIP_DISABLE_PIP_VERSION_CHECK=on \
     PIP_DEFAULT_TIMEOUT=10 \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     GUARD_CORE_MCP_HTTP_HOST=0.0.0.0 \
     GUARD_CORE_MCP_HTTP_PORT=8020
 
-RUN pip install uv
+USER 10001
 
-COPY pyproject.toml uv.lock* README.md /app/
+COPY --chown=guard:guard pyproject.toml uv.lock* README.md /app/
 
-COPY guard_core_mcp/ /app/guard_core_mcp/
+COPY --chown=guard:guard guard_core_mcp/ /app/guard_core_mcp/
 
-RUN uv sync --extra hosted --frozen --compile-bytecode
+RUN uv sync --extra hosted --frozen --compile-bytecode --no-cache
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-RUN useradd --system --home /app --shell /usr/sbin/nologin guard \
-    && chown -R guard:guard /app
-
-USER guard
-
 EXPOSE 8020
+
+# The server card needs no token, so a 200 there means the app is serving.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD ["python", "-c", "import os, urllib.request; h = os.environ.get('GUARD_CORE_MCP_HTTP_HOST', '127.0.0.1'); h = '127.0.0.1' if h in ('0.0.0.0', '::') else h; urllib.request.urlopen('http://' + h + ':' + os.environ.get('GUARD_CORE_MCP_HTTP_PORT', '8020') + '/.well-known/mcp/server-card.json', timeout=3)"]
 
 CMD ["guard-core-mcp-http"]
