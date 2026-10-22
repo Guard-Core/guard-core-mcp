@@ -1,10 +1,10 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.10, <3.15"
 resolution-markers = [
     "python_full_version >= '3.14'",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
-    "python_full_version == '3.11.*' or (python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'emscripten')",
+    "(python_full_version >= '3.11' and python_full_version < '3.14' and sys_platform != 'emscripten') or (python_full_version == '3.11.*' and sys_platform == 'emscripten')",
     "python_full_version < '3.11'",
 ]
 
@@ -3359,7 +3359,7 @@ source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.14'",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
-    "python_full_version == '3.11.*' or (python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'emscripten')",
+    "(python_full_version >= '3.11' and python_full_version < '3.14' and sys_platform != 'emscripten') or (python_full_version == '3.11.*' and sys_platform == 'emscripten')",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/aa/2a/9618a122aeb2a169a28b03889a2995fe297588964333d4a7d67bdf46e147/rpds_py-2026.6.3.tar.gz", hash = "sha256:1cebd1337c242e4ec2293e541f712b2da849b29f48f0c293684b71c0632625d4", size = 64051, upload-time = "2026-06-30T07:17:53.009Z" }
 wheels = [
@@ -3612,7 +3612,7 @@ source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.14'",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
-    "python_full_version == '3.11.*' or (python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'emscripten')",
+    "(python_full_version >= '3.11' and python_full_version < '3.14' and sys_platform != 'emscripten') or (python_full_version == '3.11.*' and sys_platform == 'emscripten')",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/db/a1/3b8ed9c1fc3aa6eebb57732d924ddaa0500ecc3b638d0454816320994383/stevedore-5.9.1.tar.gz", hash = "sha256:e97a2667923efda926e8713fde6a73616df68210a3cbc6f02b48967b676fd8bf", size = 518111, upload-time = "2026-08-20T15:25:14.754Z" }
 wheels = [
@@ -3791,7 +3791,7 @@ wheels = [
 
 [[package]]
 name = "virtualenv"
-version = "21.14.7"
+version = "21.14.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "distlib" },
@@ -3801,9 +3801,9 @@ dependencies = [
     { name = "python-discovery" },
     { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/dc/3f/935cf1757643381fb7f7cc98197b4bc119223d9c2cf37dc3b03ad2a4455f/virtualenv-21.14.7.tar.gz", hash = "sha256:5f427d56f39eb7e7447d641dd4b7ab1e9c92793f498f35f26da2e4972c5546ae", size = 5471741, upload-time = "2026-10-12T01:27:31.842Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d0/04/2f69ba1207ce59630ecea8ebfdaf5c8f9a14726f2408ccd145a18d1ef619/virtualenv-21.14.9.tar.gz", hash = "sha256:4d1bee354cd81c820da3bee56e38be3426490f8d1fc54e10ea5b2072ebad8ef8", size = 5500672, upload-time = "2026-10-17T16:09:42.345Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/52/5b/799c3e5b8e04d5fa1c9b61a4c1f5079603e747205c7311b92abd30283df5/virtualenv-21.14.7-py3-none-any.whl", hash = "sha256:3769219a308c5d2f093e7729621ad12a6346b5767a7ec4338414e2a0fb0c526b", size = 5487587, upload-time = "2026-10-12T01:27:29.37Z" },
+    { url = "https://files.pythonhosted.org/packages/64/e5/9a3918219745e8bdd64fe0fd9a2d7ce4fffde9268fbc791634b7d4779de9/virtualenv-21.14.9-py3-none-any.whl", hash = "sha256:ac51744da66ae56ff814b087d65096c94de698ec520adc624b108b679655809b", size = 5494452, upload-time = "2026-10-17T16:09:40.584Z" },
 ]
 
 [[package]]
