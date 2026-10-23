@@ -1,9 +1,6 @@
 # Guard Core as a ChatGPT plugin
 
-The same tools that power the local MCP server are also served remotely at
-`https://mcp.guard-core.com/mcp` and packaged as a ChatGPT plugin, so ChatGPT
-(and Codex, and any MCP client) can validate Guard configs, search the
-documentation and run payloads through the real detection engine.
+The same tools that power the local MCP server are also served remotely at `https://mcp.guard-core.com/mcp` and packaged as a ChatGPT plugin, so ChatGPT (and Codex, and any MCP client) can validate Guard configs, search the documentation and run payloads through the real detection engine.
 
 ## Architecture
 
@@ -19,14 +16,9 @@ ChatGPT (MCP client)
 guard-core-mcp hosted (streamable-http, all nine tools, latest pinned releases)
 ```
 
-The hosted server is a pure OAuth 2.1 resource server: it verifies RS256
-access tokens against the platform API's JWKS and checks the `mcp` scope.
-It keeps no user data; configs and payloads sent to `validate_config` and
-`check_payload` are processed transiently and never persisted or logged.
+The hosted server is a pure OAuth 2.1 resource server: it verifies RS256 access tokens against the platform API's JWKS and checks the `mcp` scope. It keeps no user data; configs and payloads sent to `validate_config` and `check_payload` are processed transiently and never persisted or logged.
 
-It also serves `/.well-known/mcp/server-card.json` without a token. The card's
-`serverInfo.version` is the running package version, so it changes with every
-release without a separate edit.
+It also serves `/.well-known/mcp/server-card.json` without a token. The card's `serverInfo.version` is the running package version, so it changes with every release without a separate edit.
 
 ## Environment variables
 
@@ -62,10 +54,7 @@ docker run -p 8020:8020 \
   ghcr.io/guard-core/guard-core-mcp:v1.7.0
 ```
 
-The image installs the `hosted` extra, so `versions` reports the exact
-guard-core, fastapi-guard and guard-agent releases the container was built
-with. The lockfile pins those at build time; refresh them with
-`uv lock --upgrade` when a new engine release ships.
+The image installs the `hosted` extra, so `versions` reports the exact guard-core, fastapi-guard and guard-agent releases the container was built with. The lockfile pins those at build time; refresh them with `uv lock --upgrade` when a new engine release ships.
 
 ## Testing in ChatGPT developer mode
 
@@ -77,8 +66,7 @@ with. The lockfile pins those at build time; refresh them with
 
 ## Local development against a local API
 
-Point every variable at localhost, generate a test signing key on the API
-side, and pass the public half inline:
+Point every variable at localhost, generate a test signing key on the API side, and pass the public half inline:
 
 ```bash
 GUARD_CORE_MCP_PUBLIC_URL=http://127.0.0.1:8020 \
@@ -87,17 +75,11 @@ GUARD_CORE_MCP_OAUTH_JWKS='{"keys":[ ...public jwk... ]}' \
 make run-http
 ```
 
-The e2e tests in `tests/test_e2e_http.py` do exactly this with a throwaway
-RSA key.
+The e2e tests in `tests/test_e2e_http.py` do exactly this with a throwaway RSA key.
 
 ## Plugin package
 
-`plugin/` holds the directory submission package: `plugin.json` (identity and
-the `com.openai` presentation metadata), `mcp.json` (the remote server
-declaration) and `skills/guard-core/SKILL.md` (tool-selection guidance that
-ships to the model). The icons under `plugin/assets/` are generated
-placeholders; swap in official brand assets before submitting if you have
-them.
+`plugin/` holds the directory submission package: `plugin.json` (identity and the `com.openai` presentation metadata), `mcp.json` (the remote server declaration) and `skills/guard-core/SKILL.md` (tool-selection guidance that ships to the model). The icons under `plugin/assets/` are generated placeholders; swap in official brand assets before submitting if you have them.
 
 ## Submission checklist
 
