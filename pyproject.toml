@@ -66,14 +66,9 @@ dev = [
     "fastapi-guard",
     "guard-agent",
     "guard-core",
-    "mkdocs",
-    "mkdocs-material",
-    "mkdocstrings",
-    "mkdocstrings-python",
     "mypy",
     "pip-audit; python_version >= '3.11'",
     "pre-commit; python_version >= '3.11'",
-    "pymarkdownlnt",
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
@@ -82,6 +77,17 @@ dev = [
     "safety; python_version >= '3.11'",
     "vulture",
     "xenon",
+]
+
+[dependency-groups]
+docs = [
+    "mike",
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocstrings",
+    "mkdocstrings-python",
+    "pymarkdownlnt",
+    "yq",
 ]
 
 [build-system]
@@ -231,6 +237,16 @@ max_average = "A"
 exclude = ["tests/*", ".venv/*", "vulture_whitelist.py", "guard_core_mcp/_docs/*"]
 ignore = []
 
+[tool.uv]
+exclude-newer = "7 days"
+# filelock 4.2.1 fixes GHSA-v4x8-3wr5-3wq8 but needs Python 3.11, and safety caps filelock below 4.0.
+override-dependencies = ["filelock>=4.2.1"]
+
+[tool.uv.exclude-newer-package]
+fastapi-guard = "0 days"
+guard-agent = "0 days"
+guard-core = "0 days"
+
 [tool.deptry]
 exclude = ["tests", ".venv", "vulture_whitelist.py", "guard_core_mcp/_docs", "docs"]
 extend_exclude = ["conftest.py"]
@@ -243,6 +259,8 @@ per_rule_ignores = { "DEP002" = [
     "guard-core",
     "mkdocs",
     "mkdocs-material",
+    "yq",
+    "mike",
     "mkdocstrings",
     "mkdocstrings-python",
     "mypy",
@@ -258,7 +276,3 @@ per_rule_ignores = { "DEP002" = [
     "vulture",
     "xenon",
 ] }
-
-[tool.uv]
-# filelock 4.2.1 fixes GHSA-v4x8-3wr5-3wq8 but needs Python 3.11, and safety caps filelock below 4.0.
-override-dependencies = ["filelock>=4.2.1"]
