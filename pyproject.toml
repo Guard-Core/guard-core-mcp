@@ -80,6 +80,9 @@ dev = [
 ]
 
 [dependency-groups]
+release = [
+    "build",
+]
 docs = [
     "mike",
     "mkdocs",
@@ -259,6 +262,7 @@ per_rule_ignores = { "DEP002" = [
     "guard-core",
     "mkdocs",
     "mkdocs-material",
+    "build",
     "yq",
     "mike",
     "mkdocstrings",
