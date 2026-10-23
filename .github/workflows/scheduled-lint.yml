@@ -20,6 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
+          # Tooling job with no test run: the dev tools need 3.11+; ruff target-version py310 and mypy python_version 3.10 still check against the 3.10 floor, and the test matrix owns the other versions.
           python-version: '3.11'
 
       - name: Install uv
@@ -42,6 +43,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
+          # Tooling job with no test run: 3.10 is the floor the lint and type config targets (mypy python_version 3.10); the test matrix owns the other versions.
           python-version: '3.10'
 
       - name: Install pymarkdownlnt
