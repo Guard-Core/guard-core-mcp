@@ -18,11 +18,11 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=on \
 
 USER 10001
 
-COPY --chown=guard:guard pyproject.toml uv.lock* README.md /app/
+COPY --chown=guard:guard pyproject.toml uv.lock README.md /app/
 
 COPY --chown=guard:guard guard_core_mcp/ /app/guard_core_mcp/
 
-RUN uv sync --extra hosted --frozen --compile-bytecode --no-cache
+RUN uv sync --locked --extra hosted --compile-bytecode --no-cache
 
 ENV PATH="/app/.venv/bin:$PATH"
 

@@ -69,7 +69,14 @@ jobs:
           # Tooling job with no test run: the dev tools need 3.11+; ruff target-version py310 and mypy python_version 3.10 still check against the 3.10 floor, and the test matrix owns the other versions.
           python-version: '3.11'
       - run: pip install uv
-      - run: uv sync --extra dev
+      - run: uv sync --locked --extra dev
+      - name: Check uv.lock is tracked and in sync
+        run: |
+          test "$(git ls-files uv.lock)" = "uv.lock"
+          rc=0
+          git check-ignore -q uv.lock || rc=$?
+          test "$rc" -eq 1
+          uv lock --check
       - run: uv run pre-commit run --all-files
 
   test:
@@ -112,7 +119,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --extra dev
+          uv sync --locked --extra dev
 
       - name: Assert the synced environment runs the matrix interpreter
         run: |
@@ -191,6 +198,7 @@ jobs:
           # Tooling job with no test run: 3.10 is the floor the lint and type config targets (mypy python_version 3.10); the test matrix owns the other versions.
           python-version: '3.10'
       - run: pip install uv
+      - run: uv sync --locked --extra dev
       - name: Check vendored docs are current
         run: |
           git clone --depth 1 https://github.com/Guard-Core/fastapi-guard ../fastapi-guard
