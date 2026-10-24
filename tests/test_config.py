@@ -97,7 +97,9 @@ def _use_deprecated_fields_model(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-def test_deprecated_field_is_reported_with_its_name(monkeypatch) -> None:
+def test_deprecated_field_is_reported_with_its_name(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _use_deprecated_fields_model(monkeypatch)
 
     report = validate_config({"old_value": 1})
@@ -143,7 +145,7 @@ def test_format_annotation_reports_bare_generic_origin_without_args() -> None:
 
 
 def test_resolve_model_reports_none_version_when_package_metadata_is_missing(
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     def raise_not_found(name: str) -> str:
         raise importlib.metadata.PackageNotFoundError(name)
@@ -189,7 +191,7 @@ def test_query_matching_nothing_returns_no_matches() -> None:
 
 
 def test_deprecation_is_still_reported_when_another_field_fails_validation(
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _use_deprecated_fields_model(monkeypatch)
 
@@ -199,7 +201,7 @@ def test_deprecation_is_still_reported_when_another_field_fails_validation(
     assert [entry["field"] for entry in report["deprecated"]] == ["old_value"]
 
 
-def test_each_deprecation_is_reported_once(monkeypatch) -> None:
+def test_each_deprecation_is_reported_once(monkeypatch: pytest.MonkeyPatch) -> None:
     _use_deprecated_fields_model(monkeypatch)
 
     report = validate_config(
@@ -221,7 +223,9 @@ def test_retry_that_still_fails_reports_no_deprecations_instead_of_raising() -> 
     assert report["deprecated"] == []
 
 
-def test_unrelated_warnings_are_ignored_and_repeats_collapse(monkeypatch) -> None:
+def test_unrelated_warnings_are_ignored_and_repeats_collapse(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class NoisyModel(BaseModel):
         value: int = 0
 

@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from mcp.types import TextContent
 
 LAUNCH_SERVER = StdioServerParameters(
     command=sys.executable,
@@ -24,7 +25,9 @@ async def running_server() -> AsyncIterator[ClientSession]:
 
 async def call(session: ClientSession, tool: str, **arguments: Any) -> Any:
     result = await session.call_tool(tool, arguments)
-    return json.loads(result.content[0].text)
+    content = result.content[0]
+    assert isinstance(content, TextContent)
+    return json.loads(content.text)
 
 
 @pytest.mark.e2e

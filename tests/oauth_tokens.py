@@ -5,6 +5,7 @@ from typing import Any
 import jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 from jwt.algorithms import RSAAlgorithm
 
 TEST_ISSUER = "https://api.guard-core.test"
@@ -24,6 +25,7 @@ def generate_key_pem() -> str:
 
 def build_jwks(pem: str) -> str:
     private_key = serialization.load_pem_private_key(pem.encode(), password=None)
+    assert isinstance(private_key, RSAPrivateKey)
     entry = json.loads(RSAAlgorithm.to_jwk(private_key.public_key()))
     entry["kid"] = TEST_KID
     entry["alg"] = "RS256"

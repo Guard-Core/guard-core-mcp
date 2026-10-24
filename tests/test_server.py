@@ -3,6 +3,8 @@ import importlib.metadata
 import json
 from pathlib import Path
 
+import pytest
+
 import guard_core_mcp.config
 import guard_core_mcp.detection
 from guard_core_mcp import __version__
@@ -67,7 +69,9 @@ def test_versions_reports_the_bundled_knowledge_packages() -> None:
     }
 
 
-def test_absent_distribution_reports_none_instead_of_raising(monkeypatch) -> None:
+def test_absent_distribution_reports_none_instead_of_raising(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     def raise_not_found(name: str) -> str:
         raise importlib.metadata.PackageNotFoundError(name)
 
@@ -80,7 +84,7 @@ async def test_versions_is_registered_as_a_tool() -> None:
     assert "versions" in {tool.name for tool in await mcp.list_tools()}
 
 
-def test_main_starts_the_server(monkeypatch) -> None:
+def test_main_starts_the_server(monkeypatch: pytest.MonkeyPatch) -> None:
     started = []
     monkeypatch.setattr(mcp, "run", lambda: started.append(True))
 
@@ -100,7 +104,9 @@ def test_validate_config_tool_returns_the_report() -> None:
     assert validate_config({"passive_mode": True})["valid"] is True
 
 
-def test_config_tools_report_a_missing_library_instead_of_raising(monkeypatch) -> None:
+def test_config_tools_report_a_missing_library_instead_of_raising(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     def raise_missing(name: str) -> None:
         raise ModuleNotFoundError(name=name)
 
@@ -149,7 +155,7 @@ async def test_check_payload_tool_returns_the_detection_report() -> None:
 
 
 async def test_check_payload_tool_reports_a_missing_library_instead_of_raising(
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     async def raise_missing(*args: object, **kwargs: object) -> None:
         raise ModuleNotFoundError(name="guard_core")

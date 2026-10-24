@@ -11,39 +11,41 @@ sync_docs = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(sync_docs)
 
 
-def test_read_version_reads_the_pyproject_version(tmp_path) -> None:
+def test_read_version_reads_the_pyproject_version(tmp_path: Path) -> None:
     (tmp_path / "pyproject.toml").write_text('[project]\nversion = "9.9.9"\n')
 
     assert sync_docs.read_version(tmp_path) == "9.9.9"
 
 
-def test_read_version_raises_when_no_version_line_matches(tmp_path) -> None:
+def test_read_version_raises_when_no_version_line_matches(tmp_path: Path) -> None:
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "no-version"\n')
 
     with pytest.raises(SystemExit, match="no version found"):
         sync_docs.read_version(tmp_path)
 
 
-def test_read_version_reads_the_package_json_version(tmp_path) -> None:
+def test_read_version_reads_the_package_json_version(tmp_path: Path) -> None:
     (tmp_path / "package.json").write_text('{"name": "pkg", "version": "1.0.0"}\n')
 
     assert sync_docs.read_version(tmp_path) == "1.0.0"
 
 
-def test_read_version_raises_when_the_package_json_has_no_version(tmp_path) -> None:
+def test_read_version_raises_when_the_package_json_has_no_version(
+    tmp_path: Path,
+) -> None:
     (tmp_path / "package.json").write_text('{"name": "pkg", "private": true}\n')
 
     with pytest.raises(SystemExit, match="no version found"):
         sync_docs.read_version(tmp_path)
 
 
-def test_read_version_raises_when_no_version_source_exists(tmp_path) -> None:
+def test_read_version_raises_when_no_version_source_exists(tmp_path: Path) -> None:
     with pytest.raises(SystemExit, match="no version source found"):
         sync_docs.read_version(tmp_path)
 
 
 def test_sync_raises_when_sibling_docs_directory_is_missing(
-    tmp_path, monkeypatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     workdir = tmp_path / "workdir"
     workdir.mkdir()
@@ -54,7 +56,9 @@ def test_sync_raises_when_sibling_docs_directory_is_missing(
         sync_docs.sync("example-package", "https://example.invalid/")
 
 
-def test_sync_resolves_the_nested_ecosystem_layout(tmp_path, monkeypatch) -> None:
+def test_sync_resolves_the_nested_ecosystem_layout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     workdir = tmp_path / "workdir"
     workdir.mkdir()
     repository = tmp_path / "Python" / "nested-package"
@@ -77,7 +81,9 @@ def test_sync_resolves_the_nested_ecosystem_layout(tmp_path, monkeypatch) -> Non
     assert (destination / "index.md").read_text() == "# Nested\n"
 
 
-def test_sibling_layout_wins_over_the_nested_layout(tmp_path, monkeypatch) -> None:
+def test_sibling_layout_wins_over_the_nested_layout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     workdir = tmp_path / "workdir"
     workdir.mkdir()
     sibling_docs = tmp_path / "nested-package" / "docs"
@@ -106,7 +112,7 @@ def test_sibling_layout_wins_over_the_nested_layout(tmp_path, monkeypatch) -> No
 
 
 def test_sync_copies_markdown_and_mirrors_directory_structure(
-    tmp_path, monkeypatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     workdir = tmp_path / "workdir"
     workdir.mkdir()
@@ -131,7 +137,9 @@ def test_sync_copies_markdown_and_mirrors_directory_structure(
     assert not (destination / "nested" / "image.png").exists()
 
 
-def test_sync_uses_the_configured_docs_subdir(tmp_path, monkeypatch) -> None:
+def test_sync_uses_the_configured_docs_subdir(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     workdir = tmp_path / "workdir"
     workdir.mkdir()
     repository = tmp_path / "starlight-package"
@@ -153,7 +161,7 @@ def test_sync_uses_the_configured_docs_subdir(tmp_path, monkeypatch) -> None:
 
 
 def test_sync_is_idempotent_and_drops_files_removed_from_the_source(
-    tmp_path, monkeypatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     workdir = tmp_path / "workdir"
     workdir.mkdir()
@@ -187,7 +195,7 @@ def test_sync_is_idempotent_and_drops_files_removed_from_the_source(
 
 
 def test_main_writes_manifest_and_vendors_markdown_for_every_repository(
-    tmp_path, monkeypatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     workdir = tmp_path / "workdir"
     workdir.mkdir()

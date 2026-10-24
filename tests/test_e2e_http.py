@@ -15,6 +15,7 @@ import oauth_tokens
 import pytest
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
+from mcp.types import TextContent
 
 LAUNCH = [sys.executable, "-c", "from guard_core_mcp.http_server import main; main()"]
 
@@ -115,7 +116,9 @@ async def test_full_session_with_a_valid_token() -> None:
                     )
 
     assert {tool.name for tool in listing.tools} == ALL_TOOLS
-    report = json.loads(verdict.content[0].text)
+    verdict_content = verdict.content[0]
+    assert isinstance(verdict_content, TextContent)
+    report = json.loads(verdict_content.text)
     assert report["is_threat"] is True
 
 
@@ -148,5 +151,7 @@ async def test_versions_reports_the_hosted_pins_over_the_protocol() -> None:
                     await session.initialize()
                     result = await session.call_tool("versions", {})
 
-    report: dict[str, Any] = json.loads(result.content[0].text)
+    result_content = result.content[0]
+    assert isinstance(result_content, TextContent)
+    report: dict[str, Any] = json.loads(result_content.text)
     assert report["installed"]["guard-core"] is not None

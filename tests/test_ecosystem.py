@@ -1,6 +1,10 @@
+from collections.abc import Iterator
+
 from guard_core_mcp import ecosystem as ecosystem_module
 from guard_core_mcp.ecosystem import (
     REGISTRY,
+    AdapterInfo,
+    LanguageEntry,
     adapter_setup,
     ecosystem,
     wire_agent,
@@ -40,7 +44,7 @@ AGENT_SNIPPET_NAMES = {
 }
 
 
-def every_adapter():
+def every_adapter() -> Iterator[tuple[LanguageEntry, AdapterInfo]]:
     for entry in REGISTRY.languages.values():
         for adapter in entry.adapters:
             yield entry, adapter

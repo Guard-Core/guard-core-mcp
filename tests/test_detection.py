@@ -1,3 +1,4 @@
+from unittest.mock import MagicMock
 from urllib.parse import quote
 
 import pytest
@@ -82,22 +83,17 @@ async def test_redis_override_is_forced_off_in_the_constructed_config(
 ) -> None:
     import guard_core
 
-    captured: dict[str, object] = {}
-    real_security_config = guard_core.SecurityConfig
-
-    class _CapturingSecurityConfig(real_security_config):
-        def __init__(self, **kwargs: object) -> None:
-            captured.update(kwargs)
-            super().__init__(**kwargs)
-
-    monkeypatch.setattr(guard_core, "SecurityConfig", _CapturingSecurityConfig)
+    spy = MagicMock(wraps=guard_core.SecurityConfig)
+    monkeypatch.setattr(guard_core, "SecurityConfig", spy)
 
     await check_payload(path="/", config={"enable_redis": True})
 
-    assert captured["enable_redis"] is False
+    assert spy.call_args.kwargs["enable_redis"] is False
 
 
-async def test_check_payload_writes_nothing_to_stdout(capsys) -> None:
+async def test_check_payload_writes_nothing_to_stdout(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     await check_payload(path="/items", query={"q": "1' OR '1'='1"})
 
     assert capsys.readouterr().out == ""
