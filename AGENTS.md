@@ -8,7 +8,7 @@ Guard Core MCP is an MCP server that answers Guard-ecosystem questions from the 
 - **PyPI Package**: `guard-core-mcp`
 - **Import Name**: `guard_core_mcp`
 - **Console Script**: `guard-core-mcp` (runs `guard_core_mcp.server:main`, stdio transport)
-- **Python Support**: 3.10, 3.11, 3.12, 3.13, 3.14
+- **Python Support**: 3.10, 3.11, 3.12, 3.13, 3.14, 3.15
 - **Package Manager**: uv
 - **Build System**: Docker + Make
 

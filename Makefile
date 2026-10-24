@@ -1,5 +1,5 @@
 # Supported Python versions
-PYTHON_VERSIONS = 3.10 3.11 3.12 3.13 3.14
+PYTHON_VERSIONS = 3.10 3.11 3.12 3.13 3.14 3.15
 DEFAULT_PYTHON = 3.10
 
 # Install dependencies
@@ -154,7 +154,7 @@ test:
 
 # Run All Python versions
 .PHONY: test-all
-test-all: test-3.10 test-3.11 test-3.12 test-3.13 test-3.14
+test-all: test-3.10 test-3.11 test-3.12 test-3.13 test-3.14 test-3.15
 
 # Python 3.10
 .PHONY: test-3.10
@@ -198,6 +198,15 @@ test-3.14:
 	@docker compose down -v guard-core-mcp
 	@COMPOSE_BAKE=true PYTHON_VERSION=3.14 docker compose build guard-core-mcp
 	@PYTHON_VERSION=3.14 docker compose run --rm guard-core-mcp pytest -v --cov=guard_core_mcp --cov-branch
+	@docker compose down --rmi all --remove-orphans -v
+	@docker system prune -f
+
+# Python 3.15
+.PHONY: test-3.15
+test-3.15:
+	@docker compose down -v guard-core-mcp
+	@COMPOSE_BAKE=true PYTHON_VERSION=3.15 docker compose build guard-core-mcp
+	@PYTHON_VERSION=3.15 docker compose run --rm guard-core-mcp pytest -v --cov=guard_core_mcp --cov-branch
 	@docker compose down --rmi all --remove-orphans -v
 	@docker system prune -f
 
