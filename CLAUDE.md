@@ -111,6 +111,7 @@ make bump-version VERSION=x.y.z
 ### Constraints worth knowing before you edit
 
 - **`mcp>=2` is a hard pin.** The server imports `mcp.server.mcpserver.MCPServer`, which does not exist in mcp 1.x, so a blanket `uv lock --upgrade` that downgrades mcp breaks the server at import. Semgrep pins `mcp==1.23.3`, so it runs via `uvx --from semgrep` rather than as a dev dependency.
+- **pre-commit, safety and pip-audit install only on Python 3.11+.** They pull in filelock, whose fixed release (4.2.1, GHSA-v4x8-3wr5-3wq8) needs 3.11, and safety caps filelock below 4.0, hence `override-dependencies` in `pyproject.toml`. The test matrix still covers 3.10; the pre-commit jobs and `.python-version` use 3.11.
 - **Complexity ceilings are enforced**, not advisory: xenon `--max-absolute B --max-modules A --max-average A`, plus vulture at `min_confidence = 100`, deptry, and strict mypy (`disallow_untyped_defs`, `warn_unreachable`, and friends). This is why the modules are built from small helpers.
 - `.roboco/conventions.yml` blocks lint suppressions and warns on inline comments.
 - The version string lives in `pyproject.toml`, `guard_core_mcp/__init__.py`, `.mike.yml`, `docs/versions/versions.json`, `docs/index.md`, `CHANGELOG.md` and `docs/release-notes.md`. Use `make bump-version VERSION=x.y.z` rather than editing by hand.
