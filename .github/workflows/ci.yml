@@ -180,7 +180,7 @@ jobs:
       - name: Combine and gate
         run: |
           uv run --no-sync coverage combine coverage-data/coverage-py*.data
-          uv run --no-sync coverage report -m
+          uv run --no-sync coverage report -m --fail-under=100
 
   docs-drift:
     needs: changes
