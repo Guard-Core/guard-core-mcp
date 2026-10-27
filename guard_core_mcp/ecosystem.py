@@ -1,6 +1,6 @@
-from typing import Any
-
 from pydantic import BaseModel
+
+from guard_core_mcp.json_types import JsonObject, dump_json_object
 
 
 class EngineInfo(BaseModel):
@@ -1091,7 +1091,7 @@ app.state.guard_decorator = guard
 
 
 @app.get("/")
-async def root() -> dict[str, str]:
+async def root() -> JsonObject:
     return {"message": "Hello World"}"""
 
 
@@ -1318,8 +1318,8 @@ REGISTRY = EcosystemRegistry(
 )
 
 
-def ecosystem() -> dict[str, Any]:
-    return REGISTRY.model_dump()
+def ecosystem() -> JsonObject:
+    return dump_json_object(REGISTRY)
 
 
 def _find_language(language: str) -> LanguageEntry | None:
@@ -1334,7 +1334,7 @@ def _find_adapter(entry: LanguageEntry, framework: str) -> AdapterInfo | None:
     return None
 
 
-def _unknown_language_error(language: str) -> dict[str, str]:
+def _unknown_language_error(language: str) -> JsonObject:
     return {
         "error": (
             f"unknown language {language!r}; expected one of "
@@ -1343,7 +1343,7 @@ def _unknown_language_error(language: str) -> dict[str, str]:
     }
 
 
-def _unknown_framework_error(entry: LanguageEntry, framework: str) -> dict[str, str]:
+def _unknown_framework_error(entry: LanguageEntry, framework: str) -> JsonObject:
     return {
         "error": (
             f"unknown framework {framework!r} for {entry.label}; adapters: "
@@ -1352,7 +1352,7 @@ def _unknown_framework_error(entry: LanguageEntry, framework: str) -> dict[str, 
     }
 
 
-def adapter_setup(language: str, framework: str) -> dict[str, Any]:
+def adapter_setup(language: str, framework: str) -> JsonObject:
     entry = _find_language(language)
     if entry is None:
         return _unknown_language_error(language)
@@ -1367,11 +1367,11 @@ def adapter_setup(language: str, framework: str) -> dict[str, Any]:
             "release_status": entry.engine.release_status,
             "conformance": entry.engine.conformance,
         },
-        "adapter": adapter.model_dump(),
+        "adapter": dump_json_object(adapter),
     }
 
 
-def wire_agent(language: str, framework: str | None = None) -> dict[str, Any]:
+def wire_agent(language: str, framework: str | None = None) -> JsonObject:
     entry = _find_language(language)
     if entry is None:
         return _unknown_language_error(language)
@@ -1392,7 +1392,7 @@ def wire_agent(language: str, framework: str | None = None) -> dict[str, Any]:
             )
     return {
         "language": entry.language,
-        "agent": entry.agent.model_dump(),
-        "ingestion": REGISTRY.saas.model_dump(),
+        "agent": dump_json_object(entry.agent),
+        "ingestion": dump_json_object(REGISTRY.saas),
         "framework_note": note,
     }

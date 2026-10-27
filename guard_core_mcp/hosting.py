@@ -2,9 +2,9 @@ import hmac
 import json
 import os
 from dataclasses import dataclass
-from typing import Any
 
 import jwt
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from jwt import PyJWK, PyJWKClient
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.datastructures import Headers
@@ -13,6 +13,7 @@ from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from guard_core_mcp import __version__
+from guard_core_mcp.json_types import JsonObject
 from guard_core_mcp.server import mcp
 
 METADATA_PATH = "/.well-known/oauth-protected-resource"
@@ -65,7 +66,7 @@ class HostingConfig:
     def metadata_url(self) -> str:
         return f"{self.public_url}{METADATA_PATH}"
 
-    def metadata_document(self) -> dict[str, Any]:
+    def metadata_document(self) -> JsonObject:
         return {
             "resource": self.public_url,
             "authorization_servers": [self.oauth_issuer],
@@ -74,11 +75,17 @@ class HostingConfig:
         }
 
 
-def server_card_document() -> dict[str, Any]:
+def server_card_document() -> JsonObject:
     return {
         "serverInfo": {"name": "guard-core-mcp", "version": __version__},
         "authentication": {"required": True, "schemes": ["oauth2"]},
     }
+
+
+def _require_rsa_public_key(key: object) -> RSAPublicKey:
+    if not isinstance(key, RSAPublicKey):
+        raise jwt.InvalidKeyError("signing key is not an RSA public key")
+    return key
 
 
 class TokenVerifier:
@@ -104,15 +111,17 @@ class TokenVerifier:
             entries = [document]
         return {entry["kid"]: PyJWK.from_dict(entry) for entry in entries}
 
-    def _signing_key(self, token: str) -> Any:
+    def _signing_key(self, token: str) -> RSAPublicKey:
         if self._jwks_client is not None:
-            return self._jwks_client.get_signing_key_from_jwt(token).key
+            return _require_rsa_public_key(
+                self._jwks_client.get_signing_key_from_jwt(token).key
+            )
         kid = jwt.get_unverified_header(token).get("kid")
         if kid is None or kid not in self._inline_keys:
             raise jwt.InvalidKeyError("unknown signing key id")
-        return self._inline_keys[kid].key
+        return _require_rsa_public_key(self._inline_keys[kid].key)
 
-    def verify(self, token: str) -> dict[str, Any]:
+    def verify(self, token: str) -> dict[str, object]:
         claims = jwt.decode(
             token,
             key=self._signing_key(token),

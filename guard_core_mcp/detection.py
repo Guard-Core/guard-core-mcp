@@ -2,11 +2,11 @@ import json
 import time
 import types
 from collections.abc import Iterator, Mapping
-from typing import Any
 
 from pydantic import ValidationError
 
 from guard_core_mcp import config as config_module
+from guard_core_mcp.json_types import JsonObject, JsonValue
 
 
 class _CaseInsensitiveHeaders(Mapping[str, str]):
@@ -86,15 +86,15 @@ class _SyntheticRequest:
         return self._body
 
     @property
-    def state(self) -> Any:
+    def state(self) -> object:
         return self._state
 
     @property
-    def scope(self) -> dict[str, Any]:
+    def scope(self) -> dict[str, object]:
         return {}
 
 
-def encode_body(body: str | dict[str, Any] | list[Any] | None) -> bytes:
+def encode_body(body: str | JsonObject | list[JsonValue] | None) -> bytes:
     if body is None:
         return b""
     if isinstance(body, str):
@@ -107,9 +107,9 @@ async def check_payload(
     method: str = "GET",
     query: dict[str, str] | None = None,
     headers: dict[str, str] | None = None,
-    body: str | dict[str, Any] | list[Any] | None = None,
-    config: dict[str, Any] | None = None,
-) -> dict[str, Any]:
+    body: str | JsonObject | list[JsonValue] | None = None,
+    config: JsonObject | None = None,
+) -> JsonObject:
     from guard_core import SecurityConfig
     from guard_core.protocols.request_protocol import GuardRequest
     from guard_core.utils import detect_penetration_attempt
@@ -136,7 +136,7 @@ async def check_payload(
     return {
         "is_threat": result.is_threat,
         "trigger_info": result.trigger_info,
-        "threat_categories": list(result.threat_categories),
-        "threat_scores": dict(result.threat_scores),
+        "threat_categories": [*result.threat_categories],
+        "threat_scores": {**result.threat_scores},
         "elapsed_ms": round(elapsed_ms, 2),
     }

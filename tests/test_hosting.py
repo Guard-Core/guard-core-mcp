@@ -5,6 +5,8 @@ import httpx
 import jwt
 import oauth_tokens
 import pytest
+from cryptography.hazmat.primitives.asymmetric import ec
+from jwt.algorithms import ECAlgorithm
 from starlette.responses import JSONResponse
 from starlette.types import Receive, Scope, Send
 
@@ -302,6 +304,17 @@ def test_inline_jwks_rejects_an_unknown_key_id() -> None:
 
     with pytest.raises(jwt.InvalidKeyError):
         verifier.verify(oauth_tokens.sign_token(pem, kid="rotated-away"))
+
+
+def test_inline_jwks_rejects_a_non_rsa_signing_key() -> None:
+    pem = oauth_tokens.generate_key_pem()
+    ec_key = ec.generate_private_key(ec.SECP256R1()).public_key()
+    entry = json.loads(ECAlgorithm.to_jwk(ec_key))
+    entry["kid"] = oauth_tokens.TEST_KID
+    verifier = TokenVerifier(make_config(jwks_inline=json.dumps(entry)))
+
+    with pytest.raises(jwt.InvalidKeyError, match="not an RSA public key"):
+        verifier.verify(oauth_tokens.sign_token(pem))
 
 
 def test_from_env_requires_the_public_url(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -1,5 +1,5 @@
 import importlib.metadata
-from typing import Annotated, Any
+from typing import Annotated
 
 from mcp.server.mcpserver import MCPServer
 from mcp.types import ToolAnnotations
@@ -10,6 +10,7 @@ from guard_core_mcp import config as config_module
 from guard_core_mcp import detection as detection_module
 from guard_core_mcp import docs as docs_module
 from guard_core_mcp import ecosystem as ecosystem_module
+from guard_core_mcp.json_types import JsonObject, JsonValue
 
 GUARD_DISTRIBUTIONS = ("guard-core", "fastapi-guard", "guard-agent")
 
@@ -58,7 +59,7 @@ def installed_guard_versions() -> dict[str, str | None]:
     title="Guard versions",
     annotations=READ_ONLY,
 )
-def versions() -> dict[str, Any]:
+def versions() -> JsonObject:
     """Report which Guard libraries this server can introspect, and at which version.
 
     Call this first, before trusting any answer about a version-specific feature. It
@@ -76,7 +77,7 @@ def versions() -> dict[str, Any]:
     """
     return {
         "guard_core_mcp": __version__,
-        "installed": installed_guard_versions(),
+        "installed": {**installed_guard_versions()},
         "docs_bundled_for": {
             package: entry["version"]
             for package, entry in docs_module.manifest().items()
@@ -88,7 +89,7 @@ def versions() -> dict[str, Any]:
     }
 
 
-def missing_library_error(exception: ModuleNotFoundError) -> dict[str, str]:
+def missing_library_error(exception: ModuleNotFoundError) -> JsonObject:
     return {
         "error": (
             f"{exception.name} is not installed in the interpreter running this server"
@@ -106,7 +107,7 @@ def missing_library_error(exception: ModuleNotFoundError) -> dict[str, str]:
 )
 def validate_config(
     config: Annotated[
-        dict[str, Any],
+        JsonObject,
         Field(
             description=(
                 "The config as a JSON object of field names to values, exactly as "
@@ -126,7 +127,7 @@ def validate_config(
             examples=["fastapi-guard", "guard-core", "guard-agent"],
         ),
     ] = "fastapi-guard",
-) -> dict[str, Any]:
+) -> JsonObject:
     """Check a Guard config dict against the installed library's real pydantic model.
 
     Use this to confirm a config is valid, or to find out why a setting seems to have
@@ -180,7 +181,7 @@ def config_fields(
             examples=["fastapi-guard", "guard-core", "guard-agent"],
         ),
     ] = "fastapi-guard",
-) -> dict[str, Any]:
+) -> JsonObject:
     """Find a Guard config setting by name or by what it does, with type and default.
 
     Use this to learn what a setting means, or whether a setting for some behaviour
@@ -237,7 +238,7 @@ def search_docs(
             examples=[5, 10],
         ),
     ] = 5,
-) -> dict[str, Any]:
+) -> JsonObject:
     """Search the bundled Guard documentation and return ranked, citable pages.
 
     Use this to answer how or why questions from documentation, and to find the page
@@ -282,7 +283,7 @@ def get_doc(
             examples=["installation.md", "tutorial/ip-management/rate-limiter.md"],
         ),
     ],
-) -> dict[str, Any]:
+) -> JsonObject:
     """Return the full text of one bundled Guard documentation page.
 
     Use this after search_docs when a snippet is not enough; it does not search. The
@@ -335,7 +336,7 @@ async def check_payload(
         ),
     ] = None,
     body: Annotated[
-        str | dict[str, Any] | list[Any] | None,
+        str | JsonObject | list[JsonValue] | None,
         Field(
             description=(
                 "Request body as a raw string, or a JSON object or array, which is "
@@ -345,7 +346,7 @@ async def check_payload(
         ),
     ] = None,
     config: Annotated[
-        dict[str, Any] | None,
+        JsonObject | None,
         Field(
             description=(
                 "SecurityConfig fields to override guard-core's defaults, as a JSON "
@@ -355,7 +356,7 @@ async def check_payload(
             examples=[{"enabled_detection_categories": ["sqli", "xss"]}],
         ),
     ] = None,
-) -> dict[str, Any]:
+) -> JsonObject:
     """Run one synthetic request through guard-core's real penetration-detection engine.
 
     Use this to confirm that an attack payload is caught, or to explain why a benign
@@ -393,7 +394,7 @@ async def check_payload(
     title="Ecosystem registry",
     annotations=READ_ONLY,
 )
-def ecosystem() -> dict[str, Any]:
+def ecosystem() -> JsonObject:
     """Survey the whole Guard ecosystem: every language, engine, adapter and agent.
 
     Use this to resolve a package name or compare languages. It takes no arguments.
@@ -442,7 +443,7 @@ def adapter_setup(
             examples=["fastapi", "gin", "fastify", "laravel", "axum"],
         ),
     ],
-) -> dict[str, Any]:
+) -> JsonObject:
     """Get the install command and a verified minimal integration for one Guard adapter.
 
     Use this when you know the language and web framework and want working setup code.
@@ -485,7 +486,7 @@ def wire_agent(
             examples=["fastapi", "gin", "laravel"],
         ),
     ] = None,
-) -> dict[str, Any]:
+) -> JsonObject:
     """Get how to set up the Guard telemetry agent for one language.
 
     Use this to ship security events and metrics to the guard-core-app backend. Use

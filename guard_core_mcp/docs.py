@@ -1,7 +1,8 @@
 import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+
+from guard_core_mcp.json_types import JsonObject
 
 DOCS_ROOT = Path(__file__).parent / "_docs"
 KNOWLEDGE_ROOT = Path(__file__).parent / "_knowledge"
@@ -67,11 +68,9 @@ def _package_pages(root: Path, name: str) -> list[Path]:
     return sorted(base.rglob("*.md")) + sorted(base.rglob("*.mdx"))
 
 
-def search_docs(
-    query: str, package: str | None = None, limit: int = 5
-) -> dict[str, Any]:
+def search_docs(query: str, package: str | None = None, limit: int = 5) -> JsonObject:
     tokens = query.lower().split()
-    results: list[dict[str, Any]] = []
+    ranked: list[tuple[int, JsonObject]] = []
     for root, entries in _corpora():
         names = [package] if package else sorted(entries)
         for name in names:
@@ -83,21 +82,24 @@ def search_docs(
                     markdown.read_text(encoding="utf-8"), tokens
                 )
                 if score:
-                    results.append(
-                        {
-                            "package": name,
-                            "path": str(relative),
-                            "heading": heading,
-                            "snippet": snippet[:300],
-                            "url": _entry_url(root, name, str(relative)),
-                            "score": score,
-                        }
+                    ranked.append(
+                        (
+                            score,
+                            {
+                                "package": name,
+                                "path": str(relative),
+                                "heading": heading,
+                                "snippet": snippet[:300],
+                                "url": _entry_url(root, name, str(relative)),
+                                "score": score,
+                            },
+                        )
                     )
-    results.sort(key=lambda result: -int(result["score"]))
-    return {"query": query, "results": results[:limit]}
+    ranked.sort(key=lambda scored: -scored[0])
+    return {"query": query, "results": [entry for _, entry in ranked[:limit]]}
 
 
-def get_doc(package: str, path: str) -> dict[str, Any]:
+def get_doc(package: str, path: str) -> JsonObject:
     root = DOCS_ROOT
     if package not in manifest():
         root = KNOWLEDGE_ROOT

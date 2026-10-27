@@ -5,10 +5,11 @@ import logging
 import threading
 import typing
 import warnings
-from typing import Any
 
 from pydantic import BaseModel, ValidationError
 from pydantic.fields import FieldInfo, PydanticUndefined
+
+from guard_core_mcp.json_types import JsonObject, JsonValue
 
 PACKAGE_MODELS: dict[str, tuple[str, str]] = {
     "guard-core": ("guard_core", "SecurityConfig"),
@@ -33,7 +34,7 @@ def resolve_model(package: str) -> tuple[type[BaseModel], str | None]:
     return model, version
 
 
-def _format_annotation(annotation: Any) -> str:
+def _format_annotation(annotation: object) -> str:
     origin = typing.get_origin(annotation)
     args = typing.get_args(annotation)
 
@@ -53,13 +54,13 @@ def _format_annotation(annotation: Any) -> str:
     return f"{origin_name}[{formatted_args}]"
 
 
-def _serialize_default(default: Any) -> str | None:
+def _serialize_default(default: object) -> str | None:
     if default is PydanticUndefined or default is None:
         return None
     return repr(default)
 
 
-def describe_field(name: str, info: FieldInfo) -> dict[str, Any]:
+def describe_field(name: str, info: FieldInfo) -> JsonObject:
     return {
         "name": name,
         "type": _format_annotation(info.annotation),
@@ -69,7 +70,7 @@ def describe_field(name: str, info: FieldInfo) -> dict[str, Any]:
     }
 
 
-def _deprecation_entry(message: str, known_fields: set[str]) -> dict[str, str | None]:
+def _deprecation_entry(message: str, known_fields: set[str]) -> JsonObject:
     first_token = message.split(maxsplit=1)[0]
     return {
         "field": first_token if first_token in known_fields else None,
@@ -100,7 +101,7 @@ class _ConstructionWarningCapture(logging.Handler):
 _guard_core_logger_lock = threading.Lock()
 
 
-def parse_validation_error(exception: ValidationError) -> list[dict[str, Any]]:
+def parse_validation_error(exception: ValidationError) -> list[JsonValue]:
     return [
         {
             "field": ".".join(str(part) for part in error["loc"]),
@@ -112,7 +113,7 @@ def parse_validation_error(exception: ValidationError) -> list[dict[str, Any]]:
 
 
 def _retry_without_rejected_fields(
-    model: type[BaseModel], config: dict[str, Any], exception: ValidationError
+    model: type[BaseModel], config: JsonObject, exception: ValidationError
 ) -> None:
     rejected = {
         str(error["loc"][0]) for error in exception.errors() if error.get("loc")
@@ -124,24 +125,22 @@ def _retry_without_rejected_fields(
         pass
 
 
-def validate_config(
-    config: dict[str, Any], package: str = "fastapi-guard"
-) -> dict[str, Any]:
+def validate_config(config: JsonObject, package: str = "fastapi-guard") -> JsonObject:
     model, version = resolve_model(package)
     known_fields = set(model.model_fields)
 
-    unknown_fields = [
+    unknown_fields: list[JsonValue] = [
         {
             "name": key,
-            "did_you_mean": difflib.get_close_matches(
-                key, known_fields, n=3, cutoff=0.75
-            ),
+            "did_you_mean": [
+                *difflib.get_close_matches(key, known_fields, n=3, cutoff=0.75)
+            ],
         }
         for key in config
         if key not in known_fields
     ]
 
-    errors: list[dict[str, Any]] = []
+    errors: list[JsonValue] = []
     guard_core_logger = logging.getLogger("guard_core")
     capture = _ConstructionWarningCapture()
     with _guard_core_logger_lock:
@@ -160,7 +159,7 @@ def validate_config(
             guard_core_logger.removeHandler(capture)
             guard_core_logger.setLevel(original_level)
 
-    deprecated = []
+    deprecated: list[JsonValue] = []
     reported: set[str] = set()
     for warning in caught:
         if not issubclass(warning.category, DeprecationWarning):
@@ -179,18 +178,18 @@ def validate_config(
         "errors": errors,
         "unknown_fields": unknown_fields,
         "deprecated": deprecated,
-        "construction_warnings": capture.messages(),
+        "construction_warnings": [*capture.messages()],
     }
 
 
-def config_fields(query: str, package: str = "fastapi-guard") -> dict[str, Any]:
+def config_fields(query: str, package: str = "fastapi-guard") -> JsonObject:
     model, version = resolve_model(package)
     fields = model.model_fields
 
     exact = describe_field(query, fields[query]) if query in fields else None
 
     tokens = query.lower().split()
-    matches = [
+    matches: list[JsonValue] = [
         describe_field(name, info)
         for name, info in fields.items()
         if name != query
