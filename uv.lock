@@ -1354,6 +1354,7 @@ name = "guard-core-mcp"
 version = "1.7.0"
 source = { editable = "." }
 dependencies = [
+    { name = "cryptography" },
     { name = "mcp" },
     { name = "pydantic" },
     { name = "pyjwt", extra = ["crypto"] },
@@ -1405,6 +1406,7 @@ release = [
 [package.metadata]
 requires-dist = [
     { name = "bandit", extras = ["toml"], marker = "extra == 'dev'" },
+    { name = "cryptography" },
     { name = "deptry", marker = "extra == 'dev'" },
     { name = "fastapi-guard", marker = "extra == 'dev'" },
     { name = "fastapi-guard", marker = "extra == 'hosted'" },

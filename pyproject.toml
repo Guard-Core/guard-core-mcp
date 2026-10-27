@@ -37,6 +37,7 @@ classifiers = [
     "Topic :: Security",
 ]
 dependencies = [
+    "cryptography",
     "mcp>=2",
     "pydantic",
     "pyjwt[crypto]",
