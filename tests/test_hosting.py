@@ -5,6 +5,7 @@ import httpx
 import jwt
 import oauth_tokens
 import pytest
+from jwt import PyJWKClient
 from starlette.responses import JSONResponse
 from starlette.types import Receive, Scope, Send
 
@@ -15,6 +16,7 @@ from guard_core_mcp.hosting import (
     HostingConfig,
     TokenVerifier,
     compose_hosted_stack,
+    create_hosted_app,
 )
 
 
@@ -373,3 +375,27 @@ def test_from_env_prefers_the_explicit_audience(
     )
 
     assert HostingConfig.from_env().oauth_audience == "https://audience.test"
+
+
+def test_jwks_url_mode_verifies_with_the_key_the_client_fetches(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    pem = oauth_tokens.generate_key_pem()
+    document = json.loads(oauth_tokens.build_jwks(pem))
+    monkeypatch.setattr(PyJWKClient, "fetch_data", lambda self: document)
+    verifier = TokenVerifier(make_config(jwks_url="https://issuer.test/jwks.json"))
+
+    claims = verifier.verify(oauth_tokens.sign_token(pem))
+
+    assert claims["sub"] == "user_abc123"
+
+
+async def test_create_hosted_app_serves_metadata_and_rejects_anonymous_mcp() -> None:
+    pem = oauth_tokens.generate_key_pem()
+    app = create_hosted_app(make_config(jwks_inline=oauth_tokens.build_jwks(pem)))
+    async with make_client(app) as client:
+        metadata = await client.get(METADATA_PATH)
+        rejected = await post_mcp(client)
+
+    assert metadata.status_code == 200
+    assert rejected.status_code == 401
