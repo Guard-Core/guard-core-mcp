@@ -3,6 +3,23 @@ Release Notes
 
 ___
 
+v1.7.1 (2026-10-29)
+-------------------
+
+validate_config on guard-core 5.0.0, hardened images and patched dependencies (v1.7.1)
+--------------------------------------------------------------------------------------
+
+- **Fixed** - `validate_config` and its tests now hold on guard-core 4.4.0 and 5.0.0. 5.0.0 logs one notice for the changed defaults a configuration leaves unset (`ban_on_hostile_signals`, `fail_on_misconfiguration`, `rate_limit` and the Redis connection fields, among others), and `validate_config` reports it under `construction_warnings`. The notice is informational and not a misconfiguration: `valid` stays true. Its restore values bring back the pre-5.0.0 behavior and are for a user who wants that, and setting the listed fields explicitly acknowledges the notice and silences it. The tool description and the tools page say so.
+- **Fixed** - The ecosystem registry and the hand-written knowledge corpus are re-synced to the shipped 4.4 engines and 3.2.4 agents (#105, #106).
+- **Fixed** - The hosted image builds on Python 3.14 (#107), runs as a non-root user and is scanned in CI (#102, #103), and the compose test path imports the package and finds its scripts (#101).
+- **Fixed** - The docs workflow runs on Python 3.14 (#92) and the Context7 library refresh uses its new id (#89).
+- **Changed** - Dependencies with published advisories or newer patch releases move: aiohttp 3.14.4, nltk 3.10.4, certifi 2026.10.19, virtualenv, opentelemetry-api and filelock 4.2.1 (#90, #98, #108, #109, #112, #113). The dev tools that need filelock 4.2.1 run on Python 3.11; the test matrix still covers 3.10 to 3.14.
+- **Changed** - The vendored docs are re-synced after the guard-core-ts API page refresh (#97).
+- **Docs** - Governance, maintainers and support files (#94), one MCPRush badge next to the Glama card (#91, #93), the issue template points at #dev-python (#95), and CLAUDE.md and AGENTS.md follow the ecosystem registry (#104).
+- **CI** - The workflows get a read-only default token and a same-repo check on the registry publish (#100), CodeQL scans the workflows and every language in one job (#96), and dependabot runs every update on Monday 02:00 UTC with the action updates grouped into one weekly PR (#111, #114, #115).
+
+___
+
 v1.7.0 (2026-10-18)
 -------------------
 
