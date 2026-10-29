@@ -16,6 +16,16 @@ from guard_core_mcp.config import (
     validate_config,
 )
 
+# guard-core 5.0.0 logs one notice for the changed defaults a configuration leaves
+# unset, so a configuration with no construction warning sets all four.
+_CHANGED_DEFAULTS_SET = {
+    "ban_on_hostile_signals": True,
+    "fail_on_misconfiguration": True,
+    "rate_limit": 120,
+    "enable_redis": False,
+}
+_CLEAN_CONFIG = {"passive_mode": True, **_CHANGED_DEFAULTS_SET}
+
 
 def test_fastapi_guard_and_guard_core_resolve_to_the_same_model() -> None:
     fastapi_model, fastapi_version = resolve_model("fastapi-guard")
@@ -296,10 +306,22 @@ def test_unknown_keyword_warning_is_reported() -> None:
 def test_clean_config_reports_no_construction_warnings() -> None:
     before = _guard_core_logger_snapshot()
 
-    report = validate_config({"passive_mode": True}, package="guard-core")
+    report = validate_config(_CLEAN_CONFIG, package="guard-core")
 
     assert report["construction_warnings"] == []
     assert _guard_core_logger_snapshot() == before
+
+
+def test_changed_defaults_left_unset_are_reported_as_one_construction_warning() -> None:
+    report = validate_config({"passive_mode": True}, package="guard-core")
+
+    notices = [
+        message
+        for message in report["construction_warnings"]
+        if "changed defaults that this configuration leaves unset" in message
+    ]
+    assert len(notices) == 1
+    assert all(field in notices[0] for field in _CHANGED_DEFAULTS_SET)
 
 
 def test_unknown_keyword_warning_collapses_across_the_validation_retry() -> None:
@@ -323,7 +345,7 @@ def test_concurrent_validate_config_calls_do_not_leak_warnings_between_each_othe
         return validate_config({"trusted_proxies": ["0.0.0.0/0"]}, package="guard-core")
 
     def call_clean() -> dict:
-        return validate_config({"passive_mode": True}, package="guard-core")
+        return validate_config(_CLEAN_CONFIG, package="guard-core")
 
     trials = 100
     with ThreadPoolExecutor(max_workers=2) as pool:
