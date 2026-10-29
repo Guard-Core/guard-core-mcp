@@ -139,7 +139,12 @@ def validate_config(
     at runtime and raises no error anywhere else. construction_warnings carries
     guard-core's own logged-not-raised misconfiguration warnings: an unknown
     constructor keyword, a trusted_proxies or whitelist /0 network, and
-    enabled_detection_categories empty while penetration detection is enabled.
+    enabled_detection_categories empty while penetration detection is enabled. With
+    guard-core 5.0.0 it also carries one changed-defaults notice when the config
+    leaves a changed default unset. That notice is informational, not a
+    misconfiguration: valid stays true. Its restore values bring back the pre-5.0.0
+    behavior and are only for a user who wants that. Setting the listed fields
+    explicitly acknowledges the notice and silences it.
 
     Read-only: the config is validated in memory and never applied. If the library is
     not installed, or package is not recognized, returns an object with an error key
