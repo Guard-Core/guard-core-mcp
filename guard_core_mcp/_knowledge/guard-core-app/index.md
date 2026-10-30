@@ -30,6 +30,8 @@ All mounted under the `/api/v1` prefix:
 
 `INGEST_MAX_PAYLOAD_BYTES` defaults to 262144 (256 KiB) and is enforced by `enforce_payload_size` against the decompressed length: a missing `Content-Length` gets 411, an unparsable one 400, and anything over the cap 413. Client-side, agents compress above a 1024-byte threshold and cap single event payloads at 1024 bytes.
 
+Besides the ingestion token buckets, each telemetry route carries a guard-core `@rate_limit` decorator: 120 requests per 60 s on `POST /api/v1/events` and `POST /api/v1/events/encrypted`, 60 per 60 s on `POST /api/v1/metrics`, and 30 per 60 s on `POST /api/v1/status` (`telemetry_router.py` lines 224, 365, 312 and 291).
+
 ## Response semantics
 
 - `200`: accepted. The `TelemetryResponse` body carries `success`, `events_received`, `events_dropped_invalid_timestamp`, `metrics_received`, `events_processed`, `metrics_processed`, `errors` and `quota_warning`; `success: false` or a non-empty `errors` means a partial failure, and agents requeue the batch in memory, retain their Redis keys and back off.

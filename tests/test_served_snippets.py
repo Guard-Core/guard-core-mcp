@@ -76,3 +76,12 @@ def test_the_saas_page_says_the_python_signing_defect_is_fixed_since_3_0_2() -> 
     assert "That defect is fixed as of 3.0.2" in page
     assert "Pin >=3.0.2" in page
     assert "guard-agent 3.0.0 (Python) signs after compression" not in page
+
+
+def test_the_saas_page_names_the_route_rate_limits_of_the_telemetry_router() -> None:
+    # SaaS telemetry_router.py: @guard_deco.rate_limit on /events and
+    # /events/encrypted (120 per 60), /metrics (60 per 60), /status POST (30 per 60).
+    page = (KNOWLEDGE_DIR / "guard-core-app" / "index.md").read_text(encoding="utf-8")
+    assert "120 requests per 60 s on `POST /api/v1/events`" in page
+    assert "60 per 60 s on `POST /api/v1/metrics`" in page
+    assert "30 per 60 s on `POST /api/v1/status`" in page
