@@ -3,6 +3,14 @@ Release Notes
 
 ___
 
+Unreleased
+----------
+
+- **Fixed** - The hosted bearer check no longer blocks the event loop on a JWKS fetch: a token whose signing key is not in the cached key set is verified on a worker thread, and after a miss an unknown `kid` is not refetched for 30 seconds, so a burst of tokens with random key ids cannot stall the server or hammer the issuer's JWKS endpoint. A token with a cached key is verified as before.
+- **Fixed** - The Python agent snippet served by `adapter_setup` and `wire_agent` no longer ends in an undefined return annotation or calls `SecurityMiddleware.configure_cors`, which fastapi-guard removed, and a test now executes every served Python snippet.
+
+___
+
 v1.7.0 (2026-10-18)
 -------------------
 

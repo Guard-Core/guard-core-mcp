@@ -1086,12 +1086,11 @@ guard = SecurityDecorator(security_config)
 
 app = FastAPI()
 app.add_middleware(SecurityMiddleware, config=security_config)
-SecurityMiddleware.configure_cors(app, security_config)
 app.state.guard_decorator = guard
 
 
 @app.get("/")
-async def root() -> JsonObject:
+async def root() -> dict[str, str]:
     return {"message": "Hello World"}"""
 
 

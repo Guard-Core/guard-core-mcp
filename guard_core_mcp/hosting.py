@@ -1,11 +1,14 @@
+import asyncio
 import hmac
 import json
 import os
+import threading
+import time
 from dataclasses import dataclass
 
 import jwt
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
-from jwt import PyJWK, PyJWKClient
+from jwt import PyJWK, PyJWKClient, PyJWKSet
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.datastructures import Headers
 from starlette.middleware.cors import CORSMiddleware
@@ -19,6 +22,7 @@ from guard_core_mcp.server import mcp
 METADATA_PATH = "/.well-known/oauth-protected-resource"
 SERVER_CARD_PATH = "/.well-known/mcp/server-card.json"
 PUBLIC_PATHS = (METADATA_PATH, SERVER_CARD_PATH)
+UNKNOWN_KID_TTL_SECONDS = 30.0
 
 
 def _env(name: str) -> str:
@@ -97,6 +101,9 @@ class TokenVerifier:
         self._jwks_client = (
             PyJWKClient(config.jwks_url, cache_keys=True) if config.jwks_url else None
         )
+        self._jwks_lock = threading.Lock()
+        self._no_refetch_until = 0.0
+        self._jwk_set_was_cached = False
 
     @staticmethod
     def _parse_inline_keys(jwks_inline: str | None) -> dict[str, PyJWK]:
@@ -111,20 +118,64 @@ class TokenVerifier:
             entries = [document]
         return {entry["kid"]: PyJWK.from_dict(entry) for entry in entries}
 
+    def _cached_jwks_key(self, token: str) -> PyJWK | None:
+        """The key for the token's kid from the cached JWK Set; never does I/O."""
+        cached = self._cached_jwks_set()
+        if cached is None:
+            return None
+        self._jwk_set_was_cached = True
+        kid = jwt.get_unverified_header(token).get("kid")
+        return next((key for key in cached.keys if key.key_id == kid), None)
+
+    def _fetching_jwks_key(self, client: PyJWKClient, token: str) -> PyJWK:
+        # shortcut: one refetch window for every unknown kid, not one per kid; a
+        # rotated-in key waits at most the window, as with PyJWKClient's cooldown.
+        with self._jwks_lock:
+            now = time.monotonic()
+            expired_set = self._jwk_set_was_cached and self._cached_jwks_set() is None
+            if now < self._no_refetch_until and not expired_set:
+                raise jwt.InvalidKeyError("unknown signing key id")
+            try:
+                return client.get_signing_key_from_jwt(token)
+            except jwt.PyJWKClientConnectionError:
+                raise
+            except (jwt.PyJWKClientError, jwt.PyJWKSetError):
+                self._no_refetch_until = now + UNKNOWN_KID_TTL_SECONDS
+                raise
+
+    def _cached_jwks_set(self) -> PyJWKSet | None:
+        client = self._jwks_client
+        cache = client.jwk_set_cache if client is not None else None
+        cached = cache.get() if cache is not None else None
+        return cached if isinstance(cached, PyJWKSet) else None
+
     def _signing_key(self, token: str) -> RSAPublicKey:
         if self._jwks_client is not None:
-            return _require_rsa_public_key(
-                self._jwks_client.get_signing_key_from_jwt(token).key
+            key = self._cached_jwks_key(token) or self._fetching_jwks_key(
+                self._jwks_client, token
             )
+            return _require_rsa_public_key(key.key)
         kid = jwt.get_unverified_header(token).get("kid")
         if kid is None or kid not in self._inline_keys:
             raise jwt.InvalidKeyError("unknown signing key id")
         return _require_rsa_public_key(self._inline_keys[kid].key)
 
+    async def verify_without_blocking(self, token: str) -> dict[str, object]:
+        """Verify on the event loop unless the signing key needs a JWKS fetch."""
+        if self._jwks_client is None:
+            return self.verify(token)
+        cached = self._cached_jwks_key(token)
+        if cached is None:
+            return await asyncio.to_thread(self.verify, token)
+        return self._decode(token, _require_rsa_public_key(cached.key))
+
     def verify(self, token: str) -> dict[str, object]:
+        return self._decode(token, self._signing_key(token))
+
+    def _decode(self, token: str, key: RSAPublicKey) -> dict[str, object]:
         claims = jwt.decode(
             token,
-            key=self._signing_key(token),
+            key=key,
             algorithms=["RS256"],
             issuer=self._issuer,
             audience=self._audience,
@@ -169,7 +220,7 @@ class BearerAuthMiddleware:
             await self._reject(scope, receive, send, "missing bearer token")
             return
         try:
-            self._verifier.verify(token)
+            await self._verifier.verify_without_blocking(token)
         except jwt.PyJWTError as exception:
             await self._reject(scope, receive, send, str(exception) or "invalid token")
             return
