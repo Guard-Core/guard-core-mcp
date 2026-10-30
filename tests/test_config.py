@@ -15,16 +15,24 @@ from guard_core_mcp.config import (
     resolve_model,
     validate_config,
 )
+from guard_core_mcp.json_types import JsonObject
 
-# guard-core 5.0.0 logs one notice for the changed defaults a configuration leaves
-# unset, so a configuration with no construction warning sets all four.
+_CHANGED_DEFAULTS_NOTICE = "changed defaults that this configuration leaves unset"
 _CHANGED_DEFAULTS_SET = {
     "ban_on_hostile_signals": True,
     "fail_on_misconfiguration": True,
     "rate_limit": 120,
     "enable_redis": False,
 }
-_CLEAN_CONFIG = {"passive_mode": True, **_CHANGED_DEFAULTS_SET}
+# The 5.0.0 engine is detected by its fields, never by version: the head wheel
+# still reports 4.4.0.
+_ENGINE_EMITS_NOTICE = (
+    "ban_on_hostile_signals" in resolve_model("guard-core")[0].model_fields
+)
+_CLEAN_CONFIG = {
+    "passive_mode": True,
+    **(_CHANGED_DEFAULTS_SET if _ENGINE_EMITS_NOTICE else {}),
+}
 
 
 def test_fastapi_guard_and_guard_core_resolve_to_the_same_model() -> None:
@@ -312,16 +320,21 @@ def test_clean_config_reports_no_construction_warnings() -> None:
     assert _guard_core_logger_snapshot() == before
 
 
-def test_changed_defaults_left_unset_are_reported_as_one_construction_warning() -> None:
-    report = validate_config({"passive_mode": True}, package="guard-core")
+def _changed_defaults_notices(config: JsonObject) -> list[str]:
+    report = validate_config(config, package="guard-core")
+    assert report["valid"] is True
+    return [m for m in report["construction_warnings"] if _CHANGED_DEFAULTS_NOTICE in m]
 
-    notices = [
-        message
-        for message in report["construction_warnings"]
-        if "changed defaults that this configuration leaves unset" in message
-    ]
-    assert len(notices) == 1
-    assert all(field in notices[0] for field in _CHANGED_DEFAULTS_SET)
+
+def test_changed_defaults_notice_is_reported_exactly_when_the_engine_emits_it() -> None:
+    notices = _changed_defaults_notices({"passive_mode": True})
+
+    assert len(notices) == (1 if _ENGINE_EMITS_NOTICE else 0)
+    assert all(field in n for n in notices for field in _CHANGED_DEFAULTS_SET)
+
+
+def test_setting_the_changed_defaults_explicitly_leaves_no_notice() -> None:
+    assert _changed_defaults_notices(_CLEAN_CONFIG) == []
 
 
 def test_unknown_keyword_warning_collapses_across_the_validation_retry() -> None:

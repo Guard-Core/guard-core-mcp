@@ -51,7 +51,7 @@ docker run -p 8020:8020 \
   -e GUARD_CORE_MCP_PUBLIC_URL=https://mcp.guard-core.com \
   -e GUARD_CORE_MCP_OAUTH_ISSUER=https://api.guard-core.com \
   -e GUARD_CORE_MCP_OAUTH_JWKS_URL=https://api.guard-core.com/.well-known/jwks.json \
-  ghcr.io/guard-core/guard-core-mcp:v1.7.0
+  ghcr.io/guard-core/guard-core-mcp:v1.7.1
 ```
 
 The image installs the `hosted` extra, so `versions` reports the exact guard-core, fastapi-guard and guard-agent releases the container was built with. The lockfile pins those at build time; refresh them with `uv lock --upgrade` when a new engine release ships.
