@@ -41,6 +41,6 @@ All mounted under the `/api/v1` prefix:
 
 ## Footguns
 
-- guard-agent 3.0.0 (Python) signs after compression (`_maybe_compress` runs before `sign_payload`), so when a body exceeds the compression threshold its signature covers compressed bytes while the server verifies uncompressed bytes; signed and gzipped batches fail verification when `require_signed_payloads` is enabled. The Go, TypeScript, PHP and Rust agents sign the uncompressed body and match the contract.
+- The Python agent signed after compression in 3.0.0 and 3.0.1 (`_maybe_compress` ran before `sign_payload`), so a signed and gzipped batch failed verification when `require_signed_payloads` was enabled. That defect is fixed as of 3.0.2: the transport signs the uncompressed body, like the Go, TypeScript, PHP and Rust agents, which match the contract. Pin >=3.0.2 before enabling `require_signed_payloads` server-side.
 - 413 is both a "split and retry" signal and part of the permanent-rejection tuple; agents try the recursive split first and only drop a singleton that still exceeds the cap.
 - The public agent-facing docs live in the frontend content tree (`frontend/src/content/docs/reference/01-agent-telemetry-api.mdx`), not the repo-root docs/ directory.
