@@ -33,7 +33,7 @@ SNIPPET_API_NAMES = {
 
 AGENT_SNIPPET_NAMES = {
     "go": "agent.SendEvent(ctx, guardagent.SecurityEvent{",
-    "typescript": "AgentConfig.create({",
+    "typescript": "new GuardAgent({",
     "php": "AgentConfigResolver::resolve([",
     "rust": "AgentConfig::new(",
     "python": "agent_api_key=api_key",

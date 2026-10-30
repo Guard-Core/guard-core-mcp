@@ -14,16 +14,24 @@ Tagged `v3.2.4` and published to npm at 3.2.4, so `pnpm add` resolves it.
 ## Setup
 
 ```ts
-import { GuardAgent, AgentConfig } from "guardagent";
+import { GuardAgent } from "guardagent";
 
-const agent = new GuardAgent(AgentConfig.create({
+const agent = new GuardAgent({
   endpoint: "https://api.guard-core.com",
   apiKey: process.env.GUARD_API_KEY!,
   projectId: "my-project",
-}));
+});
 await agent.start();
 
-agent.sendEvent({ kind: "security_event", payload: { /* ... */ } });
+agent.sendEvent({
+  timestamp: new Date(),
+  eventType: "suspicious_request",
+  ipAddress: "203.0.113.7",
+  endpoint: "/api",
+  method: "GET",
+  actionTaken: "BLOCKED",
+  reason: "suspicious pattern",
+});
 
 await agent.stop(); // final flush + confirm
 ```

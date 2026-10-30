@@ -450,16 +450,24 @@ import { GuardModule } from '@guardcore/nestjs';
 })
 export class AppModule {}"""
 
-TS_AGENT_SNIPPET = """import { GuardAgent, AgentConfig } from "guardagent";
+TS_AGENT_SNIPPET = """import { GuardAgent } from "guardagent";
 
-const agent = new GuardAgent(AgentConfig.create({
+const agent = new GuardAgent({
   endpoint: "https://api.guard-core.com",
   apiKey: process.env.GUARD_API_KEY!,
   projectId: "my-project",
-}));
+});
 await agent.start();
 
-agent.sendEvent({ kind: "security_event", payload: { /* ... */ } });
+agent.sendEvent({
+  timestamp: new Date(),
+  eventType: "suspicious_request",
+  ipAddress: "203.0.113.7",
+  endpoint: "/api",
+  method: "GET",
+  actionTaken: "BLOCKED",
+  reason: "suspicious pattern",
+});
 
 await agent.stop(); // final flush + confirm"""
 
@@ -663,6 +671,7 @@ $agent->start();
 
 // From anywhere in your request path: never throws, never blocks (default drop policy).
 $agent->sendEvent([
+    'timestamp' => new \DateTimeImmutable('now', new \DateTimeZone('UTC')),
     'event_type' => 'penetration_attempt',
     'ip_address' => $clientIp,
     'endpoint' => '/login',
