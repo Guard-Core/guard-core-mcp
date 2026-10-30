@@ -68,3 +68,11 @@ def test_typescript_and_php_agent_events_carry_the_required_timestamp(
     # timestamp ("timestamp is required"), so the served event must set one.
     snippet = REGISTRY.languages[language].agent.snippet
     assert timestamp_marker in snippet
+
+
+def test_the_saas_page_says_the_python_signing_defect_is_fixed_since_3_0_2() -> None:
+    # guard-agent v3.0.1 signs the compressed body, v3.0.2 and later the raw body.
+    page = (KNOWLEDGE_DIR / "guard-core-app" / "index.md").read_text(encoding="utf-8")
+    assert "That defect is fixed as of 3.0.2" in page
+    assert "Pin >=3.0.2" in page
+    assert "guard-agent 3.0.0 (Python) signs after compression" not in page
