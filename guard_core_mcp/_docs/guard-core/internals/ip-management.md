@@ -24,7 +24,9 @@ class IPBanManager:
     def __new__(cls) -> "IPBanManager":
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance.banned_ips = TTLCache(maxsize=10000, ttl=3600)
+            cls._instance.banned_ips = _BanStore(
+                maxsize=10000, on_evict=cls._instance._on_eviction
+            )
             cls._instance.redis_handler = None
             cls._instance.agent_handler = None
         return cls._instance
@@ -36,18 +38,24 @@ The singleton is pre-instantiated as `ip_ban_manager` at module level.
 
 | Layer      | Backend                          | TTL        | Capacity |
 |------------|----------------------------------|------------|----------|
-| Local      | `cachetools.TTLCache`            | 3600s      | 10,000   |
+| Local      | `_BanStore` (per-entry expiry)   | Per-ban    | 10,000   |
 | Distributed| Redis (via `RedisManager`)       | Per-ban    | Unlimited|
 
 ### Key Methods
 
 **`ban_ip(ip, duration, reason="threshold_exceeded")`**
 
-Stores `(ip, expiry_timestamp)` in both local cache and Redis. Also fires a ban event to the agent handler if configured. When `ip` contains `"/"` it is treated as a CIDR network and routed to a separate `banned_networks` list/Redis namespace instead (no agent ban event in that branch). `duration` cannot exceed `LOCAL_CACHE_TTL_CAP_SECONDS` (3600s) when Redis is unavailable, since the local `TTLCache` cannot hold a ban longer than its own TTL; exceeding it raises `ValueError`.
+Stores `(ip, expiry_timestamp)` in both local cache and Redis. Also fires a ban event to the agent handler if configured. When `ip` contains `"/"` it is treated as a CIDR network and routed to a separate `banned_networks` list/Redis namespace instead (no agent ban event in that branch). Every positive `duration` is honored in memory, with or without Redis; a ban that cannot be written to Redis stays in this process for its whole duration and a WARNING says so.
 
 **`unban_ip(ip)`**
 
-Removes the IP from both local cache and Redis.
+Removes the IP from both local cache and Redis and clears that identity's auto-ban strikes (both families: the in-process counts of every guarded middleware, the rate-limit violation counter and the detection strike counters in Redis), so strikes from before the unban cannot ban it again. A CIDR argument lifts a network ban and clears no strikes. A value with a `/` that `ipaddress.ip_network` rejects (`/`, `web/xml`, `1.2.3.4/33`) is not a network: it takes the exact-address path and raises nothing (`_network_of_cidr_text`, `guard_core/handlers/_ipban_queries.py:46`). `unban_inside(entries)` clears the strikes of exactly the addresses it removed.
+
+**`forget_strikes_inside(entries)`**
+
+Resets the auto-ban strikes of every identity the entries (CIDR ranges or single addresses) cover, banned or not: the process counts of every guarded middleware and the by-IP counter, and in Redis every `rate_limit:violations:*`, `detection:strikes:*` and `detection:strikes_index:*` key whose address lies inside a range (found with one `SCAN`, removed with `UNLINK`). A dynamic rule `ip_whitelist` entry runs it once per changed rule, so `10.0.0.5` and `10.0.0.5/32` give the same result.
+
+**Startup whitelist.** At initialize, with Redis connected, the strikes of every identity `config.whitelist` covers are reset once per deployment of that whitelist: one key per prefix (`{redis_prefix}whitelist:strikes_applied`) holds the fingerprint of the last applied whitelist (canonical entries, deduplicated, sorted). A start whose fingerprint differs takes a 60 s lock (`whitelist:strikes_lock`), resets the exact entries one by one and the ranges with one scan, and stores its fingerprint only after the scan succeeded, then releases the lock, so a crashed or failed scan (a Redis error during the reset is not swallowed) is retried by the next start, and another whitelist deployed within the 60 s still gets its reset. During a rolling deploy that moves between two whitelists the scan runs again for each change of whitelist, and a whitelist on a shared prefix resets the strikes of every app on that prefix, as the dynamic-rule whitelist does.
 
 **`is_ip_banned(ip) -> bool`**
 
@@ -59,7 +67,7 @@ Lookup order:
 
 **`reset()`**
 
-Clears both the local cache and all `{redis_prefix}banned_ips:*` keys from Redis.
+Clears both the local cache and all `{redis_prefix}banned_ips:*` keys from Redis, and every auto-ban strike of both families, in memory and in Redis (`{redis_prefix}rate_limit:violations:*`, `{redis_prefix}detection:strikes*`). Redis is walked with `SCAN` and cleared with `UNLINK` in batches, never `KEYS`.
 
 ### Initialization
 
@@ -75,7 +83,7 @@ ___
 IP Allow/Block Logic
 --------------------
 
-The function `check_ip_access()` in `guard_core.utils` implements the global IP evaluation chain; `IpSecurityCheck._check_global_ip_restrictions` calls it directly. `is_ip_allowed()` is a thin bool-returning wrapper around `check_ip_access()` (same `skip_ip_lists`/`skip_countries` signature) kept for external callers that only need a yes/no answer, not `check_ip_access()`'s richer `IpAccessResult` (which also names the cloud provider and network on a cloud-provider block); it is not called anywhere else inside `guard_core`. `IpSecurityCheck` calls `check_ip_access()` for every request that reaches this step (after any route-level check has run and not blocked), passing `skip_ip_lists` / `skip_countries` flags that suppress the IP-list or country gate independently: `skip_ip_lists` is `True` whenever the route declares a non-empty `ip_whitelist` (a non-matching IP would already have been denied by the route-level step above, so reaching here means it matched); `skip_countries` is `True` only when the route's `whitelist_countries` actually matches the resolved country for this request. A route `ip_whitelist` match does not, by itself, suppress country enforcement.
+The function `check_ip_access()` in `guard_core.utils` implements the global IP evaluation chain; `IpSecurityCheck._check_global_ip_restrictions` calls it directly. `is_ip_allowed()` is a thin bool-returning wrapper around `check_ip_access()` (same `skip_ip_lists`/`skip_countries`/`skip_clouds` signature) kept for external callers that only need a yes/no answer (for example fastapi-guard's WebSocket handshake), not `check_ip_access()`'s richer `IpAccessResult` (which carries the denial reason and the ban category of a denial, and names the cloud provider and network on a cloud-provider block); it is not called anywhere else inside `guard_core`. `IpSecurityCheck` calls `check_ip_access()` for every request that reaches this step (after any route-level check has run and not blocked), passing `skip_ip_lists` / `skip_countries` flags that suppress the IP-list or country gate independently, and always `skip_clouds=True`, because in the HTTP pipeline `CloudProviderCheck` blocks cloud providers (so `exempt_ips` and `bypass(["clouds"])` apply there): `skip_ip_lists` is `True` whenever the route declares a non-empty `ip_whitelist` (a non-matching IP would already have been denied by the route-level step above, so reaching here means it matched); `skip_countries` is `True` only when the route's `whitelist_countries` actually matches the resolved country for this request. A route `ip_whitelist` match does not, by itself, suppress country enforcement.
 
 ### Evaluation Order
 
@@ -103,7 +111,9 @@ flowchart TD
     CL -- No --> ALLOW
 ```
 
-When `config.whitelist` is configured, it alone governs the IP-list gate, a whitelist match is allowed even if the same IP also falls inside `config.blacklist` (explicit allow overrides deny, since v3.2.0). The blacklist is only consulted when no whitelist is configured.
+Step 5 is skipped with `skip_clouds=True`, for an IP in `config.whitelist`, and for an IP in `config.exempt_ips`, the same IPs `CloudProviderCheck` lets through.
+
+The global blacklist always denies: an IP inside `config.blacklist` is denied even when it also matches `config.whitelist` or a route `ip_whitelist`. When `config.whitelist` is configured, an IP that is not on the blacklist must also match the whitelist. `bypass(["ip"])` on a route stays the one explicit override.
 
 ### Blacklist Check
 
@@ -144,7 +154,9 @@ Uses the `GeoIPHandler` protocol to resolve the country code for an IP, then che
 
 ### Cloud Provider Check
 
-Delegates to `CloudManager.is_cloud_ip()` to check if the IP belongs to a blocked cloud provider. Before the provider's ranges are populated, `is_cloud_ip()` fails open the same way, `False`, not blocked, and logs a rate-limited `WARNING` so the window is visible instead of silent; see [Provider Status](../configuration/security-config.md#provider-status).
+Providers named only by a route's `block_clouds` are loaded like the global ones: at startup, in the on-demand refresh and when the agent is attached, so a route-only rule blocks from the first request. When the refresh covers a provider that only a route names, the engine refreshes it itself instead of calling the adapter's `refresh_cloud_ip_ranges`, which loads only `block_cloud_providers`.
+
+`check_ip_access()` does not evaluate cloud providers. Cloud blocking, global and per route, runs only in `CloudProviderCheck`, which honors the global `whitelist`, `exempt_ips`, `bypass(["clouds"])` and route cloud lists. A global cloud block answers `403` with `Cloud provider IP not allowed`. The provider check calls `CloudManager.is_cloud_ip()`. Before the provider's ranges are populated, `is_cloud_ip()` fails open, `False`, not blocked, and logs a rate-limited `WARNING` so the window is visible.
 
 ### Provider Status
 
@@ -171,18 +183,18 @@ async def extract_client_ip(
     request: GuardRequest,
     config: SecurityConfig,
     agent_handler: AgentHandlerProtocol | None = None,
-) -> str
+) -> str: ...
 ```
 
 When no client address can be resolved, `extract_client_ip` returns the sentinel `UNKNOWN_CLIENT_IDENTITY` (value `"unknown"`), exported from `guard_core.utils` and mirrored at `guard_core.sync.utils`. Every `"unknown"` reference below is that same sentinel; compare against the constant rather than the literal string.
 
 ### Logic
 
-1. If `request.client_host` is `None`: return the address resolved from `X-Forwarded-For` when `"unix"` is in `trusted_proxies` (same depth logic as step 6 below, falling back to `"unknown"` if the header is absent or the chain is too short); otherwise return `"unknown"`. The adapter's passthrough step (see [Middleware Integration](../adapters/middleware-integration.md)) only reaches this resolution for a non-excluded path -- an excluded path (a health or readiness endpoint, for example) passes through unaffected, before identity is resolved at all. For a non-excluded path, the passthrough step rejects the request with 403 before this point when the resolved identity is `"unknown"` and `fail_secure=True` (the default); with `fail_secure=False` the pipeline still runs with that identity, and `check_ip_access` treats `"unknown"` as no address available: the request is allowed unless a whitelist or a country allow-list is configured (`whitelist` or `whitelist_countries`; membership cannot be proven for an address that does not exist, so it is blocked), and the blacklist, `blocked_countries`, and cloud-provider checks are skipped since none of them can match without an address. A decorated route follows the same rule: `check_route_ip_access` blocks only when the route's own `ip_whitelist` or `whitelist_countries` is set, and otherwise passes the identity through to the global check untouched, since a route `ip_blacklist` or `blocked_countries` rule cannot match it either. Detection and the shared `"unknown"` rate-limit bucket still apply.
+1. If `request.client_host` is `None`: return the address resolved from `X-Forwarded-For` when `"unix"` is in `trusted_proxies` (same depth logic as step 6 below, falling back to `"unknown"` if the header is absent or the chain is too short); otherwise return `"unknown"`. The adapter's passthrough step (see [Middleware Integration](../adapters/middleware-integration.md)) only reaches this resolution for a non-excluded path -- an excluded path (a health or readiness endpoint, for example) passes through unaffected, before identity is resolved at all. For a non-excluded path, the passthrough step rejects the request with 403 before this point when the resolved identity is `"unknown"` and `fail_secure=True` (the default); with `fail_secure=False` the pipeline still runs with that identity, and `check_ip_access` treats `"unknown"` as no address available: the request is allowed unless a whitelist or a country allow-list is configured (`whitelist` or `whitelist_countries`; membership cannot be proven for an address that does not exist, so it is blocked), and the blacklist, `blocked_countries`, and cloud-provider checks are skipped since none of them can match without an address. A decorated route follows the same rule: `check_route_ip_access` blocks only when the route's own `ip_whitelist` or `whitelist_countries` is set, and otherwise passes the identity through to the global check untouched, since a route `ip_blacklist` or `blocked_countries` rule cannot match it either. Detection and the shared `"unknown"` rate-limit bucket still apply. The sharing is deliberate: a per-connection key would let anyone reset a rate limit by reconnecting, so every peerless client counts in the one `"unknown"` bucket (a violation is neither counted toward a ban nor banned, because `"unknown"` is not an IP address) and the one-time warning says so. Add `"unix"` to `trusted_proxies` to get the real client address from `X-Forwarded-For` instead.
 2. Get the connecting IP from `request.client_host`.
 3. Get `X-Forwarded-For` header value.
 4. If no trusted proxies are configured, log a spoofing warning (if `X-Forwarded-For` is present) and return the connecting IP.
-5. If the connecting IP is not a trusted proxy, log a spoofing warning and return the connecting IP.
+5. If the connecting IP is not a trusted proxy, log a spoofing warning (WARNING for a public peer, sampled to at most once per peer per 60 seconds, DEBUG for a private or loopback peer) and return the connecting IP. With `ban_on_hostile_signals` on, a public peer that forges a privileged `X-Forwarded-For` or rotates three distinct values within 60 seconds also counts toward an `ip_spoofing` ban.
 6. If the connecting IP is a trusted proxy, extract the client IP from `X-Forwarded-For` counting from the right end of the comma-separated list (`ips[-trusted_proxy_depth]`); with the default depth of `1` that is the rightmost entry, not the leftmost, since each proxy hop appends its own view to the right.
 
 Each comma-separated entry is stripped of a trailing port before parsing (`_strip_forwarded_entry_port`, `guard_core/_utils/ip_extraction.py`): `1.2.3.4:5678` and `[2001:db8::1]:5678` resolve to `1.2.3.4` and `2001:db8::1`. An unbracketed IPv6 address is never mistaken for `host:port`, since the split only fires when an entry has exactly one colon (every real IPv6 literal has at least two); an entry that merely looks like `host:port` but has a non-numeric or missing port (`1.2.3.4:abc`, `[2001:db8::1]:`) is left untouched and fails address parsing exactly as it did before this stripping existed, following the existing malformed-entry path.
@@ -191,11 +203,15 @@ Each comma-separated entry is stripped of a trailing port before parsing (`_stri
 
 ```python
 def _is_trusted_proxy(connecting_ip, trusted_proxies) -> bool:
+    # unwrap ::ffff:a.b.c.d, strip [] and %zone
+    peer = _peer_address_for_matching(connecting_ip)
+    if peer is None:
+        return False
     for proxy in trusted_proxies:
         if "/" in proxy:
-            if ip_address(connecting_ip) in ip_network(proxy, strict=False):
+            if peer in ip_network(proxy, strict=False):
                 return True
-        elif connecting_ip == proxy:
+        elif peer == _peer_address_for_matching(proxy):
             return True
     return False
 ```
@@ -215,6 +231,12 @@ When an `X-Forwarded-For` header is received from an untrusted source, guard-cor
 This right-side check trusts an entry by its *value* -- is this IP itself listed in `trusted_proxies`? -- not by *provenance* -- did a trusted proxy actually append it? guard-core has no way to know which hop appended which entry; it only sees the final header. A trusted proxy that forwards `X-Forwarded-For` without appending the peer address it received the request from (misconfigured, or deliberately relaying an untouched header) leaves the chain fully spoofable no matter what `trusted_proxy_depth` is set to. This is unchanged from 3.14.0: the fix above closes the over-counted-depth gap specifically, not the case where a listed proxy fails to do its part of the append.
 
 Repeated `X-Forwarded-For` field lines are joined by the adapter before guard-core sees them (guard-core reads the header as a single string); an ASGI adapter that only returns the first field line's value for a duplicate header name is an adapter-layer defect, not something this function can detect or correct.
+
+### Empty or Unparsable Entries and Zone Ids
+
+When the trusted peer's `X-Forwarded-For` has an empty or unparsable entry at the position `trusted_proxy_depth` selects (a trailing comma, a hostname, garbage), guard-core no longer attributes the request to the proxy's own address. With `fail_secure` on (the default) the request is answered `400` with a log line and a `suspicious_request` event (`action_taken="malformed_forwarded_for"`) and no strike. With `fail_secure=False` the request goes on under its own identity, `malformed-xff@<proxy address>`, which is rate limited and banned like an address; the warning and event are sampled to one a minute per peer. A client whose chain is merely shorter than `trusted_proxy_depth` still falls back to the peer, as before.
+
+IPv6 zone ids (`fe80::1%eth0`) are stripped from the connecting peer and from `X-Forwarded-For` entries before matching and before the identity is formed, so every zone spelling of an address is one client. A link-local address (`fe80::/10`) is only unique on one link: clients on different links can present the same address, and they share one identity, one rate-limit window and one ban.
 
 ### Deployment Prerequisite: Disable the App Server's Own Forwarded-Header Handling
 
@@ -243,7 +265,8 @@ The `check_route_ip_access()` helper in `guard_core.core.checks.helpers` evaluat
 
 ```python
 async def check_route_ip_access(client_ip, route_config, middleware) -> bool | None:
-```
+
+    ...```
 
 **Returns**:
 

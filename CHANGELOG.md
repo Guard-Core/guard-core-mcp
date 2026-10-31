@@ -6,6 +6,8 @@ ___
 Unreleased
 ----------
 
+- **Fixed** - **The vendored docs corpus is re-synced with the fixed fastapi-guard, guard-core and guard-agent pages, and a test keeps every Python block true.** `tests/test_markdown_python_blocks.py` parses every Python block of the README, `docs/` and the vendored docs, runs the blocks of each file one after another in a sandbox with no network (under one running event loop for a page that awaits), and checks every guard-core, fastapi-guard, guard-agent and guard-core-mcp import, call, keyword and attribute against the installed objects, plus the signature and model listings and every default the pages state for `SecurityConfig`. The mirrored pages were fixed upstream (the `docs/tools.md` listings of this server were already valid) and re-vendored with `scripts/sync_docs.py`: examples that the 5.0.0 engine rejects (keywords that do not exist, country decorators and return monitors without their geo source and response body scanning, patterns the ReDoS validator refuses), the 18-check pipeline catalogue, the detection engine and telemetry constants, and the stale defaults are corrected in the corpus that `search_docs` and `get_doc` serve.
+
 - **Fixed** - The Python agent snippet served by `adapter_setup` and `wire_agent` no longer ends in an undefined return annotation or calls `SecurityMiddleware.configure_cors`, which fastapi-guard removed, and a test now executes every served Python snippet.
 
 ___

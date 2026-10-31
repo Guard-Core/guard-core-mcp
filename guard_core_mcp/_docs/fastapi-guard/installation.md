@@ -30,6 +30,17 @@ Install `fastapi-guard` with **uv** (recommended), **poetry**, or **pip**:
 
 **Note**: Ensure you have Python 3.10 or higher installed.
 
+Optional extras. The base install carries `fastapi-guard`'s own dependencies and guard-core (`cachetools`, `pydantic` and `typing-extensions`); it does not carry the Redis client, the GeoIP reader or the downloaders. A config that needs a package you did not install is refused when `SecurityConfig` is built, with a message that names the extra:
+
+| Extra | Adds | Needed for |
+|---|---|---|
+| `fastapi-guard[redis]` | the Redis client | `enable_redis=True`: Redis-backed rate limits, bans, caches and shared state |
+| `fastapi-guard[geo]` | `maxminddb` and the downloader of the built-in GeoIP manager | country rules (`blocked_countries`, `whitelist_countries`, `@block_countries`, `@allow_countries`, `@geo_rate_limit`) and `ipinfo_token` |
+| `fastapi-guard[cloud]` | `aiohttp` and `requests` | `block_cloud_providers` |
+| `fastapi-guard[agent]` | `guard-agent` | `enable_agent=True` (telemetry) |
+
+Combine them as needed, for example `pip install "fastapi-guard[redis,geo]"`.
+
 ___
 
 Prerequisites
@@ -60,7 +71,7 @@ config = SecurityConfig(
     geo_ip_handler=IPInfoManager(
         "your_ipinfo_token_here"
     ),  # NOTE: Required when using country blocking
-    enable_redis=True,  # Enabled by default, disable to use in-memory storage
+    enable_redis=True,  # Off unless a Redis field is set, enable to use Redis (without it state is in-memory)
     redis_url="redis://localhost:6379/0",
     redis_prefix="prod:security:",
     whitelist=["192.168.1.1", "2001:db8::1"],

@@ -23,7 +23,11 @@ from guard import SecurityConfig
 from guard import SecurityDecorator
 
 app = FastAPI()
-config = SecurityConfig()
+config = SecurityConfig(
+    # geo source for block_countries, allow_countries and geo_rate_limit; response body scanning for return_monitor
+    ipinfo_token="your_ipinfo_token_here",
+    behavior_scan_response_body=True,
+)
 guard_deco = SecurityDecorator(config)
 
 
@@ -151,6 +155,9 @@ config = SecurityConfig(
     enable_rate_limiting=True,
     rate_limit=100,
     rate_limit_window=3600,
+    # geo source for block_countries, allow_countries and geo_rate_limit; response body scanning for return_monitor
+    ipinfo_token="your_ipinfo_token_here",
+    behavior_scan_response_body=True,
 )
 
 # Create decorator instance
@@ -248,9 +255,9 @@ app.include_router(admin, prefix="/v1")  # /v1/admin/billing/invoices
 There is no nesting limit. Routers included into routers, sub-applications mounted into sub-applications, and any mix of the two all resolve, and the decorator on `invoices` is enforced at whatever depth it ends up.
 
 !!! warning "Versions before 7.3.1"
-    Route resolution stopped after eight levels of mounts, and never descended past one level of `include_router()`. Decorators on routes below those limits silently did nothing — including `require_auth`, which meant an endpoint served unauthenticated. See [GHSA-f2vm-w8gq-h378](https://github.com/Guard-Core/fastapi-guard/security/advisories/GHSA-f2vm-w8gq-h378). If you compose your app from nested routers or mounts, upgrade.
+    Route resolution stopped after eight levels of mounts, and never descended past one level of `include_router()`. Decorators on routes below those limits silently did nothing - including `require_auth`, which meant an endpoint served unauthenticated. See [GHSA-f2vm-w8gq-h378](https://github.com/Guard-Core/fastapi-guard/security/advisories/GHSA-f2vm-w8gq-h378). If you compose your app from nested routers or mounts, upgrade.
 
-A request that reaches a mounted application guard-core does not route for — `StaticFiles`, a WSGI app, any opaque ASGI app — has no endpoint to decorate, so per-route checks do not apply to it and global `SecurityConfig` settings govern instead.
+A request that reaches a mounted application guard-core does not route for - `StaticFiles`, a WSGI app, any opaque ASGI app - has no endpoint to decorate, so per-route checks do not apply to it and global `SecurityConfig` settings govern instead.
 
 ___
 

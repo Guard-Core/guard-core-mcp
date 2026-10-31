@@ -280,7 +280,7 @@ class HTTPTransport:
 
 ```python
 class AgentConfig(BaseModel):
-    api_key: str
+    api_key: str  # at least 10 characters
     endpoint: str = "https://api.guard-core.com"
     project_id: str | None = None
     buffer_size: int = 100
@@ -301,12 +301,25 @@ class AgentConfig(BaseModel):
 
 ##### Compression fields
 
-- `compression_enabled` (default `True`) — when set, the agent gzip-compresses every outgoing batch body whose JSON exceeds `compression_threshold` bytes and sends it with `Content-Encoding: gzip`. Smaller bodies skip compression. The Guard Core SaaS decompresses gzip request bodies via `GzipRequestMiddleware` before pydantic validation. Set `compression_enabled=False` only if your ingestion endpoint does not handle `Content-Encoding: gzip` request bodies.
-- `compression_threshold` (default `1024` bytes) — minimum body size in bytes before gzip kicks in. Tune lower for chatty deployments, higher to save CPU on small batches.
+- `compression_enabled` (default `True`) - when set, the agent gzip-compresses every outgoing batch body whose JSON exceeds `compression_threshold` bytes and sends it with `Content-Encoding: gzip`. Smaller bodies skip compression. The Guard Core SaaS decompresses gzip request bodies via `GzipRequestMiddleware` before pydantic validation. Set `compression_enabled=False` only if your ingestion endpoint does not handle `Content-Encoding: gzip` request bodies.
+- `compression_threshold` (default `1024` bytes) - minimum body size in bytes before gzip kicks in. Tune lower for chatty deployments, higher to save CPU on small batches.
 
 ##### Retry-After
 
 429 responses raise `RateLimitedError(retry_after_seconds)`; the transport sleeps that exact value (capped at 300s) before retrying instead of falling back to client-side exponential backoff.
+
+##### Rules polling contract (conditional GET)
+
+Every call of `get_dynamic_rules` (the engine's poll, every engine interval) makes this GET; there is no ttl short-circuit, and concurrent calls share one in-flight request and its result. Every call from outside the agent's own rules loop (the engine, a `force_update`, the sync facade) is stamped with `time.monotonic()`, including a call that joins an in-flight request. The agent's own rules loop polls only when no outside call has started within W = 1.5 x max(`dynamic_rule_interval`, the larger of the last two gaps between outside calls); before the second outside call W = 1.5 x `dynamic_rule_interval`. So with an engine the SaaS sees one rules GET per engine interval, and a standalone agent (no outside caller) still polls every interval. Bounded exceptions: up to floor(engine interval / agent interval) - 2 loop GETs in the first engine interval, up to one engine interval of loop GETs after two close force_updates or one mid-interval force_update, and possible extras when a rules apply takes longer than half the engine interval. Once it holds a rule set from a 200 response it makes the poll conditional. Every agent family and the SaaS follow this contract.
+
+- The agent sends the query params `last_rule_id` and `last_rule_version` of the rule set it holds. Both always travel together, never the version alone, because synthetic rule sets reuse versions.
+- When the last 200 response carried an `ETag`, the agent also sends `If-None-Match` with that exact value. Without an `ETag` it sends no `If-None-Match`.
+- The first poll, and every poll before a 200 has been received, carries none of these.
+- `304` means unchanged: the agent keeps its cached rules, restarts the cache window (`_rules_last_update` is refreshed) and does not count a rules fetch. A 304 is its own path, never an error and never retried. A 304 with no rules held is logged as a warning and yields no rules.
+- `200` replaces the held rule set and its `ETag` (the `ETag` is dropped when the response has none). A SaaS that ignores the params and the header and always answers 200 behaves exactly as v3.2.4.
+- Any other failure (5xx, timeout, network error, 401 or 403) is retried with backoff up to `retry_attempts`. A permanent 4xx (400, 404, 422) is never retried. Whenever the fetch fails and rules are held, `get_dynamic_rules` returns the cached rules.
+- Stale rules: when the SaaS has failed for longer than the cached rules' `ttl` since the last successful check, the agent keeps serving the cached rules, logs one WARNING when they become stale and again every hour while they stay stale (rule id, version, seconds since the last successful check, and the `purge_dynamic_rules_on_start` value that drops the held rules locally), and one INFO line on the first successful check afterwards. `AgentStatus.rules_stale` and `AgentStatus.rules_last_checked` (time of the last 200 or 304) report it; both default so an older payload stays valid.
+- `ttl` of a rule set is clamped into `[60, 86400]` seconds on load and a missing or null `ttl` becomes `300`; a response is never rejected for its `ttl`.
 
 ##### SecurityEvent
 

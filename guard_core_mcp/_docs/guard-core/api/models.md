@@ -29,7 +29,7 @@ class SecurityConfig(BaseModel):
 
     geo_ip_handler: GeoIPHandler | None = Field(default=None)
 
-    enable_redis: bool = Field(default=True)
+    enable_redis: bool = Field(default=False)
     redis_url: str | None = Field(default="redis://localhost:6379")
     redis_prefix: str = Field(default="guard_core:")
 
@@ -49,7 +49,9 @@ class SecurityConfig(BaseModel):
 
     excluded_detection_headers: set[str] = Field(default_factory=set)
     excluded_semantic_detection_headers: set[str] = Field(default_factory=set)
-    excluded_detection_params: set[str] = Field(default_factory=set)
+    excluded_detection_params: set[str] | dict[str, set[str]] = Field(
+        default_factory=set
+    )
     excluded_detection_body_fields: set[str] = Field(default_factory=set)
     enabled_detection_categories: frozenset[str] = Field(
         default_factory=lambda: frozenset(ALL_DETECTION_CATEGORIES)
@@ -66,7 +68,7 @@ class SecurityConfig(BaseModel):
 
     custom_error_responses: dict[int, str] = Field(default_factory=dict)
 
-    rate_limit: int = Field(default=10)
+    rate_limit: int = Field(default=120)
     rate_limit_window: int = Field(default=60)
 
     enforce_https: bool = Field(default=False)
@@ -79,6 +81,9 @@ class SecurityConfig(BaseModel):
     custom_response_modifier: (
         Callable[[GuardResponse], Awaitable[GuardResponse]] | None
     ) = Field(default=None)
+    custom_response_modifier_max_body_bytes: int = Field(
+        default=262144, ge=1024, le=10485760
+    )
 
     enable_cors: bool = Field(default=False)
     cors_allow_origins: list[str] = Field(default_factory=lambda: ["*"])
@@ -109,6 +114,7 @@ class SecurityConfig(BaseModel):
             "/static",
         ]
     )
+    exclude_all_paths: bool = Field(default=False)
 
     enable_ip_banning: bool = Field(default=True)
     enable_rate_limiting: bool = Field(default=True)
@@ -116,6 +122,9 @@ class SecurityConfig(BaseModel):
 
     ipinfo_token: str | None = Field(default=None)
     ipinfo_db_path: Path | None = Field(default=Path("data/ipinfo/country_asn.mmdb"))
+    ipinfo_download_url: str = Field(
+        default="https://ipinfo.io/data/free/country_asn.mmdb"
+    )
 
     enable_agent: bool = Field(default=False)
     agent_api_key: str | None = Field(default=None)
@@ -133,12 +142,15 @@ class SecurityConfig(BaseModel):
 
     emergency_mode: bool = Field(default=False)
     emergency_whitelist: list[str] = Field(default_factory=list)
+    emergency_whitelist_only: bool = Field(default=True)
+    emergency_exempt_paths: list[str] = Field(default_factory=list)
     endpoint_rate_limits: dict[str, tuple[int, int]] = Field(default_factory=dict)
 
     detection_compiler_timeout: float = Field(default=2.0, ge=0.1, le=10.0)
     detection_max_scan_seconds: float = Field(default=10.0, ge=0.1, le=60.0)
     detection_max_content_length: int = Field(default=10000, ge=1000, le=100000)
     detection_max_body_inspect_bytes: int = Field(default=262144, ge=1024, le=10485760)
+    detection_max_file_inspect_bytes: int = Field(default=1048576, ge=1024, le=10485760)
     detection_preserve_attack_patterns: bool = Field(default=True)
     detection_semantic_threshold: float = Field(default=0.7, ge=0.0, le=1.0)
     detection_anomaly_threshold: float = Field(default=3.0, ge=1.0, le=10.0)
@@ -187,7 +199,7 @@ These fields opt specific request components out of penetration detection. The h
 |------------------------------------|-------------|----------------------------------|----------------------------------------------------------------------------|
 | `excluded_detection_headers`       | `set[str]`  | `set()`                          | Headers exempted only from the categories known to false-positive on their typical values: identity and proxy headers such as `X-Forwarded-For`, `X-Real-IP`, `Host`, `Origin` and `Via` skip `ssrf` only, and every other category (sqli, xss, cmd_injection, template, Log4Shell) still scans them. A name outside the built-in identity set inherits the same rule when its value looks like an address chain, otherwise it gets no exclusion at all. Merged with the hardcoded default list. |
 | `excluded_semantic_detection_headers` | `set[str]`  | `set()`                          | Opt-in. Header names (case-insensitive) whose values skip the semantic analyzer only; regex category scanning of these headers is unchanged, and `excluded_detection_headers` semantics are untouched. Use it when a header legitimately carries high-entropy encoded data, for example `cookie` or `authorization` for apps with JWT sessions, whose base64 segments score close to `detection_semantic_threshold`. Merged with the route-level set from `@security.detection_exclusion(semantic_headers=...)`. |
-| `excluded_detection_params`        | `set[str]`  | `set()`                          | Query parameter names skipped by detection.                                |
+| `excluded_detection_params`        | `set[str] \| dict[str, set[str]]` | `set()`              | Query parameter names skipped by detection. A set skips every category; a mapping of name to a set of categories skips only those categories for that parameter, for example `{"q": {"sqli"}}` (an unknown category or an empty set is rejected). |
 | `excluded_detection_body_fields`   | `set[str]`  | `set()`                          | Top-level JSON body keys skipped by detection.                             |
 | `enabled_detection_categories`     | `frozenset[str]`  | `frozenset(ALL_DETECTION_CATEGORIES)`  | Categories scanned for. Validator rejects unknown labels.                  |
 
@@ -212,7 +224,9 @@ See [Ban Configuration](ban-config.md) for `ThreatBanConfig` details and example
 | `global_behavior_rules`                        | `tuple[BehaviorRuleConfig, ...]` | `()`    | Behavior rules merged into every route. Immutable: append via whole-field reassignment (`config.global_behavior_rules = (*config.global_behavior_rules, new_rule)`), not `.append()`. |
 | `behavior_scan_response_body`                  | `bool`                        | `False`    | Gates response-body reading for `return_pattern` rules whose pattern is not `status:`. |
 | `behavior_max_response_body_inspect_bytes`     | `int`                         | `262144`   | Cap on bytes read/retained per response when `behavior_scan_response_body` is `True`. |
-| `body_read_timeout`                            | `float`                       | `3.0`      | Seconds to wait on an adapter's `read_body_prefix`/`body` call before treating the body as unavailable. Bounds `BoundedBodyReader`, `BoundedResponseBodyReader`, and the plain `GuardRequest.body` read in `guard_core` (async) via `asyncio.wait_for`. In `guard_core.sync`, each read runs on its own daemon thread and this bounds how long the caller joins that thread; see `sync_body_read_max_concurrent` for the thread budget. |
+| `body_read_timeout`                            | `float`                       | `3.0`      | Seconds a request-body read may sit idle. Passed to `read_body_prefix_until_idle` as `idle_timeout`; a client that stops sending for this long gets `408` under `fail_secure` (a log line and an event, no strike), a failed read gets `400`. An adapter without that method is read in full with no deadline of its own, and one warning names the missing method. Also how long a read waits for a free body-read slot. The sync tree reads on the request thread. |
+| `sync_body_read_max_concurrent`                | `int`                         | `64`       | Request bodies the sync tree reads at once. A wait for a slot that passes `body_read_timeout` gets the `fail_secure` outcome (`408`, a log line and an event, no strike). |
+| `async_body_read_max_concurrent`               | `int \| None`                 | `None`     | Request bodies the async tree reads at once. `None` means no limit. When set, a wait for a slot that passes `body_read_timeout` gets the `fail_secure` outcome (`408`, a log line and an event, no strike), never a silent skip. |
 
 See [Behavior Rules](behavior-rules.md) for `BehaviorRuleConfig` details, the return-pattern format table, and the detection-correlation example.
 
@@ -326,7 +340,10 @@ class DynamicRules(BaseModel):
 
     emergency_mode: bool = Field(default=False)
     emergency_whitelist: list[str] = Field(default_factory=list)
+    emergency_whitelist_only: bool = Field(default=True)
 ```
+
+`emergency_exempt_paths` is a `SecurityConfig` field only, a dynamic rule cannot set it.
 
 | Field                         | Type            | Default | Description                                                                 |
 |-------------------------------|------------------|---------|-------------------------------------------------------------------------------|

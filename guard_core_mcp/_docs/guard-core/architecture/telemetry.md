@@ -38,9 +38,9 @@ Mute is applied globally inside `CompositeAgentHandler.send_event` / `.send_metr
 
 Drawn from constants in `guard_core.core.events.event_types`:
 
-- `EVENT_TYPE_VALUES` (39 values): `access_denied`, `authentication_failed`, `behavioral_violation`, `cloud_blocked`, `content_filtered`, `country_blocked`, `csp_violation`, `custom_request_check`, `decoding_error`, `decorator_violation`, `detection_engine_callback_error`, `dynamic_rule_applied`, `dynamic_rule_updated`, `dynamic_rule_violation`, `emergency_mode_activated`, `emergency_mode_block`, `geo_lookup_failed`, `https_enforced`, `ip_ban_failed`, `ip_banned`, `ip_blocked`, `ip_unbanned`, `path_excluded`, `pattern_added`, `pattern_anomaly_slow_execution`, `pattern_anomaly_statistical_anomaly`, `pattern_anomaly_timeout`, `pattern_detected`, `pattern_removed`, `penetration_attempt`, `rate_limit_script_reloaded`, `rate_limited`, `redis_connection`, `redis_error`, `route_unresolved`, `security_bypass`, `security_headers_applied`, `suspicious_request`, `user_agent_blocked`
+- `EVENT_TYPE_VALUES` (44 values): `access_denied`, `auth_verifier_error`, `authentication_failed`, `behavior_bucket_evicted`, `behavioral_violation`, `cloud_blocked`, `content_filtered`, `country_blocked`, `csp_violation`, `custom_request_check`, `decoding_error`, `decorator_violation`, `detection_engine_callback_error`, `dynamic_rule_applied`, `dynamic_rule_updated`, `dynamic_rule_violation`, `emergency_mode_activated`, `emergency_mode_block`, `geo_lookup_failed`, `https_enforced`, `ip_ban_evicted`, `ip_ban_failed`, `ip_ban_refused`, `ip_banned`, `ip_blocked`, `ip_unbanned`, `path_excluded`, `pattern_added`, `pattern_anomaly_slow_execution`, `pattern_anomaly_statistical_anomaly`, `pattern_anomaly_timeout`, `pattern_detected`, `pattern_removed`, `penetration_attempt`, `rate_limit_script_reloaded`, `rate_limited`, `redis_connection`, `redis_error`, `response_body_unavailable`, `route_unresolved`, `security_bypass`, `security_headers_applied`, `suspicious_request`, `user_agent_blocked`
 - `METRIC_TYPE_VALUES`: `error_rate`, `request_count`, `response_time`
-- `CHECK_NAME_VALUES`: `authentication`, `cloud_ip_refresh`, `cloud_provider`, `custom_request`, `custom_validators`, `emergency_mode`, `https_enforcement`, `ip_security`, `rate_limit`, `referrer`, `request_logging`, `request_size_content`, `required_headers`, `route_config`, `suspicious_activity`, `time_window`, `user_agent`
+- `CHECK_NAME_VALUES`: `authentication`, `cloud_ip_refresh`, `cloud_provider`, `cors_preflight`, `custom_request`, `custom_validators`, `emergency_mode`, `https_enforcement`, `ip_security`, `rate_limit`, `referrer`, `request_logging`, `request_size_content`, `required_headers`, `route_config`, `suspicious_activity`, `time_window`, `user_agent`
 
 ## Enrichment fields (guard-agent tier)
 
@@ -55,11 +55,11 @@ When `enable_enrichment=True` the `EventEnricher` runs inside `CompositeAgentHan
 | `guard.rule.id` | `str` | `DynamicRuleManager.match_event(event)` when the cached rule's IP / country / event-type matched | events only |
 | `guard.rule.version` | `int` | Same source as `guard.rule.id` | events only |
 | `guard.behavior.correlation_key` | `str` (16-char hex) | SHA-256 prefix of `ip \| service \| floor(now/300)`, stable within a 5-minute window so multiple events from the same IP share a key | events only |
-| `guard.behavior.recent_event_count` | `int` | `BehaviorTracker.get_recent_event_count(ip, 300)`, total events observed from the IP across all endpoints in the last 5 minutes | events only |
+| `guard.behavior.recent_event_count` | `int` | `BehaviorTracker.count_recent_rule_hits(ip, 300)`: each `usage` or `frequency` behavior rule's hits from the IP that are still inside that rule's own window, summed across all endpoints (route and global rules), counting only hits in the last 300 seconds; one request on a route with two such rules adds 2. With Redis the same sum is read from the IP's rule keys, which every worker shares, and matches the in-memory value except where memory evicts at its caps (10,000 endpoint buckets and 10,000 clients per bucket, least recently used first) or an IP's Redis index reaches 10,000 rule keys. A custom tracker that only has the sync `get_recent_event_count(ip, window_seconds)` is still read through that method. | events only |
 
 All fields are nullable and absent unless the corresponding context is available. When `enable_enrichment=False` the enricher is never constructed and none of these keys appear. OTel spans receive these as span attributes; Logfire spans receive them as log attributes via `**enrichment` unpacking.
 
-Enrichment is **always client-side**. guard-core-app's SaaS backend stores them as structured fields for indexed queries, but no server-side component computes them, the full behaviour is deterministic from `SecurityConfig` + current dynamic rule + local in-memory behavioural counters.
+Enrichment is **always client-side**. guard-core-app's SaaS backend stores them as structured fields for indexed queries, but no server-side component computes them, the full behaviour is deterministic from `SecurityConfig` + current dynamic rule + the behaviour tracker's rule-hit counters (Redis when enabled, in-memory otherwise).
 
 ## Muting events, metrics, and check logs
 
@@ -76,6 +76,20 @@ config = SecurityConfig(
 - `muted_event_types` short-circuits `SecurityEventBus.send_middleware_event()` before the event reaches any exporter.
 - `muted_metric_types` short-circuits `MetricsCollector.send_metric()` before the metric reaches any exporter.
 - `muted_check_logs` suppresses the in-check `log_activity()` calls, each check passes the set into `log_if_allowed`. `SecurityCheckPipeline` *also* accepts a `muted_check_logs` set that gates its own block/error log entries, and `build_default_pipeline()` passes `config.muted_check_logs` into the pipeline, so pipeline-level entries are muted too for adapters that use the factory, an adapter that hand-builds `SecurityCheckPipeline(checks)` directly, without the factory, must pass `muted_check_logs` itself or those pipeline-level entries are not muted.
+
+## Rule attribution and detection correlation
+
+Events carry `metadata` keys that say which rule decided the request. They are independent of `enable_enrichment`.
+
+| Key | Present when |
+|---|---|
+| `matched_rule_type` = `"dynamic"`, `matched_rule_id` | an entry of the applied dynamic rule set decided the request: a ban the rule owns, a country, cloud provider or user-agent pattern in its lists, its global or endpoint rate limit, its emergency mode, or a detection pattern whose source text it lists. Never for toggles, thresholds, allow decisions or a set that is not applied |
+| `matched_rule_overlaps_static` = `true` | the same entry is also in the static configuration or built in |
+| `matched_rule_type` = `"behavioral"`, `matched_rule_id` | a behavioral rule fired (throttle, route usage, route return pattern, global usage, global return pattern); the id is the rule's stable uuid5 |
+| `correlation_id` | `penetration_attempt` and the `pattern_detected` events of the same request share one random id (no address or user data in it) |
+| `threat_categories`, `category` | `penetration_attempt` (active and passive mode), as `pattern_detected` already carried them |
+
+`pattern_detected` also fills the envelope `endpoint` with the redacted request path when the detection ran inside a request scan.
 
 ## Enabling OpenTelemetry
 

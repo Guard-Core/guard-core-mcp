@@ -41,8 +41,8 @@ app = FastAPI()
 config = SecurityConfig(
     rate_limit=100,  # Max 100 requests
     rate_limit_window=60,  # Per minute
-    enable_rate_limiting=True,  # Enable rate limiting (true by default)
-    enable_redis=True,  # Use Redis for distributed setup (true by default)
+    enable_rate_limiting=True,  # Enable rate limiting (True by default)
+    enable_redis=True,  # Use Redis for distributed setup (off unless a Redis field is set)
     redis_url="redis://localhost:6379/0",
 )
 
@@ -83,12 +83,13 @@ ___
 Direct Access
 -------------
 
-You can also access the handler directly if needed:
+You can also access the handler directly if needed. Pass the same config object the guarded app was built with: managers built from the same config object share one state (windows, Redis and agent handlers), so `reset()` reaches what the app counts. A different config object, even an equal one or a `model_copy()`, has its own state. `reset()` clears the request windows (the in-memory windows and the Redis `rate_limit:rate:*` keys) and the rate-limit auto-ban strikes (process-wide memory and the Redis `rate_limit:violations:*` keys), across every worker that shares the Redis prefix. It does not clear the detection strikes or the active bans (`ip_ban_manager.reset()` and `unban_ip()` clear those), and the limiter keeps its Redis and agent handlers attached. On a config object no guarded app was built with, `reset()` resets every guarded app built with an equal config (one warning names how many), else clears the Redis windows and strikes under the config's `redis_prefix` through a short-lived Redis client, else warns that it cleared nothing. To tear a limiter down, build a new config object or re-initialize the app; `reset()` is not a teardown.
 
 ```python
 from guard import rate_limit_handler
 
-# Get the singleton instance
+# Pass the config object the app was built with: managers built from the
+# same config object share one state, so this reaches the app's limiter
 handler = rate_limit_handler(config)
 
 # Reset all rate limits

@@ -103,7 +103,7 @@ The `setup_custom_logging()` function initializes the guard-core logger:
 def setup_custom_logging(
     log_file: str | None = None,
     log_format: str = "text",
-) -> logging.Logger
+) -> logging.Logger: ...
 ```
 
 This is called internally by the middleware during initialization. It:
@@ -146,7 +146,7 @@ async def log_activity(
     on_block: Callable[[GuardRequest, dict[str, Any]], Any] | None = None,
     sensitive_headers: frozenset[str] | None = None,
     sensitive_params: frozenset[str] | None = None,
-) -> None
+) -> None: ...
 ```
 
 **Log types and their message formats**:
@@ -173,6 +173,8 @@ Guard-core redacts sensitive values out of its own log lines, and only its own l
 Header values are redacted before any of the message formats above are built, so the redaction applies everywhere `Headers: {...}` appears: the request line, the suspicious line (both active and passive mode), and the generic line. The detection engine's own per-header attack line is redacted separately, against the same sensitive-header set.
 
 The default redacted set matches the header name case-insensitively: `authorization`, `proxy-authorization`, `cookie`, `x-api-key`. A matched value is replaced with the literal string `[REDACTED]`; the header's own key casing is preserved in the output.
+
+Beyond the default and configured names, a header name is also redacted when it contains a credential token. The name is split on delimiters (`_`, `-`, `.`) and on camelCase, and redacted when a part is `pass`, `pwd`, `token`, `secret`, `session`, `sid`, `auth`, `key` or `otp` (or one of the whole words `password`, `passwd`, `passphrase`, `passcode`, `authorization`, `apikey`, `sessionid`), so `X-Auth-Token`, `X-CSRF-Token` and `x_service_key` are redacted while `Keywords`, `X-Author` and `X-Monkey` are not. The `api_key_auth` header and every `require_headers` name of the matched route are redacted for that request.
 
 When a header value trips a pattern match, the detection engine logs its own line at `log_suspicious_level`: `Potential attack detected from {ip}: {value} - Suspicious pattern in header '{name}'`. The default excluded-header set that keeps detection from scanning `Host`, `User-Agent`, `Accept`, and similar boilerplate headers does not include `authorization` or `cookie`, so both are scanned for patterns like any other header. When the header named in `{name}` is in the sensitive set, `{value}` is replaced with `[REDACTED]`:
 

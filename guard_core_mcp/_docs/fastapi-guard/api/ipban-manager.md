@@ -53,7 +53,13 @@ ban_ip
 Ban an IP address for a specified duration.
 
 ```python
-async def ban_ip(ip: str, duration: int, reason: str = "threshold_exceeded") -> None
+async def ban_ip(
+    ip: str,
+    duration: int,
+    reason: str = "threshold_exceeded",
+    *,
+    grouped: bool = False,
+) -> bool: ...
 ```
 
 **Parameters**:
@@ -61,6 +67,11 @@ async def ban_ip(ip: str, duration: int, reason: str = "threshold_exceeded") -> 
 - `ip`: The IP address to ban
 - `duration`: Ban duration in seconds
 - `reason`: Ban reason used as the `SecurityEvent` reason when an agent handler is configured (defaults to `"threshold_exceeded"`)
+- `grouped`: Ban `ip` as a group identity, such as the IPv6 prefix `2001:db8::/64`, instead of one exact address
+
+**Returns**:
+
+- `bool`: True if the ban was applied, False if it was refused
 
 **Example**:
 
@@ -74,7 +85,7 @@ is_ip_banned
 Check if an IP address is currently banned.
 
 ```python
-async def is_ip_banned(ip: str) -> bool
+async def is_ip_banned(ip: str) -> bool: ...
 ```
 
 **Parameters**:
@@ -94,10 +105,10 @@ is_banned = await ip_ban_manager.is_ip_banned("192.168.1.1")
 reset
 -----
 
-Reset all banned IPs.
+Reset all banned IPs and every auto-ban strike (the rate-limit and the detection strikes, in memory and in Redis, across every worker that shares the Redis prefix). `unban_ip(ip)` clears that IP's strikes too, and `unban_inside(entries)` clears the strikes of exactly the addresses it removed, so a lifted ban is not reinstated by strikes from before it. Redis is walked with `SCAN` and cleared with `UNLINK`, never `KEYS`.
 
 ```python
-async def reset() -> None
+async def reset() -> None: ...
 ```
 
 **Example**:

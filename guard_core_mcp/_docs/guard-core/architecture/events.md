@@ -49,7 +49,7 @@ async def send_middleware_event(
     action_taken: str,
     reason: str,
     **kwargs: Any,
-) -> None
+) -> None: ...
 ```
 
 This is the primary method called by security checks and internal components. It:
@@ -71,12 +71,16 @@ These are the `event_type` strings used throughout guard-core:
 | `https_enforced` | `SecurityEventBus.send_https_violation_event` | HTTP request redirected to HTTPS (global config) |
 | `decorator_violation` | Multiple checks | Route-level security rule violated (generic) |
 | `ip_blocked` | `IpSecurityCheck` | IP blocked by global allowlist/blocklist (`filter_type="global"`) or a banned IP (`filter_type="banned"`) |
+| `country_blocked` | `IpSecurityCheck` | A global `blocked_countries` or `whitelist_countries` rule denied the request, sent next to the `ip_blocked` event of the same denial; metadata carries `country` and `rule_type` (`country_blacklist` or `country_whitelist`), and `ip_blocked` carries `country` too |
+| `cloud_blocked` | `CloudProviderCheck` (sent by `SecurityEventBus.send_cloud_detection_events`) | A global `block_cloud_providers` or route-level `block_clouds` rule denied the request (`logged_only` in passive mode); metadata carries `cloud_provider`, `network` and `rule_type` (`cloud_blacklist`), and `rule_type` is also set top-level on the event |
 | `path_excluded` | `RequestValidator.is_path_excluded` | Request path excluded from security checks |
 | `security_bypass` | `BypassHandler` | Route configured to bypass all checks |
 | `dynamic_rule_violation` | `RateLimitCheck` | Endpoint-specific rate limit (from dynamic rules) exceeded |
+| `auth_verifier_error` | `AuthenticationCheck` | The auth verifier raised: the request answers `503`, one event per request (`request_blocked`, or `logged_only` in passive mode), with `reason`, `auth_type` and `violation_type` in the metadata; no strike, no `Authentication failure` log and no `decorator_violation` event |
 | `access_denied` | `BaseSecurityDecorator` | Decorator-level access denial |
 | `authentication_failed` | `BaseSecurityDecorator` | Authentication check failed |
-| `rate_limited` | `BaseSecurityDecorator` | Decorator-level rate limit exceeded |
+| `rate_limited` | `RateLimitManager`, `BaseSecurityDecorator` | A request was blocked by a rate limit: exactly one per blocked request, carrying the blocking tier's limit and window (`logged_only` in passive mode, skipped when muted). The decorator sends it for a route limit when a decorator is attached |
+| `ip_ban_refused` | `IPBanManager` | A ban the self-DoS guard refused (loopback or a trusted proxy), once per IP per ban window, with `duration`, `refusal` (`loopback` or `trusted_proxy`) and `ban_reason` in the metadata |
 | `route_unresolved` | `RouteConfigCheck` | Adapter could not resolve the route, so per-route config could not be applied (only under `route_resolution_strict`) |
 
 ### Specialized Event Methods
@@ -86,7 +90,7 @@ These are the `event_type` strings used throughout guard-core:
 ```python
 async def send_https_violation_event(
     self, request: GuardRequest, route_config: RouteConfig | None
-) -> None
+) -> None: ...
 ```
 
 Dispatches either a `decorator_violation` event (when the route specifically requires HTTPS via decorator) or an `https_enforced` event (when global HTTPS enforcement is active). Includes the original scheme and redirect URL in the event metadata.
@@ -102,7 +106,7 @@ async def send_cloud_detection_events(
     route_config: RouteConfig | None,
     cloud_handler: Any,
     passive_mode: bool,
-) -> None
+) -> None: ...
 ```
 
 Dispatches cloud provider detection events. Resolves which specific cloud provider and network the IP belongs to, then emits events both from the cloud handler (with provider details) and from the event bus (with decorator violation metadata if applicable).
@@ -154,7 +158,7 @@ metrics = MetricsCollector(
 ```python
 async def send_metric(
     self, metric_type: str, value: float, tags: dict[str, str] | None = None
-) -> None
+) -> None: ...
 ```
 
 Constructs a `SecurityMetric` object and sends it to the agent. No-ops when agent is disabled or `config.agent_enable_metrics` is `False`.
@@ -164,7 +168,7 @@ Constructs a `SecurityMetric` object and sends it to the agent. No-ops when agen
 ```python
 async def collect_request_metrics(
     self, request: GuardRequest, response_time: float, status_code: int
-) -> None
+) -> None: ...
 ```
 
 Called by `ErrorResponseFactory.process_response()` after the request handler completes. Emits three metrics:

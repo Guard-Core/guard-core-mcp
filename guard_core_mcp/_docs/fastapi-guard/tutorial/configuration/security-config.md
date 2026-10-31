@@ -37,7 +37,7 @@ Core Security Settings
 | `route_resolution_strict` | bool | False | Block with 500 when the middleware could not resolve the request's route, instead of running the pipeline with no per-route config. Also turns unserved paths into 500s rather than 404s. Requires guard-core >= 3.7.0 |
 | `auto_ban_threshold` | int | 10 | Number of suspicious requests before auto-ban |
 | `auto_ban_duration` | int | 3600 | Auto-ban duration in seconds |
-| `rate_limit` | int | 10 | Maximum requests per `rate_limit_window` |
+| `rate_limit` | int | 120 | Maximum requests per `rate_limit_window` |
 | `rate_limit_window` | int | 60 | Rate limiting time window (seconds) |
 | `enforce_https` | bool | False | Whether to enforce HTTPS connections |
 | `exclude_paths` | list[str] | `["/docs", "/redoc", "/openapi.json", "/openapi.yaml", "/favicon.ico", "/static"]` | Paths exempted from detection and behavioral tracking; IP bans, blacklists, blocked countries, blocked cloud providers, and rate limits still apply. Matched against the route-relative path (any ASGI `root_path` mount prefix stripped), the same path `endpoint_rate_limits` keys match against |
@@ -62,7 +62,8 @@ New configuration fields for the enhanced Detection Engine:
 | `excluded_detection_params` | set[str] | `set()` | Query parameter names to skip during penetration detection (an OAuth `redirect_uri` that carries a loopback URL, for example); matched case-insensitively. Per route: `@guard_deco.detection_exclusion(params=...)` |
 | `excluded_detection_body_fields` | set[str] | `set()` | JSON body keys to skip during penetration detection, at any nesting depth, also applied to form and multipart text field names |
 | `detection_threat_score_threshold` | float | 1.0 | Anomaly score required to flag a request as a threat (0.0-10.0) |
-| `detection_max_body_inspect_bytes` | int | 262144 | Maximum request body size (bytes) read and inspected for detection; distinct from `detection_max_content_length` and `max_request_size` |
+| `detection_max_file_inspect_bytes` | int | 1048576 | The inspect limit for a `multipart/form-data` request (file uploads); every other body keeps `detection_max_body_inspect_bytes`. A multipart body up to it is scanned in full, a body past it is refused (a 400 under `fail_secure`, with an event and no strike; with `fail_secure` off it passes with the event), and a route whose `max_request_size` is above it uses that value as its own inspect limit. |
+| `detection_max_body_inspect_bytes` | int | 262144 | Maximum request body size (bytes) read and inspected for detection; a body up to it is scanned in full, a body past it is never passed unscanned (a clean prefix gets a 400 under `fail_secure`, with an event and no strike; with `fail_secure` off it passes with the event), and a route whose `max_request_size` is above it uses that value as its own inspect cap; distinct from `detection_max_content_length` and `max_request_size` |
 
 IP Management Settings
 ----------------------
@@ -85,10 +86,10 @@ Redis Settings
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `enable_redis` | bool | True | Enable/disable Redis for distributed state management |
+| `enable_redis` | bool | False | Enable/disable Redis for distributed state management. Left unset, Redis is on exactly when a Redis connection field (`redis_url`, `redis_prefix` and the other `redis_*` settings) is set explicitly; an explicit `enable_redis` always wins |
 | `redis_url` | str \| None | "redis://localhost:6379" | Redis URL for distributed state management |
 | `redis_prefix` | str | "guard_core:" | Prefix for Redis keys to avoid collisions with other apps |
-| `lazy_init` | bool | True | When Redis is enabled, defers cloud-IP/geo-IP warmup to a background task instead of blocking `initialize()`; has no effect without Redis. Whether `initialize()` itself runs at ASGI startup or on the first request is a separate concern controlled by lifespan wiring — see [Eager Initialization](../first-steps.md#eager-initialization-with-fastapi-lifespan) and [Initialization Status](#initialization-status) below |
+| `lazy_init` | bool | True | When Redis is enabled, defers cloud-IP/geo-IP warmup to a background task instead of blocking `initialize()`; has no effect without Redis. Whether `initialize()` itself runs at ASGI startup or on the first request is a separate concern controlled by lifespan wiring - see [Eager Initialization](../first-steps.md#eager-initialization-with-fastapi-lifespan) and [Initialization Status](#initialization-status) below |
 
 Initialization Status
 ----------------------
@@ -168,7 +169,7 @@ Default security_headers configuration:
     "csp": None,  # Content Security Policy directives
     "frame_options": "SAMEORIGIN",
     "content_type_options": "nosniff",
-    "xss_protection": "1; mode=block",
+    "xss_protection": "0",
     "referrer_policy": "strict-origin-when-cross-origin",
     "permissions_policy": "geolocation=(), microphone=(), camera=()",
     "custom": None,  # Additional custom headers
@@ -179,9 +180,9 @@ The following additional security headers are now included by default:
 
 - `X-Permitted-Cross-Domain-Policies: none`
 - `X-Download-Options: noopen`
-- `Cross-Origin-Embedder-Policy: require-corp`
+- `Cross-Origin-Embedder-Policy` is not sent unless you set `cross_origin_embedder_policy`
 - `Cross-Origin-Opener-Policy: same-origin`
-- `Cross-Origin-Resource-Policy: same-origin`
+- `Cross-Origin-Resource-Policy: same-site`
 
 Security Headers Sub-fields
 ----------------------------
@@ -195,7 +196,7 @@ Security Headers Sub-fields
 | `csp` | dict[str, list[str]] | None | Content Security Policy directives |
 | `frame_options` | str | "SAMEORIGIN" | X-Frame-Options value (DENY, SAMEORIGIN) |
 | `content_type_options` | str | "nosniff" | X-Content-Type-Options value |
-| `xss_protection` | str | "1; mode=block" | X-XSS-Protection value |
+| `xss_protection` | str | "0" | X-XSS-Protection value (the 5.0.0 engine default is `0`; set `"1; mode=block"` to restore the earlier default) |
 | `referrer_policy` | str | "strict-origin-when-cross-origin" | Referrer-Policy value |
 | `permissions_policy` | str | See default | Permissions-Policy value |
 | `custom` | dict[str, str] | None | Additional custom headers |
@@ -270,7 +271,7 @@ config = SecurityConfig(
         },
         "frame_options": "DENY",
         "content_type_options": "nosniff",
-        "xss_protection": "1; mode=block",
+        "xss_protection": "0",
         "referrer_policy": "no-referrer",
         "permissions_policy": "geolocation=(), microphone=(), camera=()",
         "custom": {"X-Custom-Header": "CustomValue"},
@@ -346,14 +347,14 @@ All models support standard Pydantic serialization:
 ```python
 # Export configuration
 config_dict = config.model_dump(exclude_unset=True)
-config_json = config.model_dump_json(indent=2)
+config_json = config.model_dump_json(indent=2, exclude_unset=True)
 
 # Import configuration
 config = SecurityConfig.model_validate(config_dict)
 config = SecurityConfig.model_validate_json(config_json)
 
 # Schema generation
-schema = SecurityConfig.model_json_schema()
+fields = SecurityConfig.model_fields
 ```
 
 ___

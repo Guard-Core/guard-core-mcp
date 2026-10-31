@@ -9,7 +9,7 @@ API Reference Overview
 ======================
 
 !!! info "Architecture Update (v5.0.0)"
-    As of v5.0.0, FastAPI Guard is a thin adapter over [guard-core](https://github.com/Guard-Core/guard-core). All core security modules now live in the `guard_core` package. The public API remains unchanged — use `from guard import ...` for all imports. See [Core Architecture](core-architecture.md) for details.
+    As of v5.0.0, FastAPI Guard is a thin adapter over [guard-core](https://github.com/Guard-Core/guard-core). All core security modules now live in the `guard_core` package. The public API remains unchanged - use `from guard import ...` for all imports. See [Core Architecture](core-architecture.md) for details.
 
 ___
 
@@ -113,14 +113,14 @@ The `SecurityConfig` class is the central configuration point. It is a Pydantic 
 ```python
 class SecurityConfig(BaseModel):
     geo_ip_handler: GeoIPHandler | None = None
-    whitelist: list[str] | None = None
-    blacklist: list[str] = []
+    whitelist: tuple[str, ...] | None = None
+    blacklist: tuple[str, ...] = ()
     blocked_countries: frozenset[str] = frozenset()
     whitelist_countries: frozenset[str] = frozenset()
     blocked_user_agents: list[str] = []
     auto_ban_threshold: int = 10
     auto_ban_duration: int = 3600
-    rate_limit: int = 10
+    rate_limit: int = 120
     rate_limit_window: int = 60
     enable_cors: bool = False
     # ... other fields
@@ -139,7 +139,7 @@ FastAPI Guard uses a smart loading strategy to improve performance:
 
 This approach reduces startup time and memory usage when not all security features are needed.
 
-By default initialization runs lazily on the first request. For production deployments, wire `guard_lifespan` so initialization runs at ASGI startup instead — see [Eager initialization with FastAPI lifespan](../tutorial/first-steps.md#eager-initialization-with-fastapi-lifespan).
+By default initialization runs lazily on the first request. For production deployments, wire `guard_lifespan` so initialization runs at ASGI startup instead - see [Eager initialization with FastAPI lifespan](../tutorial/first-steps.md#eager-initialization-with-fastapi-lifespan).
 
 ```python
 # Conditional loading example from middleware
@@ -172,7 +172,10 @@ The main decorator class combines all security capabilities:
 ```python
 from guard import SecurityDecorator
 
-config = SecurityConfig()
+config = SecurityConfig(
+    # geo source for block_countries, allow_countries and geo_rate_limit
+    ipinfo_token="your_ipinfo_token_here",
+)
 guard_deco = SecurityDecorator(config)
 
 

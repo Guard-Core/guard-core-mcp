@@ -13,9 +13,9 @@ The `SecurityHeadersManager` applies HTTP security headers to responses followin
 SecurityHeadersManager
 ----------------------
 
-### Singleton
+### Singleton and per-middleware instances
 
-Thread-safe singleton using `threading.Lock` for the `__new__` double-checked locking pattern. Pre-instantiated as `security_headers_manager` at module level.
+`SecurityHeadersManager()` is a thread-safe singleton (`threading.Lock`, double-checked `__new__`), pre-instantiated as `security_headers_manager` at module level. Every middleware gets its own manager as well: `ResponseContext.security_headers_manager` defaults to `SecurityHeadersManager.isolated()`, and the `ErrorResponseFactory` built on that context uses it, so two guarded apps in one process keep their own agent handler and header cache. The headers themselves come from the `SecurityConfig` the middleware was built with, never from another app's configuration.
 
 ### Default Headers
 
@@ -25,14 +25,24 @@ Applied to every response when the manager is enabled:
 |----------------------------------|--------------------------------------------------|
 | `X-Content-Type-Options`         | `nosniff`                                        |
 | `X-Frame-Options`                | `SAMEORIGIN`                                     |
-| `X-XSS-Protection`               | `1; mode=block`                                  |
+| `X-XSS-Protection`               | `0`                                              |
 | `Referrer-Policy`                | `strict-origin-when-cross-origin`                |
 | `Permissions-Policy`             | `geolocation=(), microphone=(), camera=()`       |
 | `X-Permitted-Cross-Domain-Policies` | `none`                                        |
 | `X-Download-Options`             | `noopen`                                         |
-| `Cross-Origin-Embedder-Policy`   | `require-corp`                                   |
+| `Cross-Origin-Embedder-Policy`   | not sent (opt in, for example `require-corp`)    |
 | `Cross-Origin-Opener-Policy`     | `same-origin`                                    |
-| `Cross-Origin-Resource-Policy`   | `same-origin`                                    |
+| `Cross-Origin-Resource-Policy`   | `same-site`                                      |
+
+Set `cross_origin_embedder_policy` in `SecurityConfig.security_headers` to send `Cross-Origin-Embedder-Policy`.
+
+### The `security_headers` dictionary
+
+A partial `SecurityConfig.security_headers` dict merges over the defaults key by key (`hsts` sub-key by sub-key), so `{"csp": {...}}` keeps HSTS and every default header. `None`, `{}` and `{"enabled": False}` switch every header off. A value of `None` switches that one header off: `frame_options`, `content_type_options`, `xss_protection`, `referrer_policy`, `permissions_policy`, `permitted_cross_domain_policies`, `download_options`, `cross_origin_embedder_policy`, `cross_origin_opener_policy`, `cross_origin_resource_policy`; `hsts: None` and `csp: None` do the same for those two. An unknown key is reported through `fail_on_misconfiguration` (a warning in 4.5, a startup failure from 5.0).
+
+### Application headers and operator values
+
+A default header is added only when the application did not set that header (compared without case). A value the operator configured replaces the application's: `custom`, `csp`, `hsts`, and any default header whose configured value differs from the built-in one. The merged set is cached by the content of `security_headers` (one entry per distinct configuration, never by object identity or path), so an agent event and an unsafe-CSP warning come once per configuration.
 
 ### Configuration
 
@@ -57,6 +67,25 @@ security_headers_manager.configure(
     cors_allow_headers=["Authorization"],
 )
 ```
+
+### The global `configure()` and the cross-app override
+
+A call to `security_headers_manager.configure(...)` sets exactly what it passes (every parameter has a "not passed" marker so the call can tell which keys it passed). **A call without `override_apps=True` changes only the manager's own headers and does not reach any guarded app**: the middlewares and every released adapter call it at startup with every key filled in, and that call stays inert for the apps, as in 4.4.0. To change the headers of every guarded app, pass the flag:
+
+```python
+security_headers_manager.configure(
+    csp={"default-src": ["'self'", "https://cdn.example"]},
+    override_apps=True,
+)
+```
+
+- **The manager's own headers** keep the full replace: what the call does not pass is absent (a call with only `csp` also clears HSTS and every default header on the manager).
+- **The cross-app override** (only with `override_apps=True`): the keys the call passes override the `security_headers` config of every guarded app in the process, from the next response on, for paths already served and paths never served. The keys it does not pass are not overridden, so each app keeps its own value for them. `None` switches that header off for every app. `hsts_max_age`, `hsts_include_subdomains` and `hsts_preload` merge sub-key by sub-key over each app's `hsts`. A passed `enabled` wins in both directions: `enabled=True` switches on an app whose own `security_headers` is off (the default set), `enabled=False` switches every app off; not passed keeps each app's own.
+- **Clearing**: `configure(override_apps=True)` with no other argument clears the override (and resets the manager). `reset()` (async) clears the manager and the override, in the process and in Redis. A write of `security_headers_manager.enabled` is never an override.
+- **CORS keys** (only with `override_apps=True`): `enable_cors`, `cors_origins`, `cors_allow_credentials`, `cors_allow_methods`, `cors_allow_headers`, `cors_max_age` and `cors_expose_headers` join the override and follow the same rule: a call sets exactly what it passes, and a call that passes only CORS keys is recorded. The values are validated in `configure()` (lists of strings, bools, a non-negative integer for `cors_max_age`) and a bad value raises `ValueError`. A merge that would give wildcard origins together with credentials is refused: the app keeps its own CORS and the engine logs a WARNING and sends an event. An app built with `enable_cors=False` gets CORS only when the call passes `enable_cors=True` (a WARNING per app), and the engine then answers its preflight requests in the pipeline, after the ban and IP checks and before rate limiting. A passed `enable_cors=False` stops the CORS answers of every app. The headers `enabled` flag never governs CORS. A merge that widens the app's CORS logs a WARNING once per app and override version, a merge that narrows it logs INFO. With Redis, the CORS keys travel with the rest of the override to the other workers with the same startup config.
+- **Never silent**: every call with the flag that changes the override logs one line and sends the security headers event (`action_taken` `override_changed` or `override_cleared`; metadata `override_keys`, `dropped_keys`, `override_values`, `dropped_values`). A call that drops keys from an active override, a clearing call included, logs a WARNING that names the dropped keys. Header names and values go through the request-log redaction, so a custom `X-Auth-Token` value never appears. A call without the flag logs nothing new.
+
+With Redis on, the override is persisted by `initialize_redis`, `_load_cached_config` and `_cache_configuration` (the manager's own CSP, HSTS and custom headers keep their 24-hour keys). An app's manager calls `initialize_redis(redis_handler, config)` on its first response, and the override is saved under `{redis_prefix}security_headers:override:{hash}`, where `hash` is the hash of the startup config that app runs, with no TTL. Each worker pulls it at most once per 5 seconds (through the app's own Redis connection) and applies a newer record. "Newer" is the time of the call on Redis time: each worker measures its offset to Redis `TIME` in `initialize_redis` and on every pull (one extra `TIME` command per pull, none on a response that does not pull) and corrects its stamp by it, so workers with different clocks still order two calls correctly; a Redis error keeps the last offset, and a worker without Redis stamps on its own clock, so a call in one worker reaches the others within about 5 seconds. A worker started with another config uses another key and ignores it; a redeploy with another config never serves an older deployment's values. A Redis error on pull or save keeps the last applied override and retries after 5 seconds, whatever `redis_fail_open` says. A key missing from Redis clears an override the worker took from it. Two services that share a `redis_prefix` and run an identical config share the override: give every service its own prefix.
 
 ### CSP Configuration
 
@@ -150,4 +179,14 @@ Both validators also run on `custom_headers` loaded back from Redis; a name or v
 
 ### Redis Integration
 
-Configuration (CSP, HSTS, custom headers) is cached to Redis with a 24-hour TTL. On initialization, the manager attempts to load cached configuration before applying defaults.
+`initialize_redis` loads and saves the manager's own CSP, HSTS and custom headers (24-hour TTL) and, for an app's manager, the override record described above (no TTL).
+
+The override and the clock: the stamp of a record is the time of the call corrected by the worker's offset to Redis `TIME`. The offset is measured in `initialize_redis` and in the same pipelined round trip as the 5 second read (GET of the override key and `TIME`), so no request gains a round trip. A Redis error keeps the last offset, and without Redis nothing changes.
+
+Finding the Redis handler: the handler initializer registers its Redis handler under `id(config)` in a weak registry (`guard_core/_utils/config_registry.py`, `ConfigHandlerRegistry.register(config, handler, kind=None)` and `lookup(config, kind=None)`; entries are removed when the config is collected). An app's headers manager that has no handler looks it up at the 5 second boundary, only when `enable_redis` is true, so an adapter that does not pass its Redis handler to the response context still persists and pulls the override.
+
+Own state: the handler initializer attaches the global `security_headers_manager` to Redis. While attached it owns the keys `security_headers:csp_config`, `hsts_config` and `custom_headers` (24-hour TTL), each value tagged with the fingerprint of the startup config and ignored when the fingerprint differs; the reads ride the pipelined trip of the override. App managers do not read them. An unattached manager keeps the plain 4.4.0 values.
+
+Per-startup-hash cache: a manager that pulls or clears an override writes it to a process cache keyed by the startup hash, and `CorsHandler`, which has no Redis access, reads the override through it. A global `reset()` clears the cache.
+
+Resolved once per response: the response factory resolves the override once and passes it to the enabled test, the cache key, the header build and the CORS answer. No clock is read while no override was ever recorded.

@@ -47,6 +47,8 @@ Ordered by domain, then by field name.
 | `behavior_scan_response_body` | `bool` | `False` | behavioral | Keep |
 | `behavior_max_response_body_inspect_bytes` | `int` | `262144` | behavioral | Keep |
 | `body_read_timeout` | `float` | `3.0` | behavioral | Keep |
+| `sync_body_read_max_concurrent` | `int` | `64` | behavioral | Keep |
+| `async_body_read_max_concurrent` | `int \| None` | `None` | behavioral | Keep |
 | `block_cloud_providers` | `frozenset[str] \| None` | `None` | cloud | Keep |
 | `cloud_ip_refresh_interval` | `int` | `3600` | cloud | Keep |
 | `cloud_ip_store` | `CloudIpStoreProtocol \| CloudIpStoreFactory \| None` | `None` | cloud | Keep |
@@ -64,6 +66,7 @@ Ordered by domain, then by field name.
 | `detection_compiler_timeout` | `float` | `2.0` | detection | Keep · Group? |
 | `detection_max_content_length` | `int` | `10000` | detection | Keep · Group? |
 | `detection_max_body_inspect_bytes` | `int` | `262144` | detection | Keep · Group? |
+| `detection_max_file_inspect_bytes` | `int` | `1048576` | detection | Keep · Group? |
 | `detection_preserve_attack_patterns` | `bool` | `True` | detection | Keep · Group? |
 | `detection_semantic_threshold` | `float` | `0.7` | detection | Keep · Group? |
 | `detection_anomaly_threshold` | `float` | `3.0` | detection | Keep · Group? |
@@ -83,6 +86,8 @@ Ordered by domain, then by field name.
 | `dynamic_rule_interval` | `int` | `300` | dynamic-rules | Keep |
 | `emergency_mode` | `bool` | `False` | dynamic-rules | Keep |
 | `emergency_whitelist` | `list[str]` | `list` | dynamic-rules | Keep |
+| `emergency_whitelist_only` | `bool` | `True` | dynamic-rules | Keep |
+| `emergency_exempt_paths` | `list[str]` | `list` | dynamic-rules | Keep |
 | `endpoint_rate_limits` | `dict[str, tuple[int, int]]` | `dict` | dynamic-rules | Keep |
 | `enable_enrichment` | `bool` | `False` | enrichment | Keep |
 | `ipinfo_token` | `str \| None` | `None` | ipinfo | **Deprecate (warns)** |
@@ -104,10 +109,10 @@ Ordered by domain, then by field name.
 | `trusted_proxies` | `tuple[str, ...]` | `tuple` | proxy | Keep |
 | `trusted_proxy_depth` | `int` | `1` | proxy | Keep |
 | `trust_x_forwarded_proto` | `bool` | `False` | proxy | Keep |
-| `rate_limit` | `int` | `10` | rate-limit | Keep |
+| `rate_limit` | `int` | `120` | rate-limit | Keep |
 | `rate_limit_window` | `int` | `60` | rate-limit | Keep |
 | `enable_rate_limiting` | `bool` | `True` | rate-limit | Keep |
-| `enable_redis` | `bool` | `True` | redis | Keep |
+| `enable_redis` | `bool` | `False` (see the rule) | redis | Keep |
 | `redis_url` | `str \| None` | `"redis://localhost:6379"` | redis | Keep |
 | `redis_prefix` | `str` | `"guard_core:"` | redis | Keep |
 | `redis_socket_connect_timeout` | `float \| None` | `2.0` | redis | Keep · Group? |
@@ -126,6 +131,7 @@ Ordered by domain, then by field name.
 | `custom_error_responses` | `dict[int, str]` | `dict` | hooks | Keep |
 | `custom_request_check` | `Callable[...] \| None` | `None` | hooks | Keep |
 | `custom_response_modifier` | `Callable[...] \| None` | `None` | hooks | Keep |
+| `custom_response_modifier_max_body_bytes` | `int` | `262144` | hooks | Keep |
 | `on_error` | `Callable[[str, BaseException, dict], None] \| None` | `None` | hooks | Keep |
 | `lazy_init` | `bool` | `True` | init | Keep |
 | `exclude_paths` | `list[str]` | docs/static defaults | init | Keep |
@@ -176,6 +182,16 @@ Recommendation: defer. If pursued, do it as an additive alias layer behind its o
 `fastapi-guard/guard/__init__.py` `__all__`: the 24 above + the fastapi-guard-only `SecurityMiddleware` and `__version__`, if the derivation this section describes still holds -- not independently re-verified against the fastapi-guard repository as part of this update.
 
 Single source of truth: fastapi-guard derives its `__all__` from `guard_core.__all__` plus its two locals, and a test asserts every exported name is importable, so a new guard-core export can't silently go missing downstream. `IPInfoManager` stays exported even though `ipinfo_*` config is deprecated; custom `geo_ip_handler` implementations may still construct it directly. `BoundedBodyReader` and `BoundedResponseBodyReader` are optional capability protocols (bounded body reading for requests and responses respectively), not part of the required `GuardRequest`/`GuardResponse` surface; see [Protocols](../api/protocols.md).
+
+## Adapter protocols and errors
+
+Added with the idle body read (not counted in the totals above, which are a 3.12.0 snapshot):
+
+- `IdleBoundedBodyReader` and `SyncIdleBoundedBodyReader` (`guard_core.protocols`, `guard_core.sync.protocols`): the optional `read_body_prefix_until_idle(max_bytes, idle_timeout) -> bytes` request method, tried before `read_body_prefix` and `body`. Not exported from the top-level `guard_core` namespace, so the 24-symbol `__all__` is unchanged. **Keep.**
+- `BodyReadStalledError`, `BodyReadSlotsExhaustedError` (a `BodyReadStalledError`: no body-read slot became free within `body_read_timeout`) and `BodyReadFailedError` (`guard_core.exceptions`): what an adapter raises, and what the engine raises on slot expiry. A stall answers 408 and a failure 400 under `fail_secure`. **Keep.**
+- `request.state.guard_route_template` (text) and the optional middleware method `route_template(path) -> str | None`: the route gate's input (D-75). An adapter that matches routes before the pipeline records the matched template next to `guard_route_unresolved` (Starlette `route.path`, Flask `rule.rule`, Django `match.route`); an adapter that does not (Tornado) implements `route_template`, which `SuspiciousActivityCheck` calls only for a path that passes its extension and named-segment prefilter. **Keep.**
+- `request.state.guard_static_file_served` (`True` only) and the optional middleware method `static_file_exists(path) -> bool` (`async` in the async tree): D-80 item 2. Asked once per request, only for a path whose last segment ends in `.ts` or `.map`, never for an unresolved route; `True` means the matched route is a static-file mount and the file exists in it, and clears the `.ts` and `.map` rows of the route gate only. **Keep.**
+- `DetectionResult.body_read_error` (`"stalled"` or `"failed"`, `None` otherwise) and `DetectionResult.body_read_detail`. **Keep.**
 
 ## Validators & methods (reference)
 

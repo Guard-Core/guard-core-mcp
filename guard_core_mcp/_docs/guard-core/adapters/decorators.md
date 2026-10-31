@@ -51,7 +51,7 @@ class RouteConfig:
         self.geo_rate_limits: dict[str, tuple[int, int]] | None = None
         self.excluded_detection_headers: set[str] | None = None
         self.excluded_semantic_detection_headers: set[str] | None = None
-        self.excluded_detection_params: set[str] | None = None
+        self.excluded_detection_params: set[str] | dict[str, set[str]] | None = None
         self.excluded_detection_body_fields: set[str] | None = None
         self.enabled_detection_categories: set[str] | None = None
         self.detection_scan_body: bool | None = None
@@ -107,7 +107,7 @@ class BaseSecurityDecorator:
         route_id = self._get_route_id(func)
         if route_id not in self._route_configs:
             config = RouteConfig(self._route_config_revision)
-            config.enable_suspicious_detection = (
+            config._inherit_suspicious_detection(
                 self.config.enable_penetration_detection
             )
             self._route_configs[route_id] = config
@@ -122,6 +122,8 @@ class BaseSecurityDecorator:
 ```
 
 `_route_config_revision` is a separate counter from `SecurityConfig`'s own revision; `build_default_pipeline` reads `guard_decorator.route_config_revision` to know when a route was registered or reconfigured after the pipeline was built. `_ensure_route_config` bumps it explicitly the moment a route id is first seen, in addition to `RouteConfig.__setattr__` bumping it for every field assignment after that.
+
+`_inherit_suspicious_detection` stores the global `enable_penetration_detection` in `enable_suspicious_detection`, as 4.4.0 did, and marks the route as inheriting: at request time an inheriting route follows the current global setting, so turning detection on after a route was decorated protects that route. `suspicious_detection(enabled)` or any assignment to `enable_suspicious_detection` pins the route to its own value.
 
 Key points:
 
@@ -192,7 +194,7 @@ Your adapter creates a `SecurityDecorator` instance and makes it available to us
 from guard_core.decorators import SecurityDecorator
 from guard_core.models import SecurityConfig
 
-config = SecurityConfig(...)
+config = SecurityConfig()
 guard = SecurityDecorator(config)
 ```
 
@@ -309,10 +311,11 @@ A missing `guard_route_id` is ambiguous on its own: it means either "this route 
 Adapters disambiguate by setting `request.state.guard_route_unresolved = True` on the branch where matching itself failed, and leaving it unset once a route was matched -- decorated or not:
 
 ```python
-route = self._resolve_route(request)
-if not route or not hasattr(route, "endpoint"):
-    guard_request.state.guard_route_unresolved = True
-    return
+def _populate_route_state(self, request, guard_request):
+    route = self._resolve_route(request)
+    if not route or not hasattr(route, "endpoint"):
+        guard_request.state.guard_route_unresolved = True
+        return
 ```
 
 `RouteConfigCheck` reads that flag. By default nothing changes, because a failed match is indistinguishable from a request the app simply does not route. When `SecurityConfig.route_resolution_strict` is `True` it logs the failure, emits a `route_unresolved` event, and blocks the request with `500` unless `passive_mode` is on. Adapters that never set the flag keep their current behaviour under either setting.

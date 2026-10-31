@@ -20,7 +20,7 @@ ___
 ----------
 
 ```python
-def versions() -> dict[str, Any]
+def versions() -> dict[str, Any]: ...
 ```
 
 No parameters. Reports which Guard libraries this server can introspect, at what version, and which library versions the bundled documentation and knowledge corpora cover. A `null` installed version means that library is absent from this interpreter, so any answer about it would be a guess rather than introspection.
@@ -68,7 +68,9 @@ ___
 ------------------
 
 ```python
-def validate_config(config: dict[str, Any], package: str = "fastapi-guard") -> dict[str, Any]
+def validate_config(
+    config: dict[str, Any], package: str = "fastapi-guard"
+) -> dict[str, Any]: ...
 ```
 
 | Parameter | Type | Default | Description |
@@ -123,7 +125,7 @@ ___
 ----------------
 
 ```python
-def config_fields(query: str, package: str = "fastapi-guard") -> dict[str, Any]
+def config_fields(query: str, package: str = "fastapi-guard") -> dict[str, Any]: ...
 ```
 
 | Parameter | Type | Default | Description |
@@ -201,7 +203,9 @@ ___
 --------------
 
 ```python
-def search_docs(query: str, package: str | None = None, limit: int = 5) -> dict[str, Any]
+def search_docs(
+    query: str, package: str | None = None, limit: int = 5
+) -> dict[str, Any]: ...
 ```
 
 | Parameter | Type | Default | Description |
@@ -260,7 +264,7 @@ ___
 ---------
 
 ```python
-def get_doc(package: str, path: str) -> dict[str, Any]
+def get_doc(package: str, path: str) -> dict[str, Any]: ...
 ```
 
 | Parameter | Type | Default | Description |
@@ -300,7 +304,7 @@ async def check_payload(
     headers: dict[str, str] | None = None,
     body: str | dict[str, Any] | list[Any] | None = None,
     config: dict[str, Any] | None = None,
-) -> dict[str, Any]
+) -> dict[str, Any]: ...
 ```
 
 | Parameter | Type | Default | Description |

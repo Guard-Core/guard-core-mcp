@@ -54,9 +54,9 @@ Key Design Properties
 ---------------------
 
 - **Protocol-based contracts**: `GuardRequest`, `GuardResponse`, and `GuardResponseFactory` are `typing.Protocol` classes with `@runtime_checkable`. Your adapter implements them; guard-core consumes them.
-- **A 17-check catalogue in a chain-of-responsibility pipeline**: Each check is an independent `SecurityCheck` subclass that declares its own `applies_to(config, route_configs)` predicate, so `build_default_pipeline` only instantiates the checks a deployment's configuration and registered routes can actually trigger. The `SecurityCheckPipeline` executes the built subset in catalogue order and short-circuits on the first blocking response.
+- **An 18-check catalogue in a chain-of-responsibility pipeline**: Each check is an independent `SecurityCheck` subclass that declares its own `applies_to(config, route_configs)` predicate, so `build_default_pipeline` only instantiates the checks a deployment's configuration and registered routes can actually trigger. The `SecurityCheckPipeline` executes the built subset in catalogue order and short-circuits on the first blocking response.
 - **Dependency injection via context dataclasses**: Every core module receives its dependencies through a typed context object (`ResponseContext`, `RoutingContext`, `ValidationContext`, `BypassContext`, `BehavioralContext`).
-- **Singleton handlers with async initialization**: `ip_ban_manager`, `cloud_handler`, `rate_limit_handler`, `sus_patterns_handler`, and `redis_handler` are module-level singletons initialized through `HandlerInitializer`.
+- **Singleton handlers with async initialization**: `ip_ban_manager`, `cloud_handler`, `rate_limit_handler` and `sus_patterns_handler` are module-level singletons, and `redis_handler` is one manager per config object, initialized through `HandlerInitializer`.
 - **Detection engine**: Regex-based and semantic attack pattern detection with configurable thresholds, timeouts, and content length limits.
 - **Redis-backed distributed state**: Rate limits, IP bans, cloud IP ranges, and suspicious pattern counts persist across instances when Redis is enabled. Falls back to in-memory storage automatically.
 - **Event system**: `SecurityEventBus` dispatches security events and `MetricsCollector` tracks request metrics, both feeding into the optional guard-agent telemetry platform.
@@ -97,7 +97,7 @@ Documentation
 - [Installation and Dev Setup](installation.md) -- how to depend on guard-core and set up a contributor environment
 - [Architecture Overview](architecture/overview.md) -- module map, request lifecycle, design principles
 - [Protocol Reference](architecture/protocols.md) -- `GuardRequest`, `GuardResponse`, `GuardResponseFactory`, `GuardMiddlewareProtocol`
-- [Security Pipeline](architecture/pipeline.md) -- `SecurityCheckPipeline`, the 17-check catalogue and the `applies_to` build-time filter, adding custom checks
+- [Security Pipeline](architecture/pipeline.md) -- `SecurityCheckPipeline`, the 18-check catalogue and the `applies_to` build-time filter, adding custom checks
 - [Event System](architecture/events.md) -- `SecurityEventBus`, `MetricsCollector`, hooking into events
 - [Telemetry](architecture/telemetry.md) -- muting events/metrics/check logs, OpenTelemetry, Logfire, adapter wiring
 - [Dependency Injection](architecture/dependency-injection.md) -- context objects, `HandlerInitializer`, singleton lifecycle
@@ -117,3 +117,4 @@ Documentation
 ### Upgrading
 
 - [Migrating from v1.x to v2.0](migration/v1-to-v2.md) -- breaking changes shipped in 2.0.0 and the migration steps
+- [Migrating from v4.x to v5.0](migration/v4-to-v5.md) -- the flipped defaults, the configurations that now refuse to start, the extras and the changed responses in 5.0.0

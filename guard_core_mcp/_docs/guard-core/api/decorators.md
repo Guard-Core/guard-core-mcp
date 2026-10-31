@@ -91,7 +91,7 @@ Provides authentication and authorization decorators.
 **Available Decorators:**
 
 - `@guard_deco.require_https()` - Force HTTPS
-- `@guard_deco.require_auth(type="bearer")` - Require authentication
+- `@guard_deco.require_auth(type="bearer")` - Require authentication. The built-in types `bearer` and `basic` match in any case (`"Basic"` and `"BEARER"` mean the built-in schemes, as HTTP auth scheme names are case-insensitive); any other type is kept as given. A capitalized built-in type gets the built-in prefix check, challenge and log redaction, and since 5.0.0 its verifier receives only the credential, as the lowercase types do (4.x passed it the whole `Authorization` header, so a verifier that parses that header must read the credential instead). The decorator logs one WARNING per route at registration naming the type; write the lowercase type to say it plainly. `require_authorization_header(scheme=...)` folds its scheme the same way.
 - `@guard_deco.api_key_auth(header_name="X-API-Key")` - API key authentication
 - `@guard_deco.require_headers(headers={})` - Require specific headers
 
@@ -160,10 +160,10 @@ def detection_exclusion(
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
 ```
 
-All six kwargs are optional (`set[str] | None` for `headers`/`params`/`body_fields`/`categories`/`semantic_headers`, `bool | None` for `scan_body`). Passing `None` (or omitting) leaves the corresponding `RouteConfig` field unset, the route inherits the global `SecurityConfig` value at request time. Passing a value replaces the inherited value at this route only.
+All six kwargs are optional (`set[str] | None` for `headers`/`body_fields`/`categories`/`semantic_headers`, `set[str] | dict[str, set[str]] | None` for `params`, `bool | None` for `scan_body`). Passing `None` (or omitting) leaves the corresponding `RouteConfig` field unset, the route inherits the global `SecurityConfig` value at request time. Passing a value replaces the inherited value at this route only.
 
 - `headers`, header names skipped by detection. Merged with `SecurityConfig.excluded_detection_headers` and the hardcoded default exclusion list.
-- `params`, query parameter names skipped by detection. Replaces (does not merge with) the global set when set.
+- `params`, query parameter names skipped by detection, as a set (every category) or a mapping of name to a set of categories (only those categories). Replaces (does not merge with) the global value when set.
 - `body_fields`, top-level JSON body keys skipped by detection. Replaces the global set when set.
 - `categories`, categories the regex scanner runs at this route. Replaces the global `enabled_detection_categories`. Custom user patterns always run regardless.
 - `semantic_headers`, header names whose values skip the semantic analyzer only (regex scanning is unchanged). Merged with `SecurityConfig.excluded_semantic_detection_headers`.
@@ -187,7 +187,7 @@ Provides advanced detection and time-based decorators.
 
 - `@guard_deco.time_window(start_time, end_time, timezone)` - Time-based access control
 - `@guard_deco.suspicious_detection(enabled=True)` - Toggle suspicious pattern detection
-- `@guard_deco.honeypot_detection(trap_fields=[])` - Detect bots using honeypot fields
+- `@guard_deco.honeypot_detection(trap_fields=[])` - Detect bots using honeypot fields (a filled trap field returns 403 and bans the client IP on the first hit unless `threat_ban_config["honeypot"]` says otherwise). Every method is inspected, the query string included, for urlencoded, multipart and JSON bodies. Media types and trap field names match case-insensitively, JSON is walked through nested objects and arrays and through every occurrence of a duplicated key, and any present value other than `null`, an empty string or whitespace counts as filled (`0`, `false` and `[]` too). JSON in UTF-8 (with or without a BOM), UTF-16 and UTF-32 is parsed. A body larger than `detection_max_body_inspect_bytes` is not fully inspected and logs a WARNING
 
 ___
 
@@ -228,6 +228,9 @@ config = SecurityConfig(
     enable_rate_limiting=True,
     rate_limit=100,
     rate_limit_window=3600,
+    # geo source for allow_countries; response body scanning for return_monitor
+    ipinfo_token="your_ipinfo_token_here",
+    behavior_scan_response_body=True,
 )
 
 guard_deco = SecurityDecorator(config)
@@ -341,4 +344,4 @@ Security settings are applied in the following priority order:
 
 This allows for flexible override behavior where routes can customize their security requirements while maintaining global defaults.
 
-Decorator settings override global settings only for the aspects they configure, they do not shadow the global settings wholesale. This matters most for IP and country access control, where the IP and country aspects are evaluated independently: a route-level `ip_whitelist` match suppresses only the global IP-list gate (it does not exempt the request from country enforcement), and only an actual `whitelist_countries` match for the resolved country suppresses the global country gate. A route-level deny (`ip_blacklist` or `blocked_countries`) is enforced at the route step and, on its own, never disables the global IP or country rules, which still run afterward. Within the IP aspect, a route `ip_whitelist` match wins over that same route's own `ip_blacklist`.
+Decorator settings override global settings only for the aspects they configure, they do not shadow the global settings wholesale. This matters most for IP and country access control, where the IP and country aspects are evaluated independently: a route-level `ip_whitelist` match replaces only the global whitelist (it never lifts the global blacklist and does not exempt the request from country enforcement), and only an actual `whitelist_countries` match for the resolved country suppresses the global country gate. A route-level deny (`ip_blacklist` or `blocked_countries`) is enforced at the route step and, on its own, never disables the global IP or country rules, which still run afterward. Within the IP aspect, a route `ip_whitelist` match wins over that same route's own `ip_blacklist`.
