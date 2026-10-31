@@ -560,11 +560,12 @@ def test_the_shipped_markdown_is_found() -> None:
     assert sum(len(_python_blocks(path)) for path in MARKDOWN_FILES) > 500
 
 
+@pytest.mark.usefixtures("sandbox")
 @pytest.mark.parametrize(
     "path", MARKDOWN_FILES, ids=lambda path: path.relative_to(ROOT).as_posix()
 )
 def test_every_python_block_parses_runs_and_matches_the_api(
-    path: Path, sandbox: None, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    path: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     name = path.relative_to(ROOT).as_posix()
     monkeypatch.chdir(tmp_path)
