@@ -7,6 +7,8 @@ updates:
       day: "monday"
       time: "02:00"
       timezone: "UTC"
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns:
@@ -19,6 +21,8 @@ updates:
       day: "monday"
       time: "02:00"
       timezone: "UTC"
+    cooldown:
+      default-days: 7
     groups:
       dependencies:
         patterns:
