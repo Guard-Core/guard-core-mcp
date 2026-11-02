@@ -6,11 +6,17 @@ name: Publish to MCP Registry
 on:
   workflow_call:
   workflow_dispatch:
-permissions:
-  id-token: write
-  contents: read
+permissions: {}
+concurrency:
+  group: registry-publish-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   publish:
+    name: publish
+    permissions:
+      id-token: write # trusted publishing: the registry login uses the GitHub OIDC token
+      contents: read # check out the repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

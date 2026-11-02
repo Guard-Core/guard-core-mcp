@@ -7,9 +7,15 @@ on:
     types: [published]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: read # least privilege: the job reads no repository content
+concurrency:
+  group: context7-refresh
+  cancel-in-progress: false
+
 jobs:
   refresh:
+    name: refresh
+    environment: context7
     runs-on: ubuntu-latest
     steps:
       - name: Trigger the Context7 refresh

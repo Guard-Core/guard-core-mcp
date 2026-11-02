@@ -17,7 +17,11 @@ on:
   workflow_call:
 
 permissions:
-  contents: read
+  contents: read # check out the repository
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   changes:
@@ -62,6 +66,7 @@ jobs:
           echo "code=$code" >> "$GITHUB_OUTPUT"
 
   pre-commit:
+    name: pre-commit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -128,7 +133,9 @@ jobs:
 
       - name: Run tests
         run: |
-          COVERAGE_FILE=coverage-py${{ matrix.python-version }}.data uv run pytest -v --cov=guard_core_mcp --cov-branch
+          COVERAGE_FILE=coverage-py${MATRIX_PYTHON_VERSION}.data uv run pytest -v --cov=guard_core_mcp --cov-branch
+        env:
+          MATRIX_PYTHON_VERSION: ${{ matrix.python-version }}
 
       - name: Upload coverage data
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -190,6 +197,7 @@ jobs:
           uv run --no-sync coverage report -m --fail-under=100
 
   docs-drift:
+    name: docs-drift
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
