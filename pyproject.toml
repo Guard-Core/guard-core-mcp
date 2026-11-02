@@ -38,7 +38,7 @@ classifiers = [
 ]
 dependencies = [
     "cryptography",
-    "mcp>=2",
+    "mcp>=2.2.0",
     "pydantic",
     "pyjwt[crypto]",
     "starlette",
