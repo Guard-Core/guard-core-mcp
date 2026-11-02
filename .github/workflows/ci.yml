@@ -27,8 +27,9 @@ jobs:
       code: ${{ steps.diff.outputs.code }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           # pull_request checks out the merge commit; the second commit is the base (its first parent).
           fetch-depth: 2
 
@@ -63,12 +64,14 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           # Tooling job with no test run: the dev tools need 3.11+; ruff target-version py310 and mypy python_version 3.10 still check against the 3.10 floor, and the test matrix owns the other versions.
           python-version: '3.11'
-      - run: pip install uv
+      - run: pip install uv==0.13.4
       - run: uv sync --locked --extra dev
       - name: Check uv.lock is tracked and in sync
         run: |
@@ -98,16 +101,18 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install uv
         run: |
-          pip install uv
+          pip install uv==0.13.4
 
       - name: Assert uv resolves the matrix interpreter (before sync)
         run: |
@@ -126,7 +131,7 @@ jobs:
           COVERAGE_FILE=coverage-py${{ matrix.python-version }}.data uv run pytest -v --cov=guard_core_mcp --cov-branch
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-data-py${{ matrix.python-version }}
           path: coverage-py${{ matrix.python-version }}.data
@@ -139,17 +144,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           # The reporter only reads the data files and the checked-out sources; it does not run the tests.
           python-version: '3.10'
 
       - name: Install uv
         run: |
-          pip install uv
+          pip install uv==0.13.4
 
       # The test jobs' own environment: its coverage version and the project's coverage configuration
       # (plain coverage on 3.10 reads no pyproject.toml without the toml extra).
@@ -165,7 +172,7 @@ jobs:
           uv run --no-sync coverage debug config
 
       - name: Download every version's coverage data
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: coverage-data-py*
           path: coverage-data
@@ -187,12 +194,14 @@ jobs:
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           # Tooling job with no test run: 3.10 is the floor the lint and type config targets (mypy python_version 3.10); the test matrix owns the other versions.
           python-version: '3.10'
-      - run: pip install uv
+      - run: pip install uv==0.13.4
       - run: uv sync --locked --extra dev
       - name: Check vendored docs are current
         run: |
