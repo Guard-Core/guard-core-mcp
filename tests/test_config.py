@@ -145,12 +145,23 @@ def test_describe_field_reports_metadata_from_the_installed_model() -> None:
     assert "Log-Only" in described["description"]
 
 
-def test_describe_field_formats_generic_types_and_undefined_defaults() -> None:
+def test_describe_field_formats_generic_types_and_stated_defaults() -> None:
     model, _ = resolve_model("guard-core")
 
     described = describe_field("trusted_proxies", model.model_fields["trusted_proxies"])
 
     assert described["type"] == "tuple[str, Ellipsis]"
+    assert described["default"] == "()"
+
+
+def test_describe_field_reports_no_default_for_a_default_factory_field() -> None:
+    model, _ = resolve_model("guard-core")
+
+    described = describe_field(
+        "blocked_user_agents", model.model_fields["blocked_user_agents"]
+    )
+
+    assert described["type"] == "list[str]"
     assert described["default"] is None
 
 
