@@ -37,12 +37,12 @@ classifiers = [
     "Topic :: Security",
 ]
 dependencies = [
-    "cryptography",
+    "cryptography>=50.0.0",
     "mcp>=2.2.0",
-    "pydantic",
-    "pyjwt[crypto]",
-    "starlette",
-    "uvicorn",
+    "pydantic>=2.12.0",
+    "pyjwt[crypto]>=2.15.0",
+    "starlette>=1.7.0",
+    "uvicorn>=0.30.0",
 ]
 
 [project.scripts]
@@ -58,9 +58,9 @@ Changelog = "https://github.com/Guard-Core/guard-core-mcp/blob/master/CHANGELOG.
 
 [project.optional-dependencies]
 hosted = [
-    "fastapi-guard",
-    "guard-agent",
-    "guard-core",
+    "fastapi-guard>=8.1.2",
+    "guard-agent>=3.2.4",
+    "guard-core>=4.4.0",
 ]
 dev = [
     "bandit[toml]",
