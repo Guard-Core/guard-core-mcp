@@ -1426,7 +1426,7 @@ requires-dist = [
     { name = "radon", marker = "extra == 'dev'" },
     { name = "ruff", marker = "extra == 'dev'" },
     { name = "safety", marker = "python_full_version >= '3.11' and extra == 'dev'" },
-    { name = "starlette", specifier = ">=1.7.0" },
+    { name = "starlette", specifier = ">=1.3.1" },
     { name = "uvicorn", specifier = ">=0.30.0" },
     { name = "vulture", marker = "extra == 'dev'" },
     { name = "xenon", marker = "extra == 'dev'" },
