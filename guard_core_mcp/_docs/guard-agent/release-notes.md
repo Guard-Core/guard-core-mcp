@@ -6,11 +6,14 @@ ___
 Unreleased
 ----------
 
+- **Fixed** - **Every shipped dependency declares a lower bound with no known advisory (LEDGER 6.510).** The base install declares `cryptography>=50.0.0` (the first release with no advisory), `httpx>=0.27.0` and `pydantic>=2.12.0`, and the `redis` extra `redis>=5.0.1` (none had a lower bound). The suite passes with every direct dependency at its floor on Python 3.10 and 3.11, and the CVE gate scans these floors with no open advisory. An install pinned below `cryptography` 50.0.0 must move up to it. `semgrep` leaves the `dev` extra and `make semgrep` runs it from its own isolated tool environment (`uvx --from 'semgrep>=1.100,<2' semgrep`), so its `mcp` and `opentelemetry-api` pins no longer enter the lock and the five suppressions for them are gone.
+
 Behavior changes since v3.2.4
 -----------------------------
 
 ### Changed
 
+- **Dependency lock and supply chain (LEDGER 6.495 to 6.497).** The lock moves `certifi` to 2026.10.18 (the emSign root removal) and resolves `tornado` 6.6 on Python 3.11 and later. Advisories with no lockable fix (`mcp` and `opentelemetry-api`, both reachable only through the dev-only `semgrep`; `tornado` 6.5.10 on Python 3.10, where 6.6 does not install) are suppressed per advisory in `osv-scanner.toml` with a reason and an expiry. A new CVE gate (`cve-scan.yml`, run on every pull request, push, daily and before a release) fails on any open advisory in the lock, in the declared dependency floors and in the published image, and every workflow action and tool install is pinned to a commit or version.
 - **`DynamicRules.emergency_whitelist_only` now defaults to `True`.** A rules payload that does not carry the field now keeps a lockdown on instead of lifting it. Operators who relied on the old default of `False` must send `emergency_whitelist_only: false` explicitly. No upgrade weakens a lockdown (D-33), and the engines and agents of every family share this default.
 - **`DynamicRules.ttl` is clamped into 60..86400 seconds and a `null` ttl reads as 300.** The default is unchanged at 300. A value outside the range is moved to the nearest bound instead of being kept as sent, and the ttl is also the offline grace period for the cached rules.
 - **The `block` overflow policy no longer waits indefinitely.** A full buffer under `buffer_overflow_policy="block"` now waits at most `buffer_block_timeout` seconds (new `AgentConfig` field, default 1.0) and then drops the new entry with a sampled warning, so an unreachable agent cannot hang the request path.
