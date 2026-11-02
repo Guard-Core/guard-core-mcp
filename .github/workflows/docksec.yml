@@ -18,7 +18,11 @@ on:
     - cron: '0 6 * * 1'
 
 permissions:
-  contents: read
+  contents: read # check out the repository
+
+concurrency:
+  group: docksec-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   scan:
@@ -26,8 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
-      contents: read
-      security-events: write
+      contents: read # check out the repository
+      security-events: write # upload the SARIF results to code scanning
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -47,7 +51,7 @@ jobs:
         # upload would fail every time, turning a routine fork contribution into a red
         # required check. Skip it there instead of forcing a failure.
         if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v3
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           sarif_file: docksec-results
           category: docksec
@@ -89,3 +93,6 @@ jobs:
           done
           docker logs hosted
           exit 1
+
+      - name: Initialize and list the tools over streamable-http and stdio
+        run: docker run --rm -i --entrypoint python guard-core-mcp-hosted:ci - < .github/scripts/smoke_image.py

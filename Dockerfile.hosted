@@ -1,28 +1,39 @@
-ARG PYTHON_VERSION=3.14
-FROM python:${PYTHON_VERSION}-slim
+FROM ghcr.io/astral-sh/uv:0.13.4@sha256:9f130421e930bfbdc563c00740466603f8723158e90297d07957c2294640262b AS uv
 
-COPY --from=ghcr.io/astral-sh/uv:0.13.4 /uv /uvx /bin/
+FROM python:3.14-slim@sha256:930e1abba7c4e8f96ed93e8012c35d174d7732752731bbd5e8e757d7ec6f3966 AS builder
 
-RUN useradd --system --uid 10001 --home /app --shell /usr/sbin/nologin guard \
+COPY --from=uv /uv /uvx /bin/
+
+WORKDIR /app
+
+ENV UV_LINK_MODE=copy \
+    UV_NO_CACHE=1
+
+COPY pyproject.toml uv.lock README.md /app/
+
+COPY guard_core_mcp/ /app/guard_core_mcp/
+
+RUN uv sync --locked --extra hosted --compile-bytecode
+
+FROM python:3.14-slim@sha256:930e1abba7c4e8f96ed93e8012c35d174d7732752731bbd5e8e757d7ec6f3966
+
+# Nothing at runtime installs a package, so the image carries neither pip (and the certifi, msgpack, setuptools and urllib3 it vendors) nor uv (and its rustls): both stay in the builder stage.
+RUN python -m pip uninstall --yes pip \
+    && rm -rf /usr/local/lib/python3.14/ensurepip \
+    && useradd --system --uid 10001 --home /app --shell /usr/sbin/nologin guard \
     && mkdir /app \
     && chown guard:guard /app
 
 WORKDIR /app
 
-ENV PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=10 \
-    PYTHONUNBUFFERED=1 \
+ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     GUARD_CORE_MCP_HTTP_HOST=0.0.0.0 \
     GUARD_CORE_MCP_HTTP_PORT=8020
 
 USER 10001
 
-COPY --chown=guard:guard pyproject.toml uv.lock README.md /app/
-
-COPY --chown=guard:guard guard_core_mcp/ /app/guard_core_mcp/
-
-RUN uv sync --locked --extra hosted --compile-bytecode --no-cache
+COPY --from=builder --chown=guard:guard /app /app
 
 ENV PATH="/app/.venv/bin:$PATH"
 
