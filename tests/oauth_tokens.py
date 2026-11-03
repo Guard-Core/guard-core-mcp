@@ -1,6 +1,6 @@
 import json
 import time
-from typing import Any
+from collections.abc import Mapping
 
 import jwt
 from cryptography.hazmat.primitives import serialization
@@ -32,9 +32,13 @@ def build_jwks(pem: str) -> str:
     return json.dumps({"keys": [entry]})
 
 
-def sign_token(pem: str, kid: str = TEST_KID, **overrides: Any) -> str:
+def sign_token(
+    pem: str,
+    kid: str = TEST_KID,
+    overrides: Mapping[str, str | int | None] | None = None,
+) -> str:
     now = int(time.time())
-    claims: dict[str, Any] = {
+    claims: dict[str, str | int] = {
         "iss": TEST_ISSUER,
         "aud": TEST_AUDIENCE,
         "sub": "user_abc123",
@@ -43,7 +47,7 @@ def sign_token(pem: str, kid: str = TEST_KID, **overrides: Any) -> str:
         "exp": now + 600,
         "jti": "token-1",
     }
-    for name, value in overrides.items():
+    for name, value in (overrides or {}).items():
         if value is None:
             claims.pop(name, None)
         else:

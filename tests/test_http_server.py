@@ -1,5 +1,3 @@
-from typing import Any
-
 import oauth_tokens
 import pytest
 
@@ -18,7 +16,7 @@ def test_main_serves_the_hosted_app_on_the_configured_host_and_port(
         "GUARD_CORE_MCP_OAUTH_JWKS",
         oauth_tokens.build_jwks(oauth_tokens.generate_key_pem()),
     )
-    calls: list[tuple[Any, dict[str, Any]]] = []
+    calls: list[tuple[object, dict[str, str | int]]] = []
     monkeypatch.setattr(
         http_server.uvicorn, "run", lambda app, **kwargs: calls.append((app, kwargs))
     )

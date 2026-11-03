@@ -25,6 +25,7 @@ import warnings
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from types import CodeType, FrameType
+from typing import ParamSpec
 
 import pytest
 from guard_core.exceptions import GuardRedisError
@@ -228,7 +229,10 @@ def _guard_owned(obj: object) -> bool:
     return _is_guard(module_name)
 
 
-def _call_problem(call: ast.Call, target: Callable[..., object]) -> str | None:
+P = ParamSpec("P")
+
+
+def _call_problem(call: ast.Call, target: Callable[P, object]) -> str | None:
     if any(keyword.arg is None for keyword in call.keywords) or any(
         isinstance(arg, ast.Starred) for arg in call.args
     ):

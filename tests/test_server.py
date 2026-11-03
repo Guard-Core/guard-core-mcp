@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+from json_access import get, obj, text
 
 import guard_core_mcp.config
 import guard_core_mcp.detection
@@ -30,7 +31,7 @@ def test_versions_reports_every_guard_distribution() -> None:
     report = versions()
 
     assert report["guard_core_mcp"] == __version__
-    assert set(report["installed"]) == set(GUARD_DISTRIBUTIONS)
+    assert set(obj(get(report, "installed"))) == set(GUARD_DISTRIBUTIONS)
 
 
 def test_versions_reports_the_bundled_docs_versions() -> None:
@@ -96,7 +97,7 @@ def test_main_starts_the_server(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_missing_library_error_names_the_module() -> None:
     error = missing_library_error(ModuleNotFoundError(name="guard_core"))
 
-    assert "guard_core" in error["error"]
+    assert "guard_core" in text(get(error, "error"))
     assert error["hint"]
 
 
@@ -113,13 +114,17 @@ def test_config_tools_report_a_missing_library_instead_of_raising(
     monkeypatch.setattr(importlib, "import_module", raise_missing)
     monkeypatch.setattr(guard_core_mcp.config.importlib, "import_module", raise_missing)
 
-    assert "not installed" in validate_config({})["error"]
-    assert "not installed" in config_fields("passive_mode")["error"]
+    assert "not installed" in text(validate_config({})["error"])
+    assert "not installed" in text(config_fields("passive_mode")["error"])
 
 
 def test_config_tools_report_an_unknown_package() -> None:
-    assert "unknown package" in validate_config({}, package="django-guard")["error"]
-    assert "unknown package" in config_fields("x", package="django-guard")["error"]
+    assert "unknown package" in text(
+        validate_config({}, package="django-guard")["error"]
+    )
+    assert "unknown package" in text(
+        config_fields("x", package="django-guard")["error"]
+    )
 
 
 async def test_config_tools_are_registered() -> None:
@@ -164,7 +169,7 @@ async def test_check_payload_tool_reports_a_missing_library_instead_of_raising(
 
     result = await check_payload(path="/")
 
-    assert "not installed" in result["error"]
+    assert "not installed" in text(get(result, "error"))
 
 
 async def test_ecosystem_tools_are_registered() -> None:
@@ -176,23 +181,29 @@ async def test_ecosystem_tools_are_registered() -> None:
 def test_ecosystem_tool_returns_the_registry() -> None:
     report = ecosystem()
 
-    assert set(report["languages"]) == {"python", "go", "typescript", "php", "rust"}
-    assert report["conformance"]["cases"] == 375
-    assert report["saas"]["base_url"] == "https://api.guard-core.com"
+    assert set(obj(get(report, "languages"))) == {
+        "python",
+        "go",
+        "typescript",
+        "php",
+        "rust",
+    }
+    assert get(report, "conformance", "cases") == 375
+    assert get(report, "saas", "base_url") == "https://api.guard-core.com"
 
 
 def test_adapter_setup_tool_returns_the_integration() -> None:
     result = adapter_setup("rust", "axum")
 
-    assert result["adapter"]["package"] == "axum-guard-rs"
-    assert "with_guard" in result["adapter"]["snippet"]
+    assert get(result, "adapter", "package") == "axum-guard-rs"
+    assert "with_guard" in text(get(result, "adapter", "snippet"))
 
 
 def test_wire_agent_tool_returns_the_setup() -> None:
     result = wire_agent("php", "laravel")
 
-    assert result["agent"]["package"] == "guard-agent-php"
-    assert "laravel" in result["framework_note"]
+    assert get(result, "agent", "package") == "guard-agent-php"
+    assert "laravel" in text(get(result, "framework_note"))
 
 
 async def test_every_tool_is_documented_for_agents() -> None:

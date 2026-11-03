@@ -45,7 +45,7 @@ run-http:
 # Lint code
 .PHONY: lint
 lint:
-	@COMPOSE_BAKE=true docker compose run --rm guard-core-mcp sh -c "echo 'Formatting w/ Ruff...' ; echo '' ; ruff format . ; echo '' ; echo '' ; echo 'Linting w/ Ruff...' ; echo '' ; ruff check . ; echo '' ; echo '' ; echo 'Type checking w/ Mypy...' ; echo '' ; mypy guard_core_mcp ; echo '' ; echo '' ; echo 'Finding dead code w/ Vulture...' ; echo '' ; vulture vulture_whitelist.py"
+	@COMPOSE_BAKE=true docker compose run --rm guard-core-mcp sh -c "echo 'Formatting w/ Ruff...' ; echo '' ; ruff format . ; echo '' ; echo '' ; echo 'Linting w/ Ruff...' ; echo '' ; ruff check . ; echo '' ; echo '' ; echo 'Type checking w/ Mypy...' ; echo '' ; mypy . ; echo '' ; echo '' ; echo 'Finding dead code w/ Vulture...' ; echo '' ; vulture vulture_whitelist.py"
 	@docker compose down --rmi all --remove-orphans -v
 	@docker system prune -f
 

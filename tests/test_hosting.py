@@ -1,5 +1,4 @@
 import json
-from typing import Any
 
 import httpx
 import jwt
@@ -9,7 +8,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from jwt import PyJWKClient
 from jwt.algorithms import ECAlgorithm
 from starlette.responses import JSONResponse
-from starlette.types import Receive, Scope, Send
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from guard_core_mcp import __version__
 from guard_core_mcp.hosting import (
@@ -31,29 +30,34 @@ class RecordingApp:
         await JSONResponse({"ok": True})(scope, receive, send)
 
 
-def make_config(**overrides: Any) -> HostingConfig:
-    values: dict[str, Any] = {
-        "host": "127.0.0.1",
-        "port": 8020,
-        "public_url": oauth_tokens.TEST_AUDIENCE,
-        "oauth_issuer": oauth_tokens.TEST_ISSUER,
-        "oauth_audience": oauth_tokens.TEST_AUDIENCE,
-        "oauth_scope": oauth_tokens.TEST_SCOPE,
-        "jwks_url": None,
-        "jwks_inline": None,
-    }
-    values.update(overrides)
-    return HostingConfig(**values)
+def make_config(
+    jwks_url: str | None = None,
+    jwks_inline: str | None = None,
+    mcprush_token: str | None = None,
+) -> HostingConfig:
+    return HostingConfig(
+        host="127.0.0.1",
+        port=8020,
+        public_url=oauth_tokens.TEST_AUDIENCE,
+        oauth_issuer=oauth_tokens.TEST_ISSUER,
+        oauth_audience=oauth_tokens.TEST_AUDIENCE,
+        oauth_scope=oauth_tokens.TEST_SCOPE,
+        jwks_url=jwks_url,
+        jwks_inline=jwks_inline,
+        mcprush_token=mcprush_token,
+    )
 
 
-def make_stack(jwks: str, **overrides: Any) -> tuple[Any, RecordingApp]:
+def make_stack(
+    jwks: str, mcprush_token: str | None = None
+) -> tuple[ASGIApp, RecordingApp]:
     inner = RecordingApp()
     return compose_hosted_stack(
-        inner, make_config(jwks_inline=jwks, **overrides)
+        inner, make_config(jwks_inline=jwks, mcprush_token=mcprush_token)
     ), inner
 
 
-def make_client(stack: Any) -> httpx.AsyncClient:
+def make_client(stack: ASGIApp) -> httpx.AsyncClient:
     transport = httpx.ASGITransport(app=stack)
     return httpx.AsyncClient(transport=transport, base_url=oauth_tokens.TEST_AUDIENCE)
 
@@ -158,10 +162,10 @@ async def test_non_bearer_credentials_are_rejected() -> None:
         {"sub": None},
     ],
 )
-async def test_malformed_claims_are_rejected(overrides: dict[str, Any]) -> None:
+async def test_malformed_claims_are_rejected(overrides: dict[str, str | None]) -> None:
     pem = oauth_tokens.generate_key_pem()
     stack, inner = make_stack(oauth_tokens.build_jwks(pem))
-    token = oauth_tokens.sign_token(pem, **overrides)
+    token = oauth_tokens.sign_token(pem, overrides=overrides)
     async with make_client(stack) as client:
         response = await post_mcp(client, token)
 

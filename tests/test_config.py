@@ -5,6 +5,7 @@ import warnings
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
+from json_access import arr, get, strs, text
 from pydantic import BaseModel, field_validator, model_validator
 
 import guard_core_mcp.config
@@ -18,7 +19,7 @@ from guard_core_mcp.config import (
 from guard_core_mcp.json_types import JsonObject
 
 _CHANGED_DEFAULTS_NOTICE = "changed defaults that this configuration leaves unset"
-_CHANGED_DEFAULTS_SET = {
+_CHANGED_DEFAULTS_SET: JsonObject = {
     "ban_on_hostile_signals": True,
     "fail_on_misconfiguration": True,
     "rate_limit": 120,
@@ -29,7 +30,7 @@ _CHANGED_DEFAULTS_SET = {
 _ENGINE_EMITS_NOTICE = (
     "ban_on_hostile_signals" in resolve_model("guard-core")[0].model_fields
 )
-_CLEAN_CONFIG = {
+_CLEAN_CONFIG: JsonObject = {
     "passive_mode": True,
     **(_CHANGED_DEFAULTS_SET if _ENGINE_EMITS_NOTICE else {}),
 }
@@ -67,8 +68,8 @@ def test_type_error_is_reported_as_a_field_error() -> None:
     report = validate_config({"trusted_proxy_depth": "two"})
 
     assert report["valid"] is False
-    assert report["errors"][0]["field"] == "trusted_proxy_depth"
-    assert "valid integer" in report["errors"][0]["message"]
+    assert get(report, "errors", 0, "field") == "trusted_proxy_depth"
+    assert "valid integer" in text(get(report, "errors", 0, "message"))
 
 
 def test_typo_is_reported_even_though_pydantic_ignores_it() -> None:
@@ -122,8 +123,8 @@ def test_deprecated_field_is_reported_with_its_name(
 
     report = validate_config({"old_value": 1})
 
-    assert report["deprecated"][0]["field"] == "old_value"
-    assert "deprecated" in report["deprecated"][0]["message"]
+    assert get(report, "deprecated", 0, "field") == "old_value"
+    assert "deprecated" in text(get(report, "deprecated", 0, "message"))
 
 
 def test_agent_config_is_validated_against_its_own_model() -> None:
@@ -142,7 +143,7 @@ def test_describe_field_reports_metadata_from_the_installed_model() -> None:
     assert described["type"] == "bool"
     assert described["default"] == "False"
     assert described["required"] is False
-    assert "Log-Only" in described["description"]
+    assert "Log-Only" in text(get(described, "description"))
 
 
 def test_describe_field_formats_generic_types_and_stated_defaults() -> None:
@@ -189,18 +190,20 @@ def test_resolve_model_reports_none_version_when_package_metadata_is_missing(
 def test_exact_name_returns_the_field() -> None:
     result = config_fields("passive_mode")
 
-    assert result["exact"]["name"] == "passive_mode"
-    assert result["exact"]["default"] == "False"
+    assert get(result, "exact", "name") == "passive_mode"
+    assert get(result, "exact", "default") == "False"
 
 
 def test_multi_word_query_matches_across_name_and_description() -> None:
-    names = {match["name"] for match in config_fields("redis timeout")["matches"]}
+    names = {
+        get(match, "name") for match in arr(config_fields("redis timeout")["matches"])
+    }
 
     assert "redis_socket_connect_timeout" in names
 
 
 def test_query_matching_only_a_description_still_finds_the_field() -> None:
-    names = {match["name"] for match in config_fields("Log-Only")["matches"]}
+    names = {get(match, "name") for match in arr(config_fields("Log-Only")["matches"])}
 
     assert "passive_mode" in names
 
@@ -209,7 +212,9 @@ def test_misspelled_name_falls_back_to_fuzzy_matches() -> None:
     result = config_fields("redis_failopen")
 
     assert result["exact"] is None
-    assert "redis_fail_open" in {match["name"] for match in result["matches"]}
+    assert "redis_fail_open" in {
+        get(match, "name") for match in arr(get(result, "matches"))
+    }
 
 
 def test_query_matching_nothing_returns_no_matches() -> None:
@@ -226,8 +231,10 @@ def test_deprecation_is_still_reported_when_another_field_fails_validation(
 
     report = validate_config({"old_value": 1, "strict_value": "two"})
 
-    assert report["errors"][0]["field"] == "strict_value"
-    assert [entry["field"] for entry in report["deprecated"]] == ["old_value"]
+    assert get(report, "errors", 0, "field") == "strict_value"
+    assert [get(entry, "field") for entry in arr(get(report, "deprecated"))] == [
+        "old_value"
+    ]
 
 
 def test_each_deprecation_is_reported_once(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -237,9 +244,10 @@ def test_each_deprecation_is_reported_once(monkeypatch: pytest.MonkeyPatch) -> N
         {"old_value": 1, "other_old_value": 2, "strict_value": "two"}
     )
 
-    messages = [entry["message"] for entry in report["deprecated"]]
+    messages = [get(entry, "message") for entry in arr(get(report, "deprecated"))]
     assert len(messages) == len(set(messages))
-    assert sorted(entry["field"] for entry in report["deprecated"]) == [
+    fields = [text(get(entry, "field")) for entry in arr(get(report, "deprecated"))]
+    assert sorted(fields) == [
         "old_value",
         "other_old_value",
     ]
@@ -248,7 +256,7 @@ def test_each_deprecation_is_reported_once(monkeypatch: pytest.MonkeyPatch) -> N
 def test_retry_that_still_fails_reports_no_deprecations_instead_of_raising() -> None:
     report = validate_config({"trusted_proxy_depth": "two", "enable_enrichment": True})
 
-    assert report["errors"][0]["field"] == "trusted_proxy_depth"
+    assert get(report, "errors", 0, "field") == "trusted_proxy_depth"
     assert report["deprecated"] == []
 
 
@@ -275,10 +283,10 @@ def test_unrelated_warnings_are_ignored_and_repeats_collapse(
 
     report = validate_config({"value": 1})
 
-    assert [entry["message"] for entry in report["deprecated"]] == [
+    assert [get(entry, "message") for entry in arr(get(report, "deprecated"))] == [
         "value is deprecated and will be removed"
     ]
-    assert report["deprecated"][0]["field"] == "value"
+    assert get(report, "deprecated", 0, "field") == "value"
 
 
 def _guard_core_logger_snapshot() -> tuple[list[logging.Handler], int]:
@@ -293,7 +301,7 @@ def test_trusted_proxies_prefix_zero_warning_is_reported() -> None:
 
     assert any(
         "trusted_proxies contains a /0 network" in message
-        for message in report["construction_warnings"]
+        for message in strs(get(report, "construction_warnings"))
     )
     assert _guard_core_logger_snapshot() == before
 
@@ -305,7 +313,7 @@ def test_empty_enabled_detection_categories_warning_is_reported() -> None:
 
     assert any(
         "enabled_detection_categories is empty" in message
-        for message in report["construction_warnings"]
+        for message in strs(get(report, "construction_warnings"))
     )
     assert _guard_core_logger_snapshot() == before
 
@@ -317,7 +325,7 @@ def test_unknown_keyword_warning_is_reported() -> None:
 
     assert any(
         "SecurityConfig received unknown field 'totally_bogus_field_xyz'" in message
-        for message in report["construction_warnings"]
+        for message in strs(get(report, "construction_warnings"))
     )
     assert _guard_core_logger_snapshot() == before
 
@@ -334,7 +342,11 @@ def test_clean_config_reports_no_construction_warnings() -> None:
 def _changed_defaults_notices(config: JsonObject) -> list[str]:
     report = validate_config(config, package="guard-core")
     assert report["valid"] is True
-    return [m for m in report["construction_warnings"] if _CHANGED_DEFAULTS_NOTICE in m]
+    return [
+        m
+        for m in strs(get(report, "construction_warnings"))
+        if _CHANGED_DEFAULTS_NOTICE in m
+    ]
 
 
 def test_changed_defaults_notice_is_reported_exactly_when_the_engine_emits_it() -> None:
@@ -356,7 +368,7 @@ def test_unknown_keyword_warning_collapses_across_the_validation_retry() -> None
 
     messages = [
         message
-        for message in report["construction_warnings"]
+        for message in strs(get(report, "construction_warnings"))
         if "totally_bogus_field_xyz" in message
     ]
     assert len(messages) == 1
@@ -365,10 +377,10 @@ def test_unknown_keyword_warning_collapses_across_the_validation_retry() -> None
 def test_concurrent_validate_config_calls_do_not_leak_warnings_between_each_other() -> (
     None
 ):
-    def call_prefix_zero() -> dict:
+    def call_prefix_zero() -> JsonObject:
         return validate_config({"trusted_proxies": ["0.0.0.0/0"]}, package="guard-core")
 
-    def call_clean() -> dict:
+    def call_clean() -> JsonObject:
         return validate_config(_CLEAN_CONFIG, package="guard-core")
 
     trials = 100
@@ -379,8 +391,8 @@ def test_concurrent_validate_config_calls_do_not_leak_warnings_between_each_othe
             dirty_report = future_dirty.result()
             clean_report = future_clean.result()
 
-            assert clean_report["construction_warnings"] == []
+            assert get(clean_report, "construction_warnings") == []
             assert any(
                 "trusted_proxies contains a /0 network" in message
-                for message in dirty_report["construction_warnings"]
+                for message in strs(get(dirty_report, "construction_warnings"))
             )

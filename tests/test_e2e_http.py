@@ -7,12 +7,12 @@ import sys
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any
 
 import httpx
 import httpx2
 import oauth_tokens
 import pytest
+from json_access import get, obj, parse_json
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 from mcp.types import TextContent
@@ -126,7 +126,9 @@ async def test_full_session_with_a_valid_token() -> None:
 async def test_wrong_audience_token_is_rejected_over_real_http() -> None:
     async with running_http_server() as streams:
         base_url = streams[0]
-        token = oauth_tokens.sign_token(streams[1], aud="https://other-resource.test")
+        token = oauth_tokens.sign_token(
+            streams[1], overrides={"aud": "https://other-resource.test"}
+        )
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{base_url}/mcp",
@@ -153,5 +155,5 @@ async def test_versions_reports_the_hosted_pins_over_the_protocol() -> None:
 
     result_content = result.content[0]
     assert isinstance(result_content, TextContent)
-    report: dict[str, Any] = json.loads(result_content.text)
-    assert report["installed"]["guard-core"] is not None
+    report = obj(parse_json(result_content.text))
+    assert get(report, "installed", "guard-core") is not None

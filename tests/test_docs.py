@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from json_access import arr, get, text
+
 from guard_core_mcp.docs import get_doc, knowledge_manifest, search_docs
 
 KNOWLEDGE_ROOT = (
@@ -11,21 +13,21 @@ def test_search_finds_a_page_and_cites_its_url() -> None:
     results = search_docs("rate limiting")["results"]
 
     assert results
-    assert results[0]["url"].startswith(
+    assert text(get(results, 0, "url")).startswith(
         ("https://guard-core.github.io/", "https://rennf93.github.io/")
     )
-    assert results[0]["path"].endswith(".md")
-    assert results[0]["snippet"]
+    assert text(get(results, 0, "path")).endswith(".md")
+    assert get(results, 0, "snippet")
 
 
 def test_search_can_be_scoped_to_one_package() -> None:
-    results = search_docs("detection", package="guard-core")["results"]
+    results = arr(search_docs("detection", package="guard-core")["results"])
 
-    assert {result["package"] for result in results} == {"guard-core"}
+    assert {get(result, "package") for result in results} == {"guard-core"}
 
 
 def test_search_respects_the_limit() -> None:
-    assert len(search_docs("the", limit=3)["results"]) <= 3
+    assert len(arr(search_docs("the", limit=3)["results"])) <= 3
 
 
 def test_index_pages_collapse_to_their_directory_url() -> None:
@@ -43,7 +45,7 @@ def test_index_pages_collapse_to_their_directory_url() -> None:
 def test_get_doc_returns_the_page_text() -> None:
     result = get_doc("guard-core", "index.md")
 
-    assert result["content"].strip()
+    assert text(get(result, "content")).strip()
     assert result["url"] == "https://guard-core.github.io/guard-core/latest/"
 
 
@@ -56,20 +58,20 @@ def test_get_doc_rejects_an_unknown_package() -> None:
 
 
 def test_search_covers_the_knowledge_corpus() -> None:
-    results = search_docs("INGEST_MAX_PAYLOAD_BYTES")["results"]
+    results = arr(search_docs("INGEST_MAX_PAYLOAD_BYTES")["results"])
 
-    assert any(result["package"] == "guard-core-app" for result in results)
+    assert any(get(result, "package") == "guard-core-app" for result in results)
     app_result = next(
-        result for result in results if result["package"] == "guard-core-app"
+        result for result in results if get(result, "package") == "guard-core-app"
     )
-    assert app_result["url"] == "https://github.com/Guard-Core/guard-core-app"
+    assert get(app_result, "url") == "https://github.com/Guard-Core/guard-core-app"
 
 
 def test_search_can_be_scoped_to_one_knowledge_package() -> None:
-    results = search_docs("spec_version", package="guard-core-go")["results"]
+    results = arr(search_docs("spec_version", package="guard-core-go")["results"])
 
     assert results
-    assert {result["package"] for result in results} == {"guard-core-go"}
+    assert {get(result, "package") for result in results} == {"guard-core-go"}
 
 
 def test_search_for_an_unknown_package_silently_matches_nothing() -> None:
@@ -79,7 +81,7 @@ def test_search_for_an_unknown_package_silently_matches_nothing() -> None:
 def test_get_doc_returns_a_knowledge_page() -> None:
     result = get_doc("guard-core-app", "index.md")
 
-    assert "ingestion contract" in result["content"]
+    assert "ingestion contract" in text(get(result, "content"))
     assert result["url"] == "https://github.com/Guard-Core/guard-core-app"
     assert result["package"] == "guard-core-app"
 

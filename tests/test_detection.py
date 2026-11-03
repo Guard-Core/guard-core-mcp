@@ -1,7 +1,9 @@
+import types
 from unittest.mock import MagicMock
 from urllib.parse import quote
 
 import pytest
+from json_access import get, num, text
 
 from guard_core_mcp.detection import (
     _CaseInsensitiveHeaders,
@@ -16,8 +18,8 @@ async def test_sql_injection_in_a_query_parameter_is_a_threat() -> None:
 
     assert result["is_threat"] is True
     assert result["threat_categories"] == ["sqli"]
-    assert "matched pattern" in result["trigger_info"]
-    assert result["elapsed_ms"] >= 0
+    assert "matched pattern" in text(get(result, "trigger_info"))
+    assert num(get(result, "elapsed_ms")) >= 0
 
 
 async def test_script_tag_is_a_threat() -> None:
@@ -51,8 +53,8 @@ async def test_malformed_config_returns_structured_errors_instead_of_raising() -
     result = await check_payload(config={"trusted_proxy_depth": "not-an-int"})
 
     assert result["error"] == "invalid config"
-    assert result["errors"][0]["field"] == "trusted_proxy_depth"
-    assert "valid integer" in result["errors"][0]["message"]
+    assert get(result, "errors", 0, "field") == "trusted_proxy_depth"
+    assert "valid integer" in text(get(result, "errors", 0, "message"))
 
 
 async def test_header_case_mismatch_no_longer_hides_a_form_encoded_sql_injection() -> (
@@ -112,6 +114,7 @@ def test_synthetic_request_exposes_every_protocol_member() -> None:
     assert request.url_full == "https://sandbox/x"
     assert request.url_replace_scheme("http") == "http://sandbox/x"
     assert request.method == "POST"
+    assert isinstance(request.state, types.SimpleNamespace)
     request.state.example = "value"
     assert request.state.example == "value"
     assert request.scope == {}

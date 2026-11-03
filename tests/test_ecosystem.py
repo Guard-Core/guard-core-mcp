@@ -1,5 +1,7 @@
 from collections.abc import Iterator
 
+from json_access import get, text
+
 from guard_core_mcp import ecosystem as ecosystem_module
 from guard_core_mcp.ecosystem import (
     REGISTRY,
@@ -263,67 +265,69 @@ def test_ecosystem_returns_the_registry_dump() -> None:
 def test_adapter_setup_returns_the_adapter_and_its_engine() -> None:
     result = adapter_setup("go", "gin")
 
-    assert result["adapter"]["package"] == "gin-guard"
-    assert result["adapter"]["framework"] == "gin"
-    assert result["engine"]["package"] == "guard-core-go"
-    assert "guard-core-go/v4@v4.4.1" in result["engine"]["install"]
+    assert get(result, "adapter", "package") == "gin-guard"
+    assert get(result, "adapter", "framework") == "gin"
+    assert get(result, "engine", "package") == "guard-core-go"
+    assert "guard-core-go/v4@v4.4.1" in text(get(result, "engine", "install"))
 
 
 def test_adapter_setup_accepts_the_adapter_package_name() -> None:
     result = adapter_setup("typescript", "@guardcore/express")
 
-    assert result["adapter"]["package"] == "@guardcore/express"
+    assert get(result, "adapter", "package") == "@guardcore/express"
 
 
 def test_adapter_setup_tolerates_case_and_whitespace() -> None:
-    assert adapter_setup(" PHP ", "LARAVEL ")["adapter"]["package"] == "laravel-guard"
+    assert (
+        get(adapter_setup(" PHP ", "LARAVEL "), "adapter", "package") == "laravel-guard"
+    )
 
 
 def test_adapter_setup_reports_an_unknown_language() -> None:
     result = adapter_setup("haskell", "axum")
 
-    assert "unknown language 'haskell'" in result["error"]
-    assert "python" in result["error"]
+    assert "unknown language 'haskell'" in text(get(result, "error"))
+    assert "python" in text(get(result, "error"))
 
 
 def test_adapter_setup_reports_an_unknown_framework() -> None:
     result = adapter_setup("go", "fastapi")
 
-    assert "unknown framework 'fastapi'" in result["error"]
-    assert "nethttp" in result["error"]
+    assert "unknown framework 'fastapi'" in text(get(result, "error"))
+    assert "nethttp" in text(get(result, "error"))
 
 
 def test_wire_agent_returns_the_agent_and_the_ingestion_contract() -> None:
     result = wire_agent("go")
 
     assert result["language"] == "go"
-    assert result["agent"]["package"] == "guard-agent-go"
-    assert result["ingestion"]["base_url"] == "https://api.guard-core.com"
+    assert get(result, "agent", "package") == "guard-agent-go"
+    assert get(result, "ingestion", "base_url") == "https://api.guard-core.com"
     assert result["framework_note"] == REGISTRY.languages["go"].agent.integration
 
 
 def test_wire_agent_with_a_framework_names_the_adapter() -> None:
     result = wire_agent("go", "fiber")
 
-    assert "fiber" in result["framework_note"]
+    assert "fiber" in text(get(result, "framework_note"))
 
 
 def test_wire_agent_for_python_points_at_the_bundled_doc_page() -> None:
     result = wire_agent("python", "fastapi")
 
-    assert "adapters/fastapi.md" in result["framework_note"]
-    assert "get_doc" in result["framework_note"]
+    assert "adapters/fastapi.md" in text(get(result, "framework_note"))
+    assert "get_doc" in text(get(result, "framework_note"))
 
 
 def test_wire_agent_reports_an_unknown_language() -> None:
-    assert "unknown language 'elixir'" in wire_agent("elixir")["error"]
+    assert "unknown language 'elixir'" in text(get(wire_agent("elixir"), "error"))
 
 
 def test_wire_agent_reports_an_unknown_framework() -> None:
     result = wire_agent("rust", "rocket2")
 
-    assert "unknown framework 'rocket2'" in result["error"]
-    assert "tower" in result["error"]
+    assert "unknown framework 'rocket2'" in text(get(result, "error"))
+    assert "tower" in text(get(result, "error"))
 
 
 def test_ecosystem_module_exposes_the_registry_for_the_server() -> None:

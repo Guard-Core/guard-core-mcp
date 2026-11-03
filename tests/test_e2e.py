@@ -1,13 +1,14 @@
-import json
 import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any
 
 import pytest
+from json_access import arr, get, obj, parse_json
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from mcp.types import TextContent
+
+from guard_core_mcp.json_types import JsonValue
 
 LAUNCH_SERVER = StdioServerParameters(
     command=sys.executable,
@@ -23,11 +24,11 @@ async def running_server() -> AsyncIterator[ClientSession]:
             yield session
 
 
-async def call(session: ClientSession, tool: str, **arguments: Any) -> Any:
+async def call(session: ClientSession, tool: str, **arguments: JsonValue) -> JsonValue:
     result = await session.call_tool(tool, arguments)
     content = result.content[0]
     assert isinstance(content, TextContent)
-    return json.loads(content.text)
+    return parse_json(content.text)
 
 
 @pytest.mark.e2e
@@ -55,9 +56,15 @@ async def test_ecosystem_tools_answer_over_the_protocol() -> None:
         setup = await call(session, "adapter_setup", language="go", framework="gin")
         agent = await call(session, "wire_agent", language="php", framework="slim")
 
-    assert set(matrix["languages"]) == {"python", "go", "typescript", "php", "rust"}
-    assert setup["adapter"]["package"] == "gin-guard"
-    assert agent["agent"]["package"] == "guard-agent-php"
+    assert set(obj(get(matrix, "languages"))) == {
+        "python",
+        "go",
+        "typescript",
+        "php",
+        "rust",
+    }
+    assert get(setup, "adapter", "package") == "gin-guard"
+    assert get(agent, "agent", "package") == "guard-agent-php"
 
 
 @pytest.mark.e2e
@@ -67,8 +74,8 @@ async def test_versions_reports_this_package_over_the_protocol() -> None:
     async with running_server() as session:
         report = await call(session, "versions")
 
-    assert report["guard_core_mcp"] == __version__
-    assert report["installed"]["guard-core"] is not None
+    assert get(report, "guard_core_mcp") == __version__
+    assert get(report, "installed", "guard-core") is not None
 
 
 @pytest.mark.e2e
@@ -81,8 +88,8 @@ async def test_validate_config_flags_an_unknown_field_with_a_suggestion() -> Non
             package="fastapi-guard",
         )
 
-    assert report["unknown_fields"][0]["name"] == "redis_failopen"
-    assert "redis_fail_open" in report["unknown_fields"][0]["did_you_mean"]
+    assert get(report, "unknown_fields", 0, "name") == "redis_failopen"
+    assert "redis_fail_open" in arr(get(report, "unknown_fields", 0, "did_you_mean"))
 
 
 @pytest.mark.e2e
@@ -95,8 +102,8 @@ async def test_validate_config_accepts_a_json_body_shaped_config() -> None:
             package="fastapi-guard",
         )
 
-    assert report["valid"] is False
-    assert report["errors"][0]["field"] == "rate_limit"
+    assert get(report, "valid") is False
+    assert get(report, "errors", 0, "field") == "rate_limit"
 
 
 @pytest.mark.e2e
@@ -106,18 +113,20 @@ async def test_config_fields_resolves_an_exact_field() -> None:
             session, "config_fields", query="rate_limit", package="fastapi-guard"
         )
 
-    assert report["exact"]["name"] == "rate_limit"
+    assert get(report, "exact", "name") == "rate_limit"
 
 
 @pytest.mark.e2e
 async def test_search_docs_and_get_doc_round_trip() -> None:
     async with running_server() as session:
         found = await call(session, "search_docs", query="rate limiting", limit=3)
-        top = found["results"][0]
-        page = await call(session, "get_doc", package=top["package"], path=top["path"])
+        top = get(found, "results", 0)
+        page = await call(
+            session, "get_doc", package=get(top, "package"), path=get(top, "path")
+        )
 
-    assert found["results"]
-    assert page["content"]
+    assert get(found, "results")
+    assert get(page, "content")
 
 
 @pytest.mark.e2e
@@ -130,8 +139,8 @@ async def test_check_payload_separates_an_attack_from_a_benign_request() -> None
             session, "check_payload", path="/probe", query={"page": "2"}
         )
 
-    assert attack["is_threat"] is True
-    assert benign["is_threat"] is False
+    assert get(attack, "is_threat") is True
+    assert get(benign, "is_threat") is False
 
 
 @pytest.mark.e2e
@@ -145,4 +154,4 @@ async def test_check_payload_accepts_a_json_object_body() -> None:
             body={"comment": "<script>alert(1)</script>"},
         )
 
-    assert report["is_threat"] is True
+    assert get(report, "is_threat") is True
