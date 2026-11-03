@@ -116,6 +116,7 @@ exclude = [
     "Makefile",
     "mkdocs.yml",
     "vulture_whitelist.py",
+    "tools/",
     "tests/",
     "docs/",
 ]
