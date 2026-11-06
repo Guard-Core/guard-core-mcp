@@ -60,7 +60,7 @@ Changelog = "https://github.com/Guard-Core/guard-core-mcp/blob/master/CHANGELOG.
 hosted = [
     "fastapi-guard>=8.1.2",
     "guard-agent>=3.2.4",
-    "guard-core>=4.4.0",
+    "guard-core>=5.0.0,<6",
 ]
 dev = [
     "bandit[toml]",
