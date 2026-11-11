@@ -1,6 +1,6 @@
 FROM ghcr.io/astral-sh/uv:0.13.4@sha256:9f130421e930bfbdc563c00740466603f8723158e90297d07957c2294640262b AS uv
 
-FROM python:3.14-slim@sha256:930e1abba7c4e8f96ed93e8012c35d174d7732752731bbd5e8e757d7ec6f3966 AS builder
+FROM python:3.14-slim@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f AS builder
 
 COPY --from=uv /uv /uvx /bin/
 
@@ -15,10 +15,15 @@ COPY guard_core_mcp/ /app/guard_core_mcp/
 
 RUN uv sync --locked --extra hosted --compile-bytecode
 
-FROM python:3.14-slim@sha256:930e1abba7c4e8f96ed93e8012c35d174d7732752731bbd5e8e757d7ec6f3966
+FROM python:3.14-slim@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f
 
 # Nothing at runtime installs a package, so the image carries neither pip (and the certifi, msgpack, setuptools and urllib3 it vendors) nor uv (and its rustls): both stay in the builder stage.
-RUN python -m pip uninstall --yes pip \
+# Drop the zlib1g line once the base image ships 1:1.3.dfsg+really1.3.1-1+deb13u1 (CVE-2026-76844, CVE-2026-85091, CVE-2026-27171); the compare fails the build on a stale mirror.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends --only-upgrade zlib1g \
+    && rm -rf /var/lib/apt/lists/* \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' zlib1g)" ge '1:1.3.dfsg+really1.3.1-1+deb13u1' \
+    && python -m pip uninstall --yes pip \
     && rm -rf /usr/local/lib/python3.14/ensurepip \
     && useradd --system --uid 10001 --home /app --shell /usr/sbin/nologin guard \
     && mkdir /app \
