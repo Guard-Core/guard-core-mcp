@@ -9,7 +9,7 @@
   },
   "guard-core": {
     "site_url": "https://guard-core.github.io/guard-core/latest/",
-    "version": "4.4.0"
+    "version": "5.0.0"
   },
   "guard-core-ts": {
     "site_url": "https://rennf93.github.io/guard-core-ts/",
