@@ -35,16 +35,16 @@ versions()
 
 ```json
 {
-  "guard_core_mcp": "1.7.0",
+  "guard_core_mcp": "2.0.0",
   "installed": {
-    "guard-core": "4.4.0",
-    "fastapi-guard": "8.1.2",
-    "guard-agent": "3.2.4"
+    "guard-core": "5.0.0",
+    "fastapi-guard": "9.0.0",
+    "guard-agent": "4.0.0"
   },
   "docs_bundled_for": {
-    "fastapi-guard": "8.1.2",
-    "guard-agent": "3.2.4",
-    "guard-core": "4.4.0",
+    "fastapi-guard": "9.0.0",
+    "guard-agent": "4.0.0",
+    "guard-core": "5.0.0",
     "guard-core-ts": "4.4.0"
   },
   "knowledge_bundled_for": {
@@ -113,9 +113,17 @@ validate_config({"rate_limit": 100, "enable_rate_limit": True}, "fastapi-guard")
   "deprecated": [],
   "construction_warnings": [
     "SecurityConfig received unknown field 'enable_rate_limit'; it was ignored and had no effect. Did you mean 'enable_rate_limiting'?"
+  ],
+  "construction_problems": [
+    {
+      "message": "SecurityConfig received unknown field 'enable_rate_limit'; it was ignored and had no effect. Did you mean 'enable_rate_limiting'?",
+      "kinds": [{"kind": "config.unknown_field", "subject": "enable_rate_limit"}]
+    }
   ]
 }
 ```
+
+`construction_problems` pairs each construction warning with the machine-readable misconfiguration kinds guard-core attaches to the log record (`kinds` is a list of `{"kind", "subject"}`, where `subject` is the field or value the kind is about, or `null`). It holds the same messages in the same order as `construction_warnings`, which is unchanged, so a client can branch on `kind` instead of parsing the text. A record without kinds has `"kinds": []`.
 
 `enable_rate_limit` isn't a `SecurityConfig` field, the real one is `enable_rate_limiting`, and Pydantic would have accepted and then ignored it silently, which is why the same problem also shows up in `construction_warnings`: guard-core logs it as a `logger.warning` on construction. A type error (for example `{"rate_limit": "not-a-number"}`) instead produces an entry in `errors`, each with `field`, `message`, and the offending `input`.
 

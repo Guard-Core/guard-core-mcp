@@ -4,6 +4,7 @@ from json_access import get, text
 
 from guard_core_mcp import ecosystem as ecosystem_module
 from guard_core_mcp.ecosystem import (
+    PYTHON_FAMILY_VERSIONS,
     REGISTRY,
     AdapterInfo,
     LanguageEntry,
@@ -197,19 +198,22 @@ def test_registry_records_the_python_engine_facts() -> None:
     python = REGISTRY.languages["python"]
 
     assert python.engine.package == "guard-core"
-    assert python.engine.version == "4.4.0"
+    assert python.engine.version == PYTHON_FAMILY_VERSIONS["guard-core"]
     assert python.engine.release_status == "published"
 
     versions = {adapter.package: adapter.version for adapter in python.adapters}
     assert versions == {
-        "fastapi-guard": "8.1.2",
-        "flaskapi-guard": "4.4.0",
-        "djapi-guard": "5.0.0",
-        "tornadoapi-guard": "2.0.0",
+        package: PYTHON_FAMILY_VERSIONS[package]
+        for package in (
+            "fastapi-guard",
+            "flaskapi-guard",
+            "djapi-guard",
+            "tornadoapi-guard",
+        )
     }
 
     assert python.agent.package == "guard-agent"
-    assert python.agent.version == "3.2.4"
+    assert python.agent.version == PYTHON_FAMILY_VERSIONS["guard-agent"]
     assert python.agent.release_status == "published"
 
 
