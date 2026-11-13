@@ -48,7 +48,7 @@ The server speaks MCP over stdio (`guard_core_mcp.server:main`). To verify what 
 
 ## Covered Libraries
 
-`PACKAGE_MODELS` in `config.py` maps package name to `(import module, model class)`: `guard-core` to `guard_core.SecurityConfig`, `fastapi-guard` to `guard.SecurityConfig`, `guard-agent` to `guard_agent.AgentConfig`. Adding a package means adding an allowlist entry; the `importlib.import_module` call is safe only because it is constrained to that dict.
+`PACKAGE_MODELS` in `config.py` maps package name to `(import module, model class)`: `guard-core` to `guard_core.SecurityConfig`, `fastapi-guard` to `guard.SecurityConfig`, `guard-agent` to `guard_agent.AgentConfig`. Adding a package means adding an allowlist entry and one loader in `_MODULE_LOADERS`, which imports a literal module name.
 
 The rest of the family lives in `ecosystem.py` as typed data: engines (`guard-core-go` tagged v0.1.0, `@guardcore/core` tagged 1.0.0, `guard-core-php` tagged v0.1.0, `guard-core-rs` untagged 0.0.1), twenty adapters with snippets copied verbatim from their READMEs, the five agents, and the SaaS contract. Facts are verified against the sibling repos; update by hand when they move. The vendored docs come from sibling clones (`../fastapi-guard`, `../guard-core`, `../guard-agent`, `../guard-core-ts`) via `scripts/sync_docs.py` (`make sync-docs`); regenerate after upstream releases, never hand-edit `guard_core_mcp/_docs/`. The `_knowledge/` corpus is the hand-written counterpart (Go/PHP/Rust engines and agents, and the SaaS ingestion contract), one `index.md` per repo plus a manifest; edit those directly.
 

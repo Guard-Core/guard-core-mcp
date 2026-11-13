@@ -135,7 +135,9 @@ def validate_config(
 
     Returns valid (bool), package, version, model, errors (type errors, each with
     field, message and input), unknown_fields (each with name and did_you_mean
-    suggestions), deprecated (field and message) and construction_warnings. Unknown
+    suggestions), deprecated (field and message), construction_warnings and
+    construction_problems (the same messages, each with the kinds guard-core attached:
+    a list of kind and subject, so a client can branch on kind). Unknown
     keys matter: pydantic silently ignores them, so a misspelled setting does nothing
     at runtime and raises no error anywhere else. construction_warnings carries
     guard-core's own logged-not-raised misconfiguration warnings: an unknown

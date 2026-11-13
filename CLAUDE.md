@@ -24,7 +24,7 @@ That is why the README pushes `uv add --dev guard-core-mcp` over `uvx`: an isola
 | `fastapi-guard` | `guard` | `SecurityConfig` |
 | `guard-agent` | `guard_agent` | `AgentConfig` |
 
-Supporting another package means adding an entry to that dict. The dynamic `importlib.import_module` is safe precisely because it is constrained to this allowlist (hence the `# nosemgrep` on the import line).
+Supporting another package means adding an entry to that dict and one loader to `_MODULE_LOADERS`, which imports a literal module name so static analysis sees the import and no marker is needed (`tests/test_config_problem_kinds.py` fails when the two disagree).
 
 ## Tools
 
