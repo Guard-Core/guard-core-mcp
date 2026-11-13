@@ -203,8 +203,8 @@ jobs:
           # starlette 1.3.1 imports the anyio.abc.BlockingPortal alias that anyio 4.15 deprecates and -W error turns into a failure: the floor suite runs with anyio 4.14.2 (D-240).
           echo 'anyio==4.14.2' > constraints.txt
           echo "guard-core @ file://$PWD/$(ls engine-dist/*.whl)" > overrides.txt
-          uv pip compile pyproject.toml --constraint constraints.txt --override overrides.txt --extra hosted --resolution lowest-direct --python-version "$MATRIX_PYTHON_VERSION" --no-emit-package guard-core --no-emit-package guard-agent --no-emit-package fastapi-guard --no-header -o floors.txt
-          uv pip install -r floors.txt
+          uv pip compile pyproject.toml --constraint constraints.txt --override overrides.txt --extra hosted --resolution lowest-direct --python-version "$MATRIX_PYTHON_VERSION" --no-emit-package guard-core --no-emit-package guard-agent --no-emit-package fastapi-guard --no-header --generate-hashes -o floors.txt
+          uv pip install --require-hashes -r floors.txt
           uv pip install --no-deps --force-reinstall engine-dist/*.whl
         env:
           MATRIX_PYTHON_VERSION: ${{ matrix.python-version }}
