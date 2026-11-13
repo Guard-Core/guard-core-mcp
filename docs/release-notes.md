@@ -173,6 +173,8 @@ The parity train closeout: the registry reflects the shipped 4.2.0/3.1.0 ecosyst
 - **Changed** - The hand-written `_knowledge` corpus re-syncs to those releases (guard-core-go/php/rs 4.2.0 with the spec-4.1.0 corpus, the four agents at 3.1.0) and the vendored `_docs` re-syncs to guard-core 4.2.0, guard-agent 3.1.0, fastapi-guard 8.0.2 and guard-core-ts 4.2.0 via `scripts/sync_docs.py`.
 - **Changed** - `uv.lock` moves guard-core to 4.2.0 and guard-agent to 3.1.0; version 1.3.0 closes out the 4.2.0/3.1.0 parity release train this server documents.
 
+___
+
 v1.2.0 (2026-09-26)
 -------------------
 
@@ -298,7 +300,7 @@ Vendored docs re-synced to the guard-core 3.13.0 / fastapi-guard 7.7.0 / guard-a
 
 ___
 
-v0.1.7 (2026-08-15)
+v0.1.7 (2026-08-17)
 -------------------
 
 check_payload body-scan fix for guard-core 3.12.0, documentation accuracy sweep, and vendored docs re-synced to the 3.12.0 line (v0.1.7)
@@ -387,7 +389,7 @@ MCP SDK 2.0 compatibility (v0.1.1)
 
 ___
 
-v0.1.0 (2026-07-25)
+v0.1.0 (2026-07-28)
 -------------------
 
 Config, documentation and detection tools (v0.1.0)
