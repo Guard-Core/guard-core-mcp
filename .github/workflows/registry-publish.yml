@@ -2,9 +2,8 @@ name: Publish to MCP Registry
 # Registers the server.json version with the MCP Registry only after that
 # version is on PyPI: the registry validates the PyPI package, so publishing
 # on the server.json push (before the release) always failed with a 404.
-# It is called by release.yml after the publish job (no privileged trigger on another run's completion), or run by hand.
+# release.yml dispatches it after the publish job (no privileged trigger on another run's completion), or it is run by hand.
 on:
-  workflow_call:
   workflow_dispatch:
 permissions: {}
 concurrency:
