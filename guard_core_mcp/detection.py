@@ -85,6 +85,14 @@ class _SyntheticRequest:
     async def body(self) -> bytes:
         return self._body
 
+    async def read_body_prefix_until_idle(
+        self, max_bytes: int, idle_timeout: float
+    ) -> bytes:
+        # The body is in memory, so it can never stall; declaring the reader keeps
+        # guard-core from logging its "no bounded body reader" warning per call.
+        del idle_timeout
+        return self._body[:max_bytes]
+
     @property
     def state(self) -> object:
         return self._state

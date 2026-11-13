@@ -51,7 +51,7 @@ jobs:
         - [ ] `make test` - full test suite passes with 100% coverage
         - [ ] `make security` - `bandit`, `safety`, and `pip-audit` all clean
         - [ ] `make quality` - `radon` and `xenon` complexity thresholds respected
-        - [ ] No `# noqa` / `# type: ignore` shortcuts; pre-existing violations in touched files are fixed
+        - [ ] No lint or type-check suppression comments; pre-existing violations in touched files are fixed
         - [ ] Added an entry under `## Unreleased` in [CHANGELOG.md](../blob/master/CHANGELOG.md)
         - [ ] If you touched a public API, updated the relevant page under `docs/`
         - [ ] If you changed `scripts/sync_docs.py`, re-run `make sync-docs` and confirm `make check-docs-drift` passes

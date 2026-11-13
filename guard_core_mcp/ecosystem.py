@@ -1103,17 +1103,28 @@ async def root() -> dict[str, str]:
     return {"message": "Hello World"}"""
 
 
+# The Python family's release versions, the one place the registry, its tests and
+# its docs read them from. A release of the family changes these lines and nothing else.
+PYTHON_FAMILY_VERSIONS: dict[str, str] = {
+    "guard-core": "5.0.0",
+    "fastapi-guard": "9.0.0",
+    "flaskapi-guard": "5.0.0",
+    "djapi-guard": "6.0.0",
+    "tornadoapi-guard": "3.0.0",
+    "guard-agent": "4.0.0",
+}
+
+
 def _python_adapter(
     package: str,
     framework: str,
-    version: str,
     role: str,
     snippet: str,
 ) -> AdapterInfo:
     return AdapterInfo(
         package=package,
         repo=f"https://github.com/Guard-Core/{package}",
-        version=version,
+        version=PYTHON_FAMILY_VERSIONS[package],
         install=f"uv add {package}",
         release_status="published",
         framework=framework,
@@ -1132,7 +1143,7 @@ PY_ENTRY = LanguageEntry(
     engine=EngineInfo(
         package="guard-core",
         repo="https://github.com/Guard-Core/guard-core",
-        version="4.4.0",
+        version=PYTHON_FAMILY_VERSIONS["guard-core"],
         install="uv add guard-core",
         release_status="published",
         conformance=(
@@ -1151,28 +1162,24 @@ PY_ENTRY = LanguageEntry(
         _python_adapter(
             "fastapi-guard",
             "fastapi",
-            "8.1.2",
             "ASGI middleware for FastAPI (async tree)",
             PY_FASTAPI_SNIPPET,
         ),
         _python_adapter(
             "flaskapi-guard",
             "flask",
-            "4.4.0",
             "Flask extension over the sync mirror",
             PY_FLASK_SNIPPET,
         ),
         _python_adapter(
             "djapi-guard",
             "django",
-            "5.0.0",
             "Django middleware adapter over the sync mirror",
             PY_DJANGO_SNIPPET,
         ),
         _python_adapter(
             "tornadoapi-guard",
             "tornado",
-            "2.0.0",
             "Tornado handler/middleware adapter (async tree)",
             PY_TORNADO_SNIPPET,
         ),
@@ -1180,7 +1187,7 @@ PY_ENTRY = LanguageEntry(
     agent=AgentInfo(
         package="guard-agent",
         repo="https://github.com/Guard-Core/guard-agent",
-        version="3.2.4",
+        version=PYTHON_FAMILY_VERSIONS["guard-agent"],
         install="uv add guard-agent",
         release_status="published",
         semantics=(

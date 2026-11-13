@@ -21,6 +21,14 @@ Unreleased
 
 - **Fixed** - The Python agent snippet served by `adapter_setup` and `wire_agent` no longer ends in an undefined return annotation or calls `SecurityMiddleware.configure_cors`, which fastapi-guard removed, and a test now executes every served Python snippet.
 
+- **Added** - **`validate_config` returns each guard-core problem with its machine-readable kind.** A new `construction_problems` list pairs every construction warning with the `kinds` guard-core attaches to its log record (each a `kind` and a `subject`), so a client can branch on `config.unknown_field` or `trusted_proxies.prefix_zero` instead of parsing the message. `construction_warnings` is unchanged (release note, behavior change).
+
+- **Fixed** - **The ecosystem registry lists the Python family at its 5.0.0 release versions.** `ecosystem`, `adapter_setup` and `wire_agent` answered with guard-core 4.4.0, guard-agent 3.2.4 and fastapi-guard 8.1.2; they now report guard-core 5.0.0, fastapi-guard 9.0.0, flaskapi-guard 5.0.0, djapi-guard 6.0.0, tornadoapi-guard 3.0.0 and guard-agent 4.0.0, read from one table in `guard_core_mcp/ecosystem.py` that the tests and the documented `versions` example are checked against. The other languages stay at their published versions (release note, behavior change).
+
+- **Fixed** - **`check_payload` no longer makes guard-core log a body-reader warning on every call.** The synthetic request now declares `read_body_prefix_until_idle`, so guard-core stops warning that the request has no bounded body reader.
+
+- **Fixed** - **`plugin/plugin.json` carries the package version.** It said 0.1.0 while the package was 2.0.0; `make bump-version` now keeps it in step and a test fails when they differ. The package import of the three Guard libraries uses one loader per package with a literal module name, so the semgrep suppression comment is gone.
+
 ___
 
 v1.7.1 (2026-10-29)
@@ -124,6 +132,8 @@ The org-move docs refresh: the vendored documentation and its sources follow the
 - **Changed** - CI publishes to PyPI via OIDC trusted publishing (`pypa/gh-action-pypi-publish`, `environment: pypi`) instead of twine tokens, matching the PyPI trusted-publisher configuration; the release job now runs in the `pypi` environment.
 - **Fixed** - The `guard-core-ts` clone URL in CI keeps pointing at `rennf93/guard-core-ts` until the TypeScript wave moves, unbreaking the docs-drift gate.
 
+___
+
 v1.4.1 (2026-10-07)
 -------------------
 
@@ -163,6 +173,8 @@ The parity train closeout: the registry reflects the shipped 4.2.0/3.1.0 ecosyst
 - **Changed** - The guard-core-rs registry and knowledge entries carry the honest known gaps (behavior-rule storage is in-memory only with no Redis-backed distributed mode, and the route ip_blacklist-before-ip_whitelist evaluation order diverges from the reference), both documented in the port's docs/configuration.md.
 - **Changed** - The hand-written `_knowledge` corpus re-syncs to those releases (guard-core-go/php/rs 4.2.0 with the spec-4.1.0 corpus, the four agents at 3.1.0) and the vendored `_docs` re-syncs to guard-core 4.2.0, guard-agent 3.1.0, fastapi-guard 8.0.2 and guard-core-ts 4.2.0 via `scripts/sync_docs.py`.
 - **Changed** - `uv.lock` moves guard-core to 4.2.0 and guard-agent to 3.1.0; version 1.3.0 closes out the 4.2.0/3.1.0 parity release train this server documents.
+
+___
 
 v1.2.0 (2026-09-26)
 -------------------
@@ -289,14 +301,14 @@ Vendored docs re-synced to the guard-core 3.13.0 / fastapi-guard 7.7.0 / guard-a
 
 ___
 
-v0.1.7 (2026-08-15)
+v0.1.7 (2026-08-17)
 -------------------
 
 check_payload body-scan fix for guard-core 3.12.0, documentation accuracy sweep, and vendored docs re-synced to the 3.12.0 line (v0.1.7)
 ----------------------------------------------------------------------------------------------------------------------------------------
 
 - **Fixed** - Every worked example in the installation guide and tool reference still showed the versions frozen at the 0.1.5 sweep: `versions()`'s own `guard_core_mcp` field showed `0.1.5` although the server had since moved to 0.1.6, and `installed`/`docs_bundled_for` still showed guard-core 3.11.0 and fastapi-guard 7.5.1 despite the sibling repos having released 3.12.0 and 7.6.0. The `version` field in both `validate_config` examples and the `config_fields` example carried the same stale 7.5.1, and the `search_docs` example's second result score was stale at 76 now that fastapi-guard's growing release notes push it to 79. All five example blocks now show real, live output captured against the installed 3.12.0/7.6.0/2.8.1 line.
-- **Fixed** - `config_fields`'s tool docstring said `matches` lists every field "whose name or description contains the query", which is not what the implementation does: it splits the query into words and requires every word to appear somewhere in the combined name and description, independent of order or adjacency. `config_fields("limit rate", ...)` matches `rate_limit` even though the literal substring "limit rate" appears nowhere in its name or description. The docstring now says "contains every word of the query (case-insensitively, word order does not matter)", matching what [Tools](https://rennf93.github.io/guard-core-mcp/latest/tools/) already documented correctly.
+- **Fixed** - `config_fields`'s tool docstring said `matches` lists every field "whose name or description contains the query", which is not what the implementation does: it splits the query into words and requires every word to appear somewhere in the combined name and description, independent of order or adjacency. `config_fields("limit rate", ...)` matches `rate_limit` even though the literal substring "limit rate" appears nowhere in its name or description. The docstring now says "contains every word of the query (case-insensitively, word order does not matter)", matching what [Tools](https://guard-core.github.io/guard-core-mcp/latest/tools/) already documented correctly.
 - **Fixed** - `pyproject.toml`'s package description used an em dash between the product name and its feature list; replaced with a plain hyphen.
 - **Changed** - Vendored `_docs` re-synced from the sibling repos: guard-core 3.12.0, fastapi-guard 7.6.0, guard-agent 2.8.1 (unchanged). This picks up guard-core's exclusion-path enforcement fix (an excluded path now still enforces IP bans, blacklists, blocked countries, blocked cloud providers and rate limits; only detection and behavioral tracking are skipped there), the identity-block escalation fix so a route-level IP block is no longer bypassed by a stale global-whitelist flag left over from the earlier global check, and fastapi-guard's bounded body reading for chunked requests plus working response-body `return_pattern` rules.
 - **Changed** - `uv.lock` and the development environment refreshed to resolve guard-core 3.12.0 and fastapi-guard 7.6.0; `guard-agent` was already current at 2.8.1. Upgraded individually rather than via a blanket `uv lock --upgrade`, which still downgrades `mcp` from 2.0.0 to 1.23.3 and breaks the server at import. `pyproject.toml` runtime dependencies remain unpinned and unchanged.
@@ -324,7 +336,7 @@ Documentation accuracy sweep, corrected tool descriptions, and vendored docs re-
 ------------------------------------------------------------------------------------------------------------------
 
 - **Fixed** - Three tool descriptions did not match their implementations. `config_fields` did not mention that `exact` and `matches` are populated together rather than exclusively, and omitted the `required` key it returns for every field. `check_payload` did not mention that it forces `enable_redis` off regardless of what the caller passes. `versions` did not mention that it also reports the server's own version. A tool's description is what a model reads before deciding to call it, so a wrong description is a functional defect rather than a cosmetic one.
-- **Fixed** - `search_docs` silently returns an empty result set for an unrecognized `package`, while `validate_config` and `config_fields` raise a clear error for the same mistake. An agent that typo'd a package name concluded the documentation covered nothing on the topic. The behaviour is unchanged, but the docstring now states it, and [Tools](https://rennf93.github.io/guard-core-mcp/latest/tools/) documents the difference between the four `package`-taking tools.
+- **Fixed** - `search_docs` silently returns an empty result set for an unrecognized `package`, while `validate_config` and `config_fields` raise a clear error for the same mistake. An agent that typo'd a package name concluded the documentation covered nothing on the topic. The behaviour is unchanged, but the docstring now states it, and [Tools](https://guard-core.github.io/guard-core-mcp/latest/tools/) documents the difference between the four `package`-taking tools.
 - **Fixed** - The `versions` example in the installation guide and tool reference showed invented numbers that no real call would produce, and the surrounding prose did not explain what `installed` and `docs_bundled_for` each mean. Both now show real output, and the prose explains that the two are independent, that either side trailing the other is normal, and that a `null` under `installed` is the actual warning sign.
 - **Changed** - Vendored `_docs` re-synced from the sibling repos: guard-core 3.11.0, fastapi-guard 7.5.1, guard-agent 2.8.1. This picks up guard-core's ten newly reachable `agent_*` configuration fields and the `on_error` forwarding fix, fastapi-guard's corrected agent buffer guidance, and guard-agent's corrected middleware attachment examples.
 - **Changed** - `uv.lock` refreshed so the development environment resolves the current guard-core, fastapi-guard and guard-agent releases rather than three versions behind. `pyproject.toml` dependencies remain unpinned. Note that a blanket `uv lock --upgrade` downgrades `mcp` from 2.0.0 to 1.23.3, which removes `mcp.server.mcpserver.MCPServer` and breaks the server at import; the guard packages were upgraded individually instead.
@@ -378,7 +390,7 @@ MCP SDK 2.0 compatibility (v0.1.1)
 
 ___
 
-v0.1.0 (2026-07-25)
+v0.1.0 (2026-07-28)
 -------------------
 
 Config, documentation and detection tools (v0.1.0)

@@ -8,6 +8,7 @@ Updates the version string across all files that reference it:
 - docs/versions/versions.json
 - docs/chatgpt-plugin.md
 - server.json (server version and PyPI package pointers)
+- plugin/plugin.json (the ChatGPT directory package's version)
 - CHANGELOG.md
 - docs/release-notes.md
 
@@ -306,6 +307,22 @@ def update_server_json(version: str) -> bool:
     return True
 
 
+def update_plugin_json(version: str) -> bool:
+    """Update the ChatGPT directory package's version in plugin/plugin.json."""
+    path = PROJECT_ROOT / "plugin" / "plugin.json"
+    if not path.is_file():
+        print("  plugin/plugin.json: not found, skipping")
+        return True
+    data = json.loads(path.read_text())
+    if data.get("version") == version:
+        print(f"  plugin/plugin.json: already set to {version}")
+        return True
+    data["version"] = version
+    path.write_text(json.dumps(data, indent=2) + "\n")
+    print(f"  plugin/plugin.json: updated to {version}")
+    return True
+
+
 def update_changelogs(version: str) -> bool:
     """Update CHANGELOG.md and docs/release-notes.md."""
     changelog = PROJECT_ROOT / "CHANGELOG.md"
@@ -341,6 +358,7 @@ def main() -> int:
         ("docs/versions/versions.json", update_versions_json),
         ("docs/chatgpt-plugin.md", update_docker_image_tag),
         ("server.json", update_server_json),
+        ("plugin/plugin.json", update_plugin_json),
         ("changelogs", update_changelogs),
     ]
 

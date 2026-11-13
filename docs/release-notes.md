@@ -28,6 +28,14 @@ Unreleased
 
 - **Fixed** - The Python agent snippet served by `adapter_setup` and `wire_agent` no longer ends in an undefined return annotation or calls `SecurityMiddleware.configure_cors`, which fastapi-guard removed, and a test now executes every served Python snippet.
 
+- **Added** - **`validate_config` returns each guard-core problem with its machine-readable kind.** A new `construction_problems` list pairs every construction warning with the `kinds` guard-core attaches to its log record (each a `kind` and a `subject`), so a client can branch on `config.unknown_field` or `trusted_proxies.prefix_zero` instead of parsing the message. `construction_warnings` is unchanged (release note, behavior change).
+
+- **Fixed** - **The ecosystem registry lists the Python family at its 5.0.0 release versions.** `ecosystem`, `adapter_setup` and `wire_agent` answered with guard-core 4.4.0, guard-agent 3.2.4 and fastapi-guard 8.1.2; they now report guard-core 5.0.0, fastapi-guard 9.0.0, flaskapi-guard 5.0.0, djapi-guard 6.0.0, tornadoapi-guard 3.0.0 and guard-agent 4.0.0, read from one table in `guard_core_mcp/ecosystem.py` that the tests and the documented `versions` example are checked against. The other languages stay at their published versions (release note, behavior change).
+
+- **Fixed** - **`check_payload` no longer makes guard-core log a body-reader warning on every call.** The synthetic request now declares `read_body_prefix_until_idle`, so guard-core stops warning that the request has no bounded body reader.
+
+- **Fixed** - **`plugin/plugin.json` carries the package version.** It said 0.1.0 while the package was 2.0.0; `make bump-version` now keeps it in step and a test fails when they differ. The package import of the three Guard libraries uses one loader per package with a literal module name, so the semgrep suppression comment is gone.
+
 ___
 
 v1.7.1 (2026-10-29)
@@ -173,6 +181,8 @@ The parity train closeout: the registry reflects the shipped 4.2.0/3.1.0 ecosyst
 - **Changed** - The hand-written `_knowledge` corpus re-syncs to those releases (guard-core-go/php/rs 4.2.0 with the spec-4.1.0 corpus, the four agents at 3.1.0) and the vendored `_docs` re-syncs to guard-core 4.2.0, guard-agent 3.1.0, fastapi-guard 8.0.2 and guard-core-ts 4.2.0 via `scripts/sync_docs.py`.
 - **Changed** - `uv.lock` moves guard-core to 4.2.0 and guard-agent to 3.1.0; version 1.3.0 closes out the 4.2.0/3.1.0 parity release train this server documents.
 
+___
+
 v1.2.0 (2026-09-26)
 -------------------
 
@@ -298,7 +308,7 @@ Vendored docs re-synced to the guard-core 3.13.0 / fastapi-guard 7.7.0 / guard-a
 
 ___
 
-v0.1.7 (2026-08-15)
+v0.1.7 (2026-08-17)
 -------------------
 
 check_payload body-scan fix for guard-core 3.12.0, documentation accuracy sweep, and vendored docs re-synced to the 3.12.0 line (v0.1.7)
@@ -387,7 +397,7 @@ MCP SDK 2.0 compatibility (v0.1.1)
 
 ___
 
-v0.1.0 (2026-07-25)
+v0.1.0 (2026-07-28)
 -------------------
 
 Config, documentation and detection tools (v0.1.0)

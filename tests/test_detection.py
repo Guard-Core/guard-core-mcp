@@ -1,3 +1,4 @@
+import logging
 import types
 from unittest.mock import MagicMock
 from urllib.parse import quote
@@ -153,3 +154,16 @@ def test_encode_body_handles_every_accepted_shape() -> None:
     assert encode_body("raw") == b"raw"
     assert encode_body({"a": 1}) == b'{"a": 1}'
     assert encode_body([1, 2]) == b"[1, 2]"
+
+
+async def test_check_payload_does_not_log_the_missing_body_reader_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with caplog.at_level(logging.WARNING, logger="guard_core"):
+        report = await check_payload(
+            method="POST", body="x=<script>alert(1)</script>", config={}
+        )
+
+    assert report["is_threat"] is True
+    messages = [r.getMessage() for r in caplog.records]
+    assert [m for m in messages if "read_body_prefix" in m] == []

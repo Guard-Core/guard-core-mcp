@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "guard-core",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Guard Core security tools: validate fastapi-guard and guard-core configs, search the Guard documentation, resolve adapters across five languages, and run real attack payloads through the live detection engine.",
   "author": {
     "name": "Renzo Franceschini",
